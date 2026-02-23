@@ -1,6 +1,6 @@
 import { shareAsync } from 'expo-sharing'
-import { generate7DaySlot } from 'src/helpers/dates'
-import { ActionType, ResourceName } from 'src/types'
+import { generate7DaySlot } from '@/helpers/dates'
+import { ActionType, ResourceName } from '@/types'
 import { create } from 'zustand'
 
 export type CurrentResourceType = {

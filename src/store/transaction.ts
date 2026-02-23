@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { getCurrentStock } from 'src/helpers/helpersToTrades'
-import { TransactionDetailsType, TransactionFlowType } from '../types'
+import { getCurrentStock } from '@/helpers/trades'
+import { TransactionDetailsType, TransactionFlowType } from '@/types'
 
 export type TransactionFormDataType = {
     startDate: Date

@@ -1,4 +1,4 @@
-import { TABLES } from '@/library/powersync/app-schemas'
+import { AdminPostRecord, TABLES } from '@/library/powersync/app-schemas'
 import { powersync } from '../powersync/system'
 
 // select district name by id and return the district name
@@ -39,17 +39,6 @@ export const getProvinceById = async (id: string): Promise<string | null> => {
 	}
 }
 
-// select admin_post by id and return the admin_post name
-export const getAdminPostById = async (id: string): Promise<string | null> => {
-	if (!id || typeof id !== 'string') return null
-	try {
-		const data = await powersync.get<{ name: string }>(`SELECT name FROM ${TABLES.ADMIN_POSTS} WHERE id = ?`, [id])
-		return data?.name || null
-	} catch (error) {
-		console.error('Error getting admin_post by id:', error)
-		return null
-	}
-}
 
 // select admin_posts by district_id and return the admin_posts
 export const getAdminPostsByDistrictId = async (
@@ -153,4 +142,29 @@ export const getLinkedCheckpoints = async (db: any, checkpointId: string) => {
 
 	const result = await db.getAll(query, [checkpointId, checkpointId, checkpointId, checkpointId])
 	return result
+}
+
+
+
+export const getAdminPostById = async (id: string, callback: (result: AdminPostRecord) => void) => {
+	await powersync
+		.get(`SELECT * FROM ${TABLES.ADMIN_POSTS} WHERE id = ?`, [id])
+		.then((result) => {
+			callback(result as AdminPostRecord)
+		})
+		.catch((error) => {
+			console.error(`Error selecting admin post by id ${id}:`, error)
+		})
+}
+
+// select admin_post by id and return the admin_post name
+export const getAdminPostNameById = async (id: string): Promise<string | null> => {
+	if (!id || typeof id !== 'string') return null
+	try {
+		const data = await powersync.get<{ name: string }>(`SELECT name FROM ${TABLES.ADMIN_POSTS} WHERE id = ?`, [id])
+		return data?.name || null
+	} catch (error) {
+		console.error('Error getting admin_post by id:', error)
+		return null
+	}
 }

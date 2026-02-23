@@ -1,4 +1,4 @@
-import { ActorCategory, CategoryCardType } from 'src/types'
+import { ActorCategory, CategoryCardType } from '@/types'
 import { create } from 'zustand'
 
 interface CategoryCardState {

@@ -1,83 +1,85 @@
 import { Schema } from '@powersync/react-native'
-// import documents from './documents'
-import actorCategories from './schemas/actor-categories'
-import actorDetails from './schemas/actor-details'
-import actorDocuments from './schemas/actor-document'
+
+
+import actor_categories from './schemas/actor-categories'
+import actor_details from './schemas/actor-details'
+import actor_documents from './schemas/actor-document'
 import actors from './schemas/actors'
-import addressDetails from './schemas/address-details'
-import adminPosts from './schemas/admin-posts'
-import birthDates from './schemas/birth-dates'
-import birthPlaces from './schemas/birth-places'
+import address_details from './schemas/address-details'
+import admin_posts from './schemas/admin-posts'
+import birth_dates from './schemas/birth-dates'
+import birth_places from './schemas/birth-places'
 import borders from './schemas/borders'
-import cashewCrossbordersSmuggling from './schemas/cashew-crossborder-smugglings'
-import cashewInbordersSmuggling from './schemas/cashew-inborder-smugglings'
-import cashewShipments from './schemas/cashew-shipments'
-import cashewWarehouseTransactions from './schemas/cashew-warehouse-transactions'
+import cashew_crossborders_smuggling from './schemas/cashew-crossborder-smugglings'
+import cashew_inborders_smuggling from './schemas/cashew-inborder-smugglings'
+import cashew_shipments from './schemas/cashew-shipments'
+import cashew_warehouse_transactions from './schemas/cashew-warehouse-transactions'
 import checkpoints from './schemas/checkpoints'
-import contactDetails from './schemas/contact-details'
+import contact_details from './schemas/contact-details'
 import countries from './schemas/countries'
 import districts from './schemas/districts'
 import facilities from './schemas/facilities'
 import genders from './schemas/genders'
-import groupManagerAssignments from './schemas/group-manager-assignments'
-import groupMembers from './schemas/group-members'
+import group_manager_assignments from './schemas/group-manager-assignments'
+import group_members from './schemas/group-members'
 import licenses from './schemas/licenses'
 import nuels from './schemas/nuels'
 import nuits from './schemas/nuits'
-import organizationTransactionParticipants from './schemas/organization-transaction-participants'
-import organizationTransactions from './schemas/organization-transactions'
+import organization_transaction_participants from './schemas/organization-transaction-participants'
+import organization_transactions from './schemas/organization-transactions'
 import provinces from './schemas/provinces'
 import shipmentCars from './schemas/shipment-cars'
-import shipmentCheckpointInspectors from './schemas/shipment-checkpoint-inspectors'
-import shipmentCheckpointSequences from './schemas/shipment-checkpoint-sequences'
-import shipmentChecks from './schemas/shipment-checks'
-import shipmentDirections from './schemas/shipment-directions'
-import shipmentDrivers from './schemas/shipment-drivers'
-import shipmentLoads from './schemas/shipment-loads'
-import userDetails from './schemas/user-details'
+import shipment_checkpoint_inspectors from './schemas/shipment-checkpoint-inspectors'
+import shipment_checkpoint_sequence from './schemas/shipment-checkpoint-sequences'
+import shipment_checks from './schemas/shipment-checks'
+import shipment_directions from './schemas/shipment-directions'
+import shipment_drivers from './schemas/shipment-drivers'
+import shipment_loads from './schemas/shipment-loads'
+import user_details from './schemas/user-details'
 import villages from './schemas/villages'
-import warehouseDetails from './schemas/warehouse-details'
-import workerAssignments from './schemas/worker-assignments'
+import warehouse_details from './schemas/warehouse-details'
+import worker_assignments from './schemas/worker-assignments'
+import shipment_cars from './schemas/shipment-cars'
 
 export const AppSchema = new Schema({
 	// documents,
-	userDetails,
-	groupMembers,
-	cashewWarehouseTransactions,
-	organizationTransactions,
-	organizationTransactionParticipants,
+	user_details,
+	group_members,
+	cashew_warehouse_transactions,
+	organization_transactions,
+	organization_transaction_participants,
 	countries,
 	provinces,
 	districts,
-	adminPosts,
+	admin_posts,
 	villages,
 	nuits,
 	nuels,
 	licenses,
-	cashewShipments,
-	shipmentLoads,
-	shipmentCars,
-	shipmentDrivers,
-	shipmentDirections,
-	shipmentChecks,
-	shipmentCheckpointInspectors,
-	shipmentCheckpointSequences,
-	cashewInbordersSmuggling,
-	cashewCrossbordersSmuggling,
+	cashew_shipments,
+	shipment_loads,
+	shipment_cars,
+	shipment_drivers,
+	shipment_directions,
+	shipment_checks,
+	shipment_checkpoint_inspectors,
+	shipment_checkpoint_sequence,
+	cashew_inborders_smuggling,
+	cashew_crossborders_smuggling,
 	borders,
 	actors,
-	actorDocuments,
-	birthPlaces,
-	birthDates,
-	contactDetails,
-	addressDetails,
+	actor_documents,
+	birth_places,
+	birth_dates,
+	contact_details,
+	address_details,
 	facilities,
-	warehouseDetails,
-	actorDetails,
-	actorCategories,
+	warehouse_details,
+	actor_details,
+	actor_categories,
 	genders,
-	workerAssignments,
-	groupManagerAssignments,
+	worker_assignments,
+	group_manager_assignments,
 	checkpoints,
 })
 
@@ -126,42 +128,42 @@ export const TABLES = {
 
 export type Database = (typeof AppSchema)['types']
 // export type DocumentRecord = Database['documents']
-export type UserDetailsRecord = Database['userDetails']
-export type GroupMemberRecord = Database['groupMembers']
-export type CashewWarehouseTransactionRecord = Database['cashewWarehouseTransactions']
-export type OrganizationTransactionRecord = Database['organizationTransactions']
-export type OrganizationTransactionParticipantRecord = Database['organizationTransactionParticipants']
+export type UserDetailsRecord = Database['user_details']
+export type GroupMemberRecord = Database['group_members']
+export type CashewWarehouseTransactionRecord = Database['cashew_warehouse_transactions']
+export type OrganizationTransactionRecord = Database['organization_transactions']
+export type OrganizationTransactionParticipantRecord = Database['organization_transaction_participants']
 export type CountryRecord = Database['countries']
 export type ProvinceRecord = Database['provinces']
 export type DistrictRecord = Database['districts']
-export type AdminPostRecord = Database['adminPosts']
+export type AdminPostRecord = Database['admin_posts']
 export type VillageRecord = Database['villages']
 export type NuitRecord = Database['nuits']
 export type NuelRecord = Database['nuels']
 export type LicenseRecord = Database['licenses']
-export type CashewShipmentRecord = Database['cashewShipments']
-export type ShipmentLoadRecord = Database['shipmentLoads']
-export type ShipmentCarRecord = Database['shipmentCars']
-export type ShipmentDriverRecord = Database['shipmentDrivers']
-export type ShipmentDirectionRecord = Database['shipmentDirections']
-export type ShipmentCheckRecord = Database['shipmentChecks']
+export type CashewShipmentRecord = Database['cashew_shipments']
+export type ShipmentLoadRecord = Database['shipment_loads']
+export type ShipmentCarRecord = Database['shipment_cars']
+export type ShipmentDriverRecord = Database['shipment_drivers']
+export type ShipmentDirectionRecord = Database['shipment_directions']
+export type ShipmentCheckRecord = Database['shipment_checks']
 export type ShipmentCheckpointRecord = Database['checkpoints'] // Changed from shipment_checkpoints to checkpoints
-export type ShipmentCheckpointInspectorRecord = Database['shipmentCheckpointInspectors']
-export type ShipmentCheckpointSequenceRecord = Database['shipmentCheckpointSequences']
-export type CashewInbordersSmugglingRecord = Database['cashewInbordersSmuggling']
-export type CashewCrossbordersSmugglingRecord = Database['cashewCrossbordersSmuggling']
+export type ShipmentCheckpointInspectorRecord = Database['shipment_checkpoint_inspectors']
+export type ShipmentCheckpointSequenceRecord = Database['shipment_checkpoint_sequence']
+export type CashewInbordersSmugglingRecord = Database['cashew_inborders_smuggling']
+export type CashewCrossbordersSmugglingRecord = Database['cashew_crossborders_smuggling']
 export type BorderRecord = Database['borders']
 export type ActorRecord = Database['actors']
-export type ActorDocumentRecord = Database['actorDocuments']
-export type BirthPlaceRecord = Database['birthPlaces']
-export type BirthDateRecord = Database['birthDates']
-export type ContactDetailRecord = Database['contactDetails']
-export type AddressDetailRecord = Database['addressDetails']
+export type ActorDocumentRecord = Database['actor_documents']
+export type BirthPlaceRecord = Database['birth_places']
+export type BirthDateRecord = Database['birth_dates']
+export type ContactDetailRecord = Database['contact_details']
+export type AddressDetailRecord = Database['address_details']
 export type FacilityRecord = Database['facilities']
-export type WarehouseDetailRecord = Database['warehouseDetails']
-export type WorkerAssignmentRecord = Database['workerAssignments']
-export type ActorDetailRecord = Database['actorDetails']
-export type ActorCategoryRecord = Database['actorCategories']
+export type WarehouseDetailRecord = Database['warehouse_details']
+export type WorkerAssignmentRecord = Database['worker_assignments']
+export type ActorDetailRecord = Database['actor_details']
+export type ActorCategoryRecord = Database['actor_categories']
 export type GenderRecord = Database['genders']
-export type GroupManagerAssignmentRecord = Database['groupManagerAssignments']
+export type GroupManagerAssignmentRecord = Database['group_manager_assignments']
 export type CheckpointRecord = Database['checkpoints']

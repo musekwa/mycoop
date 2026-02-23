@@ -1,4 +1,4 @@
-import { IconComponentType } from '../components/dynamic-icon/DynamicIcon'
+import { IconComponentType } from '../components/dynamic-icon'
 
 export enum GroupManagerPosition {
 	PRESIDENT = 'PRESIDENT',

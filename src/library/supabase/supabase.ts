@@ -30,6 +30,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 	},
 })
 
+
 AppState.addEventListener('change', async (state: any) => {
 	if (state === 'active') {
 		await supabase.auth.startAutoRefresh()

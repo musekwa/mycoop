@@ -1,4 +1,4 @@
-import { CoopAffiliationStatus } from 'src/types'
+import { CoopAffiliationStatus } from '@/types'
 import { create } from 'zustand'
 
 // 1. COOPERATIVE

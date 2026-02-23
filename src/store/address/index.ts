@@ -1,4 +1,4 @@
-import { getAdminPostById, getCountryById, getDistrictById, getProvinceById, getVillageById } from '@/library/sqlite/selects'
+import { getAdminPostNameById, getCountryById, getDistrictById, getProvinceById, getVillageById } from '@/library/sqlite/selects'
 import { AddressLevel } from '@/types'
 import { create } from 'zustand'
 
@@ -187,7 +187,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
 	},
 	getFullAdminPostNameById: (adminPostId: string) => {
 		const getAdminPostName = async (adminPostId: string) => {
-			const adminPostName = await getAdminPostById(adminPostId)
+			const adminPostName = await getAdminPostNameById(adminPostId)
 			return adminPostName
 		}
 		return getAdminPostName(adminPostId)
@@ -217,7 +217,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
 	},
 	getPartialAdminPostNameById: (adminPostId: string) => {
 		const getAdminPostName = async (adminPostId: string) => {
-			const adminPostName = await getAdminPostById(adminPostId)
+			const adminPostName = await getAdminPostNameById(adminPostId)
 			return adminPostName
 		}
 		return getAdminPostName(adminPostId)

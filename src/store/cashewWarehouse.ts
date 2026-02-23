@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { CashewWarehouseType } from 'src/types'
+import { CashewWarehouseType } from '@/types'
 
 
 export type CashewWarehouseInfoType = {
