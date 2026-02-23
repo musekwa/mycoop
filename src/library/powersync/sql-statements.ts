@@ -607,3 +607,17 @@ export async function insertFarmer(params: CreateFarmerParams): Promise<CreateFa
 		return { success: false, message: 'Erro ao criar produtor. Tente novamente.' }
 	}
 }
+
+
+export const updateOne = async <T>(query: string, params: string[]) => {
+  await powersync
+    .execute(query, params)
+    .then((result) => {
+      console.log(`Result of updateOne ${query}:`, result);
+      // return result as T
+    })
+    .catch((error) => {
+      console.error(`Error updating one ${query}:`, error);
+      // return null
+    });
+};

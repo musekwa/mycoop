@@ -41,7 +41,6 @@ export default function Providers({ children }: Props) {
 						<MenuProvider>
 						<RootSiblingParent>
 							<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-
 								<PaperProvider theme={theme}>
 									<ToastProvider>
 										<BottomSheetModalProvider>{children}</BottomSheetModalProvider>
