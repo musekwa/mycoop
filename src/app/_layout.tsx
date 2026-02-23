@@ -10,14 +10,13 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
 import { Href, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import 'react-native-reanimated';
+// import 'react-native-reanimated';
 
 // Components
 import CustomSplashScreen from '@/components/custom-splash-screen';
 import PowerSyncConnecting from '@/components/loaders/powersync-connecting';
 import { useUserDetails } from '@/hooks/queries';
 import Providers from '@/Providers';
-import { useColorScheme } from 'react-native';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -139,7 +138,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(profiles)" options={{ presentation: 'modal', headerShown: false }} />
-        <Stack.Screen name="(native)" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen name="(native)" options={{ headerShown: false }} />
       </Stack>
 	</>
   );

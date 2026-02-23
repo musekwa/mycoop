@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { updateOne } from '@/library/powersync/sql-statements'
 import { ActorDetailRecord, TABLES } from '@/library/powersync/app-schemas'
 import { CurrentResourceType, useActionStore } from '@/store/actions/actions'
-import ImageHandleModal from '../modals/ImageHandleModal'
+import ImageHandler from '@/components/image-handler'
 
 type Props = {
 	showImageHandleModal: boolean
@@ -77,7 +77,7 @@ export default function UploadPhoto({
 	}, [currentResource.id, onError, setShowImageHandleModal, setToast])
 
 	return (
-		<ImageHandleModal
+		<ImageHandler
 			title={title}
 			savePhoto={savePhoto}
 			deletePhoto={deletePhoto}

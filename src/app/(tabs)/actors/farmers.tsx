@@ -167,7 +167,7 @@ export default function FarmersScreen() {
 			setActiveTab('ALL')
 			setIsLoading(true)
 		}
-	}, [activeTab, isLoading])
+	}, [activeTab, isLoading, handleSearchKeys])
 
 
 	// Render each farmer with a photo, name, surname, phone number, and cashew stock

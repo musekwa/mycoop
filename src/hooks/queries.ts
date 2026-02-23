@@ -200,7 +200,7 @@ export const useQueryOne = <T>(query: string, params: string[]) => {
 				setIsError(true)
 				setIsLoading(false)
 			})
-	}, [query])
+	}, [query, params])
 	return { data, isLoading, error, isError }
 }
 
@@ -276,7 +276,7 @@ export const useQueryOneAndWatchChanges = <T>(query: string, params: string[]) =
 		return () => {
 			abortController.abort()
 		}
-	}, [query, ...params])
+	}, [query, params])
 	return { data, isLoading, error, isError }
 }
 
@@ -379,8 +379,10 @@ export const useAddressById = (id: string) => {
 				})
 			}
 			if (data?.admin_post_id) {
-				getAdminPostById(data?.admin_post_id).then((adminPost) => {
-					setAdminPostName(adminPost)
+				getAdminPostById(data?.admin_post_id, (adminPost) => {
+					if (adminPost) {
+						setAdminPostName(adminPost.name)
+					}
 				})
 			}
 			if (data?.village_id) {
@@ -592,8 +594,9 @@ export const useLocationName = (searchKey: string, userDistrictId?: string) => {
 		const fetchLocationName = async () => {
 			try {
 				if (searchKey) {
-					const adminPost = await getAdminPostById(searchKey)
-					setLocationName(adminPost ?? '')
+					const adminPost = await getAdminPostById(searchKey, () => {
+						setLocationName(adminPost ?? '')
+					})
 				} else if (userDistrictId) {
 					const district = await getDistrictById(userDistrictId)
 					setLocationName(district ?? '')

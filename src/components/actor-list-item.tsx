@@ -69,7 +69,7 @@ export default function ActorListItem({ item, resource_name }: ActorListItemProp
 			id: id,
 			name: resource_name,
 		})
-		router.navigate(`/(aux)/actors/${resource_name.toLowerCase()}` as Href)
+		router.navigate(`/(profiles)/${resource_name.toLowerCase()}` as Href)
 	}
 
 	useEffect(() => {

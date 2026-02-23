@@ -11,12 +11,12 @@ import { useDrawerStatus } from "@react-navigation/drawer";
 import { commercializationCampainsdateRange } from "@/helpers/dates";
 import SingleFloatingButton from "@/components/buttons/single-floating-button";
 import { useActionStore } from "@/store/actions/actions";
-import ActorContactInfo from "src/components/actors/ActorContactInfo";
+import ActorContactInfo from "@/components/actor-contact-info";
 import { TABLES } from "@/library/powersync/app-schemas";
 import { useQueryOne, useQueryOneAndWatchChanges } from "@/hooks/queries";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import HeaderAvatar from "src/components/actors/header-avatar";
+import HeaderAvatar from "@/components/actor-profile-header-avatar";
 
 function CustomDrawerContent(props: any) {
   const { setDrawerStatus, getCurrentResource } = useActionStore();
@@ -29,9 +29,9 @@ function CustomDrawerContent(props: any) {
 
   const {
     data: farmer,
-    isLoading: isFarmerLoading,
-    error: farmerError,
-    isError: isFarmerError,
+    // isLoading: isFarmerLoading,
+    // error: farmerError,
+    // isError: isFarmerError,
   } = useQueryOneAndWatchChanges<{
     id: string;
     photo: string;
@@ -60,7 +60,7 @@ function CustomDrawerContent(props: any) {
     } else {
       setDrawerStatus("open");
     }
-  }, [isDrawerOpen]);
+  }, [isDrawerOpen, setDrawerStatus]);
 
   // console.log('farmer', JSON.stringify(farmer, null, 2))
 
@@ -174,10 +174,7 @@ function CustomDrawerContent(props: any) {
         </View>
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <View
-            className={cn("px-2 py-3 mt-2", {
-              "bg-[#333333]": isDarkMode,
-              "bg-white": !isDarkMode,
-            })}
+            className={"px-2 py-3 mt-2"}
             style={{ paddingBottom: Math.max(insets.bottom, 8) }}
           >
             <TouchableOpacity
@@ -203,20 +200,14 @@ function CustomDrawerContent(props: any) {
 }
 
 export default function FarmerLayout() {
-  const isDarkMode = useColorScheme().colorScheme === "dark";
-  const navigation = useNavigation();
+  const isDarkMode = useColorScheme() === "dark";
   const { getDrawerStatus, getCurrentResource } = useActionStore();
-
-  // const toggleDrawer = () => {
-  // 	const drawerNavigation = navigation.getParent('Drawer') || navigation
-  // 	drawerNavigation.dispatch(DrawerActions.toggleDrawer())
-  // }
 
   const {
     data: farmer,
-    isLoading,
-    error,
-    isError,
+    // isLoading,
+    // error,
+    // isError,
   } = useQueryOne<{
     other_names: string;
     surname: string;

@@ -6,8 +6,8 @@ import * as Location from 'expo-location'
 import { useAddressById, useUserDetails, useContactById } from '@/hooks/queries'
 import { getDistrictById } from '@/library/sqlite/selects'
 import ErrorAlert from '@/components/alerts/error-alert'
-import CustomConfirmDialog from '../modals/CustomConfirmDialog'
-import CapturingCoordinates from '../location/CapturingCoordinates'
+import ConfirmDialog from '@/components/dialog-boxes/confirm-dialog'
+import CoordinatesHandler from '@/components/coordinates-handler'
 
 interface ActorContactInfoProps {
 	contact_id: string
@@ -50,6 +50,7 @@ export default function ActorContactInfo({ contact_id, address_id }: ActorContac
 			}
 			setShowCapturingCoordinatesDialog(true)
 		} catch (err) {
+			console.log("Error requesting permissions", err)
 			setShowErrorAlert(true)
 			setErrorMessage('Erro ao solicitar permissão de localização')
 		}
@@ -100,13 +101,13 @@ export default function ActorContactInfo({ contact_id, address_id }: ActorContac
 				)}
 			</View>
 
-			<CustomConfirmDialog
-				showConfirmDialog={showCapturingCoordinatesDialog}
-				setShowConfirmDialog={setShowCapturingCoordinatesDialog}
+			<ConfirmDialog
+				visible={showCapturingCoordinatesDialog}
+				setVisible={setShowCapturingCoordinatesDialog}
 				title={''}
 				content={
 					address_id ? (
-						<CapturingCoordinates
+						<CoordinatesHandler
 							errorMessage={errorMessage}
 							showErrorAlert={showErrorAlert}
 							setShowErrorAlert={setShowErrorAlert}
