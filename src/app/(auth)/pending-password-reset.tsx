@@ -79,7 +79,7 @@ export default function PendingPasswordReset() {
 				scrollEventThrottle={16}
 				contentContainerStyle={{
 					flexGrow: 1,
-					// padding: 15,
+					paddingHorizontal: 16,
 					paddingBottom: 40,
 				}}
 				className="bg-white dark:bg-black"

@@ -538,7 +538,7 @@ export default function HomeScreen() {
 						className="bg-white dark:bg-black"
 						showsVerticalScrollIndicator={false}
 					>
-						<View className="h-[150px] bg-[#008000]">
+						<View className="h-37.5 bg-[#008000]">
 							<View className="relative justify-center items-center pt-10">
 								<Animatable.Text
 									animation="pulse"
@@ -550,10 +550,10 @@ export default function HomeScreen() {
 									MyCoop
 								</Animatable.Text>
 								<Text className="text-white text-center text-[10px] italic px-10">
-									Promovendo o cooperativismo em Moçambique
+									Promovendo o cooperativismo moderno em Moçambique
 								</Text>
 							</View>
-							<View className="h-[50px] flex flex-row items-center justify-between space-x-6 px-3">
+							<View className="h-12.5 flex flex-row items-center justify-between space-x-6 px-3">
 								<View className="flex flex-row items-center space-x-1 w-1/2">
 									<Ionicons name="location-outline" size={20} color="white" />
 									<Text className="text-white text-[14px] font-semibold text-center">

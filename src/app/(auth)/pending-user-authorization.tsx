@@ -247,58 +247,54 @@ export default function PendingUserAuthorization() {
       className="flex-1 bg-white dark:bg-black"
       style={{ backgroundColor: isDark ? "#000000" : "#ffffff" }}
     >
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          <View className="w-full max-w-md self-center">
-            <View className="pt-8">
-              <HeroCard
-                title="MyCoop"
-                description="Aguarde Autorização. A autorização da sua conta está a ser processada. Você receberá um email assim que for aprovada."
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
+      >
+        <View className="flex-1 w-full">
+          <View className="pt-8">
+            <HeroCard
+              title="MyCoop"
+              description="Aguarde Autorização. A autorização da sua conta está a ser processada. Você receberá um email assim que for aprovada."
+            />
+          </View>
+
+          <View className="flex-1 pt-6 gap-4 justify-end">
+            <View className="w-full">
+              <SubmitButton
+                onPress={handleCheckStatus}
+                title={isCheckingStatus ? "Verificando..." : "Verificar Status"}
+                isSubmitting={isCheckingStatus}
+                disabled={isCheckingStatus}
               />
             </View>
 
-            <View className="pt-6 gap-4">
-              <View className="w-full">
-                <SubmitButton
-                  onPress={handleCheckStatus}
-                  title={
-                    isCheckingStatus ? "Verificando..." : "Verificar Status"
-                  }
-                  isSubmitting={isCheckingStatus}
-                  disabled={isCheckingStatus}
-                />
-              </View>
+            <View className="w-full">
+              <CancelButton
+                onCancel={handleContactSupport}
+                disabled={isCheckingStatus}
+                cancelText="Contactar Suporte"
+              />
+            </View>
 
-              <View className="w-full">
-                <CancelButton
-                  onCancel={handleContactSupport}
-                  disabled={isCheckingStatus}
-                  cancelText="Contactar Suporte"
-                />
-              </View>
-
-              <View className="w-full pt-2">
-                <TouchableOpacity
-                  style={styles.signOutButton}
-                  onPress={handleSignOut}
-                  disabled={isSigningOut}
-                  activeOpacity={0.6}
+            <View className="w-full">
+              <TouchableOpacity
+                style={styles.signOutButton}
+                onPress={handleSignOut}
+                disabled={isSigningOut}
+                activeOpacity={0.6}
+              >
+                <Text
+                  style={styles.signOutButtonText}
+                  className={isDark ? "text-red-200" : "text-red-800"}
                 >
-                  <Text
-                    style={styles.signOutButtonText}
-                    className={isDark ? "text-red-200" : "text-red-800"}
-                  >
-                    {isSigningOut ? "A sair..." : "Sair"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  {isSigningOut ? "A sair..." : "Sair"}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </View>
+        </View>
+      </ScrollView>
 
       {/* Bottom Sheet */}
       <BottomSheet

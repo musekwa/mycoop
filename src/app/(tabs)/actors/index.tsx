@@ -57,7 +57,7 @@ export default function ActorsHomeScreen() {
 			<CustomSafeAreaView>
 				<Animated.View
 					entering={FadeIn.duration(300)}
-					className="flex-1 bg-gray-50 dark:bg-black"
+					className="flex-1"
 				>
 					<ScrollView
 						contentContainerStyle={{
@@ -67,7 +67,7 @@ export default function ActorsHomeScreen() {
 						showsVerticalScrollIndicator={false}
 					>
 						<Text className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-							Tipos de actores
+							Categorias de actores
 						</Text>
 						<Text className="text-sm text-gray-500 dark:text-gray-400 mb-6">
 							Seleccione uma categoria para explorar

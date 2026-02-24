@@ -1,10 +1,10 @@
 import { ToastProvider } from "@/components/toast-message/toast-provider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { DefaultTheme, PaperProvider } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { DefaultTheme, PaperProvider } from "react-native-paper";
 import { MenuProvider } from "react-native-popup-menu";
 import { RootSiblingParent } from "react-native-root-siblings";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -36,16 +36,16 @@ export default function Providers({ children }: Props) {
   return (
     <SafeAreaProvider>
       <PowersyncProvider>
-        <GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <MenuProvider>
             <RootSiblingParent>
               <PaperProvider theme={theme}>
-                  <ToastProvider>
-                    <BottomSheetModalProvider>
-                      {children}
-                    </BottomSheetModalProvider>
-                    <StatusBar style="auto" />
-                  </ToastProvider>
+                <ToastProvider>
+                  <BottomSheetModalProvider>
+                    {children}
+                  </BottomSheetModalProvider>
+                  <StatusBar style="auto" />
+                </ToastProvider>
               </PaperProvider>
             </RootSiblingParent>
           </MenuProvider>

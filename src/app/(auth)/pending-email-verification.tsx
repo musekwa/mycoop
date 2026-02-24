@@ -90,7 +90,7 @@ export default function PendingEmailVerification() {
 					<HeroCard title="MyCoop" description={`Verifique seu email. Um código de verificação de 6 dígitos foi enviado para ${currentEmail}`} />
 
 				</View>
-				<View className="flex-1 justify-center items-center space-y-3">
+				<View className="flex-1 justify-center items-center gap-y-2">
 					<View style={styles.codeContainer}>
 						{code.map((digit, index) => (
 							<TextInput

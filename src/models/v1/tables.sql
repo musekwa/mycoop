@@ -908,5 +908,6 @@ create table public.support_contacts(
   email varchar(150),
   is_active boolean default true,
   created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone null default now()
-)
+  updated_at timestamp with time zone null default now(),
+  constraint support_contacts_pkey primary key (id)
+) TABLESPACE pg_default;

@@ -22,7 +22,7 @@ import { insertFarmer } from '@/library/powersync/sql-statements'
 
 export type SegmentId =
 	| 'person'
-	| 'categories'
+	// | 'categories'
 	| 'birthDate'
 	| 'birthPlace'
 	| 'address'
@@ -31,7 +31,7 @@ export type SegmentId =
 
 const SEGMENTS: { id: SegmentId; title: string }[] = [
 	{ id: 'person', title: 'Informação Pessoal' },
-	{ id: 'categories', title: 'Categorias' },
+	// { id: 'categories', title: 'Categorias' },
 	{ id: 'birthDate', title: 'Data de Nascimento' },
 	{ id: 'birthPlace', title: 'Naturalidade' },
 	{ id: 'address', title: 'Endereço' },
@@ -42,7 +42,7 @@ const SEGMENTS: { id: SegmentId; title: string }[] = [
 function useSegmentCompletion() {
 	const {
 		person,
-		categories,
+		// categories,
 		birthDate,
 		birthPlace,
 		address,
@@ -59,9 +59,9 @@ function useSegmentCompletion() {
 			person.familySize
 	)
 
-	const isCategoriesComplete = Boolean(
-		categories?.isServiceProvider && categories?.isSmallScale
-	)
+	// const isCategoriesComplete = Boolean(
+	// 	categories?.isServiceProvider && categories?.isSmallScale
+	// )
 
 	const isBirthDateComplete = Boolean(
 		birthDate?.birthDate && !isNaN(new Date(birthDate.birthDate).getTime())
@@ -104,7 +104,7 @@ function useSegmentCompletion() {
 
 	return {
 		person: isPersonComplete,
-		categories: isCategoriesComplete,
+		// categories: isCategoriesComplete,
 		birthDate: isBirthDateComplete,
 		birthPlace: isBirthPlaceComplete,
 		address: isAddressComplete,
@@ -140,7 +140,7 @@ export default function FarmerSegmentedDataForm() {
 	// Submit button visible when all required segments complete; contact is optional
 	const allComplete =
 		completion.person &&
-		completion.categories &&
+		// completion.categories &&
 		completion.birthDate &&
 		completion.birthPlace &&
 		completion.address &&
@@ -264,7 +264,7 @@ export default function FarmerSegmentedDataForm() {
 				})}
 			</ScrollView>
 			{allComplete && (
-				<View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
+				<View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
 					<SubmitButton
 						onPress={handleSubmit}
 						title="Guardar no Banco de Dados"
@@ -287,10 +287,10 @@ export default function FarmerSegmentedDataForm() {
 				visible={activeSegment === 'person'}
 				onClose={handleSegmentClose}
 			/>
-			<CategoriesSegmentModal
+			{/* <CategoriesSegmentModal
 				visible={activeSegment === 'categories'}
 				onClose={handleSegmentClose}
-			/>
+			/> */}
 			<BirthDateSegmentModal
 				visible={activeSegment === 'birthDate'}
 				onClose={handleSegmentClose}

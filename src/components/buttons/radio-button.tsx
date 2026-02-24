@@ -16,7 +16,7 @@ type RadioButtonProps = {
 export default function RadioButton({ label, value, checked, onChange,  disabled = false, textClassNames, buttonClassNames }: RadioButtonProps) {
 	return (
 		<TouchableOpacity
-			className={`flex flex-row space-x-2 my-2 items-center ${buttonClassNames}`}
+			className={`flex flex-row gap-x-2 my-2 items-center ${buttonClassNames}`}
 			activeOpacity={0.5}
 			onPress={() => {
 				if (!disabled) {
