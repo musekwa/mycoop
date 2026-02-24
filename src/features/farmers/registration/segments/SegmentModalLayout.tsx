@@ -14,6 +14,7 @@ type SegmentModalLayoutProps = {
   onClose: () => void;
   onSave: () => void;
   isSaving?: boolean;
+  variant?: "bottomSheet" | "inline";
   children: React.ReactNode;
 };
 
@@ -23,10 +24,82 @@ export default function SegmentModalLayout({
   onClose,
   onSave,
   isSaving = false,
+  variant = "bottomSheet",
   children,
 }: SegmentModalLayoutProps) {
   const ref = useRef<BottomSheetModal>(null);
   const isDark = useColorScheme() === "dark";
+
+  if (variant === "inline") {
+    if (!visible) return null;
+    return (
+      <View
+        style={{
+          backgroundColor: isDark ? colors.gray800 : colors.white,
+          borderRadius: 12,
+          padding: 16,
+          marginTop: 12,
+          borderWidth: 1,
+          borderColor: isDark ? "#374151" : "#e5e7eb",
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingBottom: 16,
+            marginBottom: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: isDark ? "#374151" : "#e5e7eb",
+          }}
+        >
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ padding: 8 }}
+            activeOpacity={0.7}
+          >
+            <Fontisto name="close" size={22} color={colors.gray600} />
+          </TouchableOpacity>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              color: isDark ? colors.white : colors.black,
+              flex: 1,
+              textAlign: "center",
+            }}
+          >
+            {title}
+          </Text>
+          <View style={{ width: 38 }} />
+        </View>
+
+        {children}
+
+        <TouchableOpacity
+          onPress={onSave}
+          disabled={isSaving}
+          activeOpacity={0.8}
+          style={{
+            backgroundColor: colors.primary,
+            paddingVertical: 14,
+            borderRadius: 12,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 24,
+            marginBottom: 16,
+          }}
+        >
+          <Text
+            style={{ color: colors.white, fontWeight: "600", fontSize: 16 }}
+          >
+            Guardar
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   useEffect(() => {
     if (visible) {

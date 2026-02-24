@@ -25,9 +25,14 @@ type BirthPlaceFormData = z.infer<typeof BirthPlaceSchema>;
 type Props = {
   visible: boolean;
   onClose: () => void;
+  variant?: "bottomSheet" | "inline";
 };
 
-export default function BirthPlaceSegmentModal({ visible, onClose }: Props) {
+export default function BirthPlaceSegmentModal({
+  visible,
+  onClose,
+  variant = "bottomSheet",
+}: Props) {
   const { birthPlace: savedBirthPlace, setBirthPlace } =
     useFarmerRegistrationStore();
   const {
@@ -161,6 +166,7 @@ export default function BirthPlaceSegmentModal({ visible, onClose }: Props) {
       title="Naturalidade"
       onClose={onClose}
       onSave={onSave}
+      variant={variant}
     >
       <FormItemDescription description="Indica o local de nascimento do produtor" />
 

@@ -35,9 +35,14 @@ type PersonInfoFormData = z.input<typeof PersonInfoSchema>;
 type Props = {
   visible: boolean;
   onClose: () => void;
+  variant?: "bottomSheet" | "inline";
 };
 
-export default function PersonInfoSegmentModal({ visible, onClose }: Props) {
+export default function PersonInfoSegmentModal({
+  visible,
+  onClose,
+  variant = "bottomSheet",
+}: Props) {
   const { person, setPerson } = useFarmerRegistrationStore();
 
   const {
@@ -83,6 +88,7 @@ export default function PersonInfoSegmentModal({ visible, onClose }: Props) {
       title="Informação Pessoal"
       onClose={onClose}
       onSave={onSave}
+      variant={variant}
     >
       <FormItemDescription description="Informações básicas do produtor" />
       <View className="gap-4 my-4">

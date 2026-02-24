@@ -27,9 +27,14 @@ type BirthDateFormData = z.input<typeof BirthDateSchema>;
 type Props = {
   visible: boolean;
   onClose: () => void;
+  variant?: "bottomSheet" | "inline";
 };
 
-export default function BirthDateSegmentModal({ visible, onClose }: Props) {
+export default function BirthDateSegmentModal({
+  visible,
+  onClose,
+  variant = "bottomSheet",
+}: Props) {
   const { birthDate: savedBirthDate, setBirthDate } =
     useFarmerRegistrationStore();
   const isDarkMode = useColorScheme() === "dark";
@@ -69,6 +74,7 @@ export default function BirthDateSegmentModal({ visible, onClose }: Props) {
       title="Data de Nascimento"
       onClose={onClose}
       onSave={onSave}
+      variant={variant}
     >
       <FormItemDescription description="Indica a data de nascimento do produtor" />
 

@@ -40,9 +40,14 @@ type DocumentationFormData = z.infer<typeof DocumentationSchema>;
 type Props = {
   visible: boolean;
   onClose: () => void;
+  variant?: "bottomSheet" | "inline";
 };
 
-export default function DocumentationSegmentModal({ visible, onClose }: Props) {
+export default function DocumentationSegmentModal({
+  visible,
+  onClose,
+  variant = "bottomSheet",
+}: Props) {
   const { documentation, setDocumentation } = useFarmerRegistrationStore();
 
   const {
@@ -85,6 +90,7 @@ export default function DocumentationSegmentModal({ visible, onClose }: Props) {
       title="Documentação"
       onClose={onClose}
       onSave={onSave}
+      variant={variant}
     >
       <FormItemDescription description="Documento de identificação e NUIT do produtor" />
 

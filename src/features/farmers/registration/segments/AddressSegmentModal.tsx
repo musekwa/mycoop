@@ -22,9 +22,14 @@ type AddressFormData = z.infer<typeof AddressSchema>;
 type Props = {
   visible: boolean;
   onClose: () => void;
+  variant?: "bottomSheet" | "inline";
 };
 
-export default function AddressSegmentModal({ visible, onClose }: Props) {
+export default function AddressSegmentModal({
+  visible,
+  onClose,
+  variant = "bottomSheet",
+}: Props) {
   const { userDetails } = useUserDetails();
   const { address: savedAddress, setAddress } = useFarmerRegistrationStore();
   const { partialAddress, setPartialAdminPostId, setPartialVillageId } =
@@ -86,6 +91,7 @@ export default function AddressSegmentModal({ visible, onClose }: Props) {
       title="Endereço"
       onClose={onClose}
       onSave={onSave}
+      variant={variant}
     >
       <FormItemDescription description="Indica o endereço de residência do produtor" />
       <View className="mt-4">
