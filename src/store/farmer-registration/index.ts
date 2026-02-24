@@ -1,3 +1,4 @@
+import { capitalize } from '@/helpers/capitalize'
 import { create } from 'zustand'
 
 export type PersonSegmentData = {
@@ -134,8 +135,8 @@ export const useFarmerRegistrationStore = create<FarmerRegistrationStore>((set, 
 		const birthDate = birthDateSeg?.birthDate ?? new Date()
 
 		setFarmerFormData({
-			surname: person.surname,
-			otherNames: person.otherNames,
+			surname: capitalize(person.surname),
+			otherNames: capitalize(person.otherNames),
 			gender: person.gender,
 			familySize: person.familySize,
 			isServiceProvider: categories?.isServiceProvider,

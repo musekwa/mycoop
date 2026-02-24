@@ -899,3 +899,14 @@ create table public.cashew_crossborders_smuggling (
   constraint cashew_crossborders_smuggling_destination_country_id_fkey foreign KEY (destination_country_id) references countries (id) on delete CASCADE,
   constraint cashew_crossborders_smuggling_shipment_id_fkey foreign KEY (shipment_id) references cashew_shipments (id) on delete CASCADE
 ) TABLESPACE pg_default;
+
+create table public.support_contacts(
+  id uuid not null default gen_random_uuid (),
+  name text not null,
+  whatsapp varchar(20),
+  phone varchar(20),
+  email varchar(150),
+  is_active boolean default true,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone null default now()
+)

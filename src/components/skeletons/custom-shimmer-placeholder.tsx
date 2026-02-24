@@ -2,17 +2,16 @@ import React from 'react'
 
 import { LinearGradient } from 'expo-linear-gradient'
 import { ShimmerPlaceholderProps, createShimmerPlaceholder } from 'react-native-shimmer-placeholder'
-import { useColorScheme } from 'nativewind'
-import { FlatList } from 'react-native'
-import { View } from 'react-native'
+import { FlatList, View, useColorScheme } from "react-native";
+
 
 
 const LinearShimmerPlaceholder = createShimmerPlaceholder(LinearGradient)
 
 export default function CustomShimmerPlaceholder(props: ShimmerPlaceholderProps) {
-	const isDarkMode = useColorScheme().colorScheme === 'dark'
+	const isDark = useColorScheme() === 'dark'
 	
-	const shimmerColor = isDarkMode ? ['rgba(220, 220, 220, 0.05)', 'rgba(220, 220, 220, 0.03)', 'rgba(220, 220, 220, 0.03)'] : ['rgba(0, 0, 0, 0.03)', 'rgba(0, 0, 0, 0.05)', 'rgba(0, 0, 0, 0.08)']
+	const shimmerColor = isDark ? ['rgba(220, 220, 220, 0.05)', 'rgba(220, 220, 220, 0.03)', 'rgba(220, 220, 220, 0.03)'] : ['rgba(0, 0, 0, 0.03)', 'rgba(0, 0, 0, 0.05)', 'rgba(0, 0, 0, 0.08)']
 
 	return <LinearShimmerPlaceholder {...props} shimmerColors={shimmerColor} />
 }

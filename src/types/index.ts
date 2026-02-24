@@ -1,5 +1,11 @@
 import { IconComponentType } from '../components/dynamic-icon'
 
+// Type for position option
+export interface GroupManagerPositionOption {
+	label: string
+	value: GroupManagerPosition
+}
+
 export enum GroupManagerPosition {
 	PRESIDENT = 'PRESIDENT',
 	VICE_PRESIDENT = 'VICE_PRESIDENT',
@@ -224,8 +230,8 @@ export type UserRegister = {
 }
 
 export enum UserRoles {
-	FIELD_AGENT = 'FIELD_AGENT',
-	INSPECTOR = 'INSPECTOR',
+	// FIELD_AGENT = 'FIELD_AGENT',
+	// INSPECTOR = 'INSPECTOR',
 	COOP_ADMIN = 'COOP_ADMIN',
 	SUPERVISOR = 'SUPERVISOR',
 }

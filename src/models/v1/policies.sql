@@ -171,3 +171,7 @@ alter table public.cashew_inborders_smuggling
 -- Create RLS policy for the cashew_crossborders_smuggling table
 alter table public.cashew_crossborders_smuggling 
     disable row level security; 
+
+-- Create RLS policy for the support_contacts table
+alter table public.support_contacts
+    disable row level security;

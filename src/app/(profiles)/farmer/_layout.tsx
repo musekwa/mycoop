@@ -23,7 +23,7 @@ function CustomDrawerContent(props: any) {
   const drawerStatus = useDrawerStatus();
   const isDrawerOpen = drawerStatus === "open" ? "open" : "closed";
   const router = useRouter();
-  const isDarkMode = useColorScheme() === "dark";
+  const isDark = useColorScheme() === "dark";
   const [showImageHandleModal, setShowImageHandleModal] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -71,7 +71,7 @@ function CustomDrawerContent(props: any) {
 
   return (
     <View
-      style={{ flex: 1, backgroundColor: isDarkMode ? "#333333" : "#ffffff" }}
+      style={{ flex: 1, backgroundColor: isDark ? "#333333" : "#ffffff" }}
     >
       <ScrollView
         style={{ flex: 1 }}
@@ -136,18 +136,13 @@ function CustomDrawerContent(props: any) {
             const drawerIcon = options.drawerIcon;
 
             return (
-                <TouchableOpacity
-                    key={route.key}
-                    onPress={() => {
-                        props.navigation?.navigate(route.name);
-                        props.navigation?.closeDrawer();
+              <TouchableOpacity
+                key={route.key}
+                onPress={() => {
+                  props.navigation?.navigate(route.name);
+                  props.navigation?.closeDrawer();
                 }}
-                className={`flex flex-row items-center px-4 py-3 rounded-md ${isFocused}`}
-                  //   className={`flex flex-row items-center px-4 py-3 rounded-md ${isFocused && !isDarkMode ? "bg-[#f0f0f0]" : }`},
-                  // {
-                  //   "bg-[#f0f0f0]": isFocused && !isDarkMode,
-                  //   "bg-[#333333]": isFocused && isDarkMode,
-                  // }`}
+                className={`flex flex-row items-center px-4 py-3 rounded-md ${isFocused && !isDark ? "bg-[#f0f0f0]" : isFocused && isDark ? "bg-[#333333]" : ""} `}
               >
                 {drawerIcon && (
                   <View className="mr-3">
@@ -161,7 +156,7 @@ function CustomDrawerContent(props: any) {
                   style={{
                     color: isFocused
                       ? colors.primary
-                      : isDarkMode
+                      : isDark
                         ? colors.white
                         : colors.black,
                   }}

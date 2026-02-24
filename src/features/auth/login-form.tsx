@@ -61,7 +61,7 @@ export default function LogInForm({ performLogin }: LoginFormProps) {
 	}
 
 	return (
-		<View className="space-y-4">
+		<View className="gap-4">
 			<View className="relative ">
 				{/* Email */}
 				<Controller
@@ -146,7 +146,7 @@ export default function LogInForm({ performLogin }: LoginFormProps) {
 					onPress={handleSubmit(onSubmit)}
 				/>
 			</View>
-			<Pressable onPress={navigateToSignUp} className="flex flex-row space-x-2 justify-center">
+			<Pressable onPress={navigateToSignUp} className="flex flex-row gap-x-2 justify-center">
 				<Text className="text-[14px] text-gray-600 text-center dark:text-white">Não tem conta?</Text>
 				<Text className="text-[14px] font-bold text-[#008000] text-center dark:text-slate-600 underline">
 					Crie uma conta

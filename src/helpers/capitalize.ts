@@ -1,4 +1,4 @@
-export const capitalize = (name: any) => {
+export const capitalize = (name: string) => {
     const newName = String(name)
   
     const capitalized = newName?.split(" ").map((word) => {

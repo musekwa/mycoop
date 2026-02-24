@@ -10,8 +10,8 @@ type CustomSafeAreaViewProps = {
 
 // SafeAreaView with background color based on dark mode and custom edges and mode
 export default function CustomSafeAreaView({ children, edges, mode, style }: CustomSafeAreaViewProps) {
-	const isDarkMode = useColorScheme() === 'dark'
-	const backgroundColor = isDarkMode ? 'black' : 'white'
+	const isDark = useColorScheme() === 'dark'
+	const backgroundColor = isDark ? 'black' : 'white'
 	// Filter out 'top' from edges to prevent top padding
 	const filteredEdges = edges?.filter((edge) => edge !== 'top') || edges
 
@@ -19,8 +19,7 @@ export default function CustomSafeAreaView({ children, edges, mode, style }: Cus
 		<SafeAreaView
 			edges={filteredEdges}
 			mode={mode}
-			style={[{ flex: 1, paddingTop: -10 }, style]}
-			className={`flex-1 bg-${backgroundColor}`}
+			style={[{ flex: 1, backgroundColor, paddingTop: -10 }, style]}
 		>
 			<View style={{ paddingTop: 0, paddingBottom: 0, flex: 1, width: '100%',minHeight: '100%' }}>{children}</View>
 		</SafeAreaView>

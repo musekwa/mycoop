@@ -16,7 +16,7 @@ import { MultiCategory, OrganizationTypes } from '@/types'
 
 import { useRouter } from 'expo-router'
 import { useQueryMany, useUserDetails } from '@/hooks/queries'
-import { ActorRecord, TABLES, UserDetailsRecord } from '@/library/powersync/app-schemas'
+import { TABLES, UserDetailsRecord } from '@/library/powersync/app-schemas'
 import CustomShimmerPlaceholder from '@/components/skeletons/custom-shimmer-placeholder'
 import { getUserSession } from '@/library/supabase/user-auth'
 import { getAdminPostsByDistrictId } from '@/library/sqlite/selects'

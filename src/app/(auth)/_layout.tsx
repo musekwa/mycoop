@@ -1,6 +1,8 @@
 import { Stack } from 'expo-router'
+import { useColorScheme } from 'react-native'
 
 export default function AuthLayout() {
+	const isDark = useColorScheme() === 'dark'
 	return (
 		<Stack
 			screenOptions={{

@@ -9,45 +9,78 @@ export default function TabLayout() {
 
   return (
     <Tabs
-    screenOptions={{
-      tabBarHideOnKeyboard: true,
-      tabBarActiveTintColor: colors.primary,
-      tabBarStyle: {
-        backgroundColor: isDarkMode ? colors.lightblack : colors.white,
-        borderTopWidth: 0,
-      },
-    }}
-      >
+      screenOptions={{
+        tabBarHideOnKeyboard: true,
+        tabBarActiveTintColor: colors.primary,
+        tabBarStyle: {
+          backgroundColor: isDarkMode ? colors.lightblack : colors.white,
+          borderTopWidth: 0,
+        },
+      }}
+    >
       <Tabs.Screen
-       name="index"
-       options={{
-         title: 'Início',
-         headerShown: false,
-         tabBarIcon: ({ color, focused }) => (
-           <MaterialCommunityIcons
-             name="view-dashboard"
-             size={22}
-             color={focused ? colors.primary : isDarkMode ? colors.gray600 : colors.black}
-           />
-         ),
-         headerRight: () => <View />,
-       }}
+        name="index"
+        options={{
+          title: "Início",
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              name="view-dashboard"
+              size={22}
+              color={
+                focused
+                  ? colors.primary
+                  : isDarkMode
+                    ? colors.gray600
+                    : colors.black
+              }
+            />
+          ),
+          headerRight: () => <View />,
+        }}
       />
 
       <Tabs.Screen
-					name="actors"
-					options={{
-						title: 'Actores',
-						headerShown: false,
-						tabBarIcon: ({ color, focused }) => (
-							<FontAwesome6
-								name="users"
-								size={20}
-								color={focused ? colors.primary : isDarkMode ? colors.gray600 : colors.black}
-							/>
-						),
-					}}
-				/>
+        name="actors"
+        options={{
+          title: "Actores",
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome6
+              name="users"
+              size={20}
+              color={
+                focused
+                  ? colors.primary
+                  : isDarkMode
+                    ? colors.gray600
+                    : colors.black
+              }
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="trades"
+        options={{
+          title: "Comercialização",
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome6
+              name="hand-holding-dollar"
+              size={22}
+              color={
+                focused
+                  ? colors.primary
+                  : isDarkMode
+                    ? colors.gray600
+                    : colors.black
+              }
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

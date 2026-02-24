@@ -85,29 +85,32 @@ export default function ForgotPassword() {
 				<View className="flex-1/3 justify-center space-y-3">
 					<HeroCard title="MyCoop" description="Esqueceu a senha? Digite seu endereço de email para redefinir a senha." />
 				</View>
-				<View className="flex-1 justify-center">
+				<View className="flex-1 justify-center gap-4">
+					<View>
+
 					<Controller
 						control={control}
 						name="email"
 						render={({ field }) => (
 							<CustomTextInput
-								label=""
-								placeholder="Digite seu endereço de email"
-								value={field.value}
-								onChangeText={field.onChange}
-								keyboardType="email-address"
-								autoCapitalize="none"
-								editable={!isLoading}
+							label=""
+							placeholder="Digite seu endereço de email"
+							value={field.value}
+							onChangeText={field.onChange}
+							keyboardType="email-address"
+							autoCapitalize="none"
+							editable={!isLoading}
 							/>
 						)}
-					/>
+						/>
 
 					{errors.email ? (
 						<Text className="text-red-500">{errors.email.message}</Text>
 					) : (
 						<FormItemDescription description="Endereço electrónico" />
 					)}
-					<View className="mt-4">
+					</View>
+					<View className="">
 						<SubmitButton
 							title={isLoading ? 'Enviando...' : 'Enviar link de redefinição'}
 							onPress={handleSubmit(onSubmit)}

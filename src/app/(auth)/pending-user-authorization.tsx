@@ -1,130 +1,148 @@
-import { AUTH_CODES } from '@/data/auth-codes'
-import { useUserDetails } from '@/hooks/queries'
-import Ionicons from '@expo/vector-icons/Ionicons'
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet'
-import { Href, Redirect } from 'expo-router'
-import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { AUTH_CODES } from "@/data/auth-codes";
+import { useUserDetails } from "@/hooks/queries";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { Href, Redirect } from "expo-router";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 
-import Spinner from '@/components/loaders/spinner'
-import { getUserDetails, updateUserMetdata } from '@/library/supabase/user-auth'
-import { useAuthStore } from '@/store/auth'
+import Spinner from "@/components/loaders/spinner";
+import {
+  getUserDetails,
+  updateUserMetdata,
+} from "@/library/supabase/user-auth";
+import { useAuthStore } from "@/store/auth";
 // import { useToast } from '@/components/toast-message'
-import ErrorAlert from '@/components/alerts/error-alert'
-import CancelButton from '@/components/buttons/cancel-button'
-import SubmitButton from '@/components/buttons/submit-button'
-import HeroCard from '@/components/hero-card'
-
+import ErrorAlert from "@/components/alerts/error-alert";
+import CancelButton from "@/components/buttons/cancel-button";
+import SubmitButton from "@/components/buttons/submit-button";
+import HeroCard from "@/components/hero-card";
 
 export default function PendingUserAuthorization() {
-	const [showContactSheet, setShowContactSheet] = useState(false)
-	const [shouldRedirect, setShouldRedirect] = useState<Href | null>(null)
-	const bottomSheetRef = useRef<BottomSheet>(null)
-	const { userDetails, isLoading } = useUserDetails()
-	const [statusMessage, setStatusMessage] = useState<string | null>(null)
-	const [showStatusSheet, setShowStatusSheet] = useState(false)
-	const [statusTitle, setStatusTitle] = useState<string>('')
-	const { signOut, isSigningOut } = useAuthStore()
-	// const { showError, showSuccess } = useToast()
-	const [showErrorAlert, setShowErrorAlert] = useState(false)
-	const [errorAlertMessage, setErrorAlertMessage] = useState('')
-	const [errorAlertTitle, setErrorAlertTitle] = useState('')
-	const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-	// Bottom sheet snap points
-	const snapPoints = useMemo(() => ['50%'], [])
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const [showContactSheet, setShowContactSheet] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState<Href | null>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const { userDetails, isLoading } = useUserDetails();
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [showStatusSheet, setShowStatusSheet] = useState(false);
+  const [statusTitle, setStatusTitle] = useState<string>("");
+  const { signOut, isSigningOut } = useAuthStore();
+  // const { showError, showSuccess } = useToast()
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorAlertMessage, setErrorAlertMessage] = useState("");
+  const [errorAlertTitle, setErrorAlertTitle] = useState("");
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  // Bottom sheet snap points
+  const snapPoints = useMemo(() => ["50%"], []);
 
-	const handleContactSupport = useCallback(() => {
-		setShowContactSheet(true)
-		setShowStatusSheet(false) // Hide status sheet when showing contact support
-		bottomSheetRef.current?.expand()
-	}, [])
+  const handleContactSupport = useCallback(() => {
+    setShowContactSheet(true);
+    setShowStatusSheet(false); // Hide status sheet when showing contact support
+    bottomSheetRef.current?.expand();
+  }, []);
 
-	const handleCloseSheet = useCallback(() => {
-		bottomSheetRef.current?.close()
-		setShowContactSheet(false)
-		setShowStatusSheet(false)
-	}, [])
+  const handleCloseSheet = useCallback(() => {
+    bottomSheetRef.current?.close();
+    setShowContactSheet(false);
+    setShowStatusSheet(false);
+  }, []);
 
-	const handleShowStatusSheet = useCallback((title: string, message: string) => {
-		setStatusTitle(title)
-		setStatusMessage(message)
-		setShowStatusSheet(true)
-		bottomSheetRef.current?.expand()
-	}, [])
+  const handleShowStatusSheet = useCallback(
+    (title: string, message: string) => {
+      setStatusTitle(title);
+      setStatusMessage(message);
+      setShowStatusSheet(true);
+      bottomSheetRef.current?.expand();
+    },
+    [],
+  );
 
-	const handleCheckStatus = async () => {
-		setIsCheckingStatus(true)
-		if (!userDetails?.id) {
-			// showError('Não foi possível obter informações do usuário.')
-			return
-		}
-		const { data, success, message } = await getUserDetails(userDetails?.id)
-		if (!success || !data) {
-			// showError('Não foi possível obter informações do usuário.')
-			return
-		}
+  const handleCheckStatus = async () => {
+    setIsCheckingStatus(true);
+    if (!userDetails?.id) {
+      // showError('Não foi possível obter informações do usuário.')
+      return;
+    }
+    const { data, success, message } = await getUserDetails(userDetails?.id);
+    if (!success || !data) {
+      // showError('Não foi possível obter informações do usuário.')
+      return;
+    }
 
-		const status = data?.status
+    const status = data?.status;
 
-		if (!success || !data || !status) {
-			// showError('Não foi possível obter informações do usuário.')
-			return
-		}
-		await updateUserMetdata({ status })
+    if (!success || !data || !status) {
+      // showError('Não foi possível obter informações do usuário.')
+      return;
+    }
+    await updateUserMetdata({ status });
 
-		switch (status) {
-			case AUTH_CODES.USER_DETAILS_STATUS.AUTHORIZED:
-				// User is authorized, redirect to main app
-				handleCloseSheet()
-				// showSuccess('A sua conta foi autorizada com sucesso.')
-				setTimeout(() => {
-					setShouldRedirect('/(tabs)')
-				}, 1000)
-				break
+    switch (status) {
+      case AUTH_CODES.USER_DETAILS_STATUS.AUTHORIZED:
+        // User is authorized, redirect to main app
+        handleCloseSheet();
+        // showSuccess('A sua conta foi autorizada com sucesso.')
+        setTimeout(() => {
+          setShouldRedirect("/(tabs)");
+        }, 1000);
+        break;
 
-			case AUTH_CODES.USER_DETAILS_STATUS.UNAUTHORIZED:
-				// Still unauthorized, show message
-				handleShowStatusSheet(
-					'Aguardando Autorização',
-					'Sua conta ainda não foi autorizada. Nossa equipe está a analisar a sua solicitação. Você receberá uma notificação assim que for aprovada.',
-				)
-				break
+      case AUTH_CODES.USER_DETAILS_STATUS.UNAUTHORIZED:
+        // Still unauthorized, show message
+        handleShowStatusSheet(
+          "Aguardando Autorização",
+          "Sua conta ainda não foi autorizada. Nossa equipe está a analisar a sua solicitação. Você receberá uma notificação assim que for aprovada.",
+        );
+        break;
 
-			case AUTH_CODES.USER_DETAILS_STATUS.BLOCKED:
-				// Account blocked
-				handleShowStatusSheet(
-					'Conta Bloqueada',
-					'Sua conta foi bloqueada. Entre em contacto com a equipe de suporte para mais informações.',
-				)
-				break
-			case AUTH_CODES.USER_DETAILS_STATUS.BANNED:
-				// Account banned
-				handleShowStatusSheet(
-					'Conta Banida',
-					'Sua conta foi banida. Entre em contacto com a equipe de suporte para mais informações.',
-				)
-				break
+      case AUTH_CODES.USER_DETAILS_STATUS.BLOCKED:
+        // Account blocked
+        handleShowStatusSheet(
+          "Conta Bloqueada",
+          "Sua conta foi bloqueada. Entre em contacto com a equipe de suporte para mais informações.",
+        );
+        break;
+      case AUTH_CODES.USER_DETAILS_STATUS.BANNED:
+        // Account banned
+        handleShowStatusSheet(
+          "Conta Banida",
+          "Sua conta foi banida. Entre em contacto com a equipe de suporte para mais informações.",
+        );
+        break;
 
-			case AUTH_CODES.USER_DETAILS_STATUS.EMAIL_PENDING_VERIFICATION:
-				// Email not verified, redirect to verification page
-				setShouldRedirect('/(auth)/pending-email-verification')
-				break
+      case AUTH_CODES.USER_DETAILS_STATUS.EMAIL_PENDING_VERIFICATION:
+        // Email not verified, redirect to verification page
+        setShouldRedirect("/(auth)/pending-email-verification");
+        break;
 
-			default:
-				// Unknown status
-				// setShouldRedirect('/(auth)/login')
-				handleShowStatusSheet(
-					'Status Desconhecido',
-					'Status da conta não reconhecido. Entre em contacto com a equipe de suporte para mais informações.',
-				)
-				break
-		}
-		setIsCheckingStatus(false)
-	}
+      default:
+        // Unknown status
+        // setShouldRedirect('/(auth)/login')
+        handleShowStatusSheet(
+          "Status Desconhecido",
+          "Status da conta não reconhecido. Entre em contacto com a equipe de suporte para mais informações.",
+        );
+        break;
+    }
+    setIsCheckingStatus(false);
+  };
 
-	const handleWhatsApp = async () => {
-		const phoneNumber = '+258840445375'
-		const message = `
+  const handleWhatsApp = async () => {
+    const phoneNumber = "+258876414210";
+    const message = `
 					Prezados senhores,
 					
 					Criei uma conta no aplicativo MyCoop, mas ainda não foi autorizada.
@@ -136,42 +154,42 @@ export default function PendingUserAuthorization() {
 					
 					Preciso de ajuda com a autorização da minha conta MyCoop. Se possível, me avise quando a conta for autorizada.
 
-					Obrigado!`
-		const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
+					Obrigado!`;
+    const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
 
-		try {
-			const supported = await Linking.canOpenURL(whatsappUrl)
-			if (supported) {
-				await Linking.openURL(whatsappUrl)
-			} else {
-				setShowErrorAlert(true)
-				setErrorAlertMessage('WhatsApp não está instalado no seu dispositivo.')
-				setErrorAlertTitle('Erro')
-			}
-		} catch (error) {
-			setShowErrorAlert(true)
-			setErrorAlertMessage('Não foi possível abrir o WhatsApp.')
-			setErrorAlertTitle('Erro')
-		}
-		handleCloseSheet()
-	}
+    try {
+      const supported = await Linking.canOpenURL(whatsappUrl);
+      if (supported) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        setShowErrorAlert(true);
+        setErrorAlertMessage("WhatsApp não está instalado no seu dispositivo.");
+        setErrorAlertTitle("Erro");
+      }
+    } catch (error) {
+      setShowErrorAlert(true);
+      setErrorAlertMessage("Não foi possível abrir o WhatsApp.");
+      setErrorAlertTitle("Erro");
+    }
+    handleCloseSheet();
+  };
 
-	const handleCall = async () => {
-		const phoneNumber = '+258840445375'
-		try {
-			await Linking.openURL(`tel:${phoneNumber}`)
-		} catch (error) {
-			setShowErrorAlert(true)
-			setErrorAlertMessage('Não foi possível fazer a chamada.')
-			setErrorAlertTitle('Erro')
-		}
-		handleCloseSheet()
-	}
+  const handleCall = async () => {
+    const phoneNumber = "+258876414210";
+    try {
+      await Linking.openURL(`tel:${phoneNumber}`);
+    } catch (error) {
+      setShowErrorAlert(true);
+      setErrorAlertMessage("Não foi possível fazer a chamada.");
+      setErrorAlertTitle("Erro");
+    }
+    handleCloseSheet();
+  };
 
-	const handleEmail = async () => {
-		const email = 'mycoop@ampcm.org'
-		const subject = 'Pedido de Autorização - Conta MyCoop'
-		const body = `
+  const handleEmail = async () => {
+    const email = "edias@ampcm.coop";
+    const subject = "Pedido de Autorização - Conta MyCoop";
+    const body = `
 					Prezados senhores,
 
 					Criei uma conta no aplicativo MyCoop, mas ainda não foi autorizada.
@@ -183,358 +201,489 @@ export default function PendingUserAuthorization() {
 					
 					Preciso de ajuda com a autorização da minha conta MyCoop. Se possível, me avise quando a conta for autorizada.
 
-					Obrigado!`
+					Obrigado!`;
 
-		try {
-			await Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
-		} catch (error) {
-			setShowErrorAlert(true)
-			setErrorAlertMessage('Não foi possível abrir o aplicativo de email.')
-			setErrorAlertTitle('Erro')
-		}
-		handleCloseSheet()
-	}
+    try {
+      await Linking.openURL(
+        `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      );
+    } catch (error) {
+      setShowErrorAlert(true);
+      setErrorAlertMessage("Não foi possível abrir o aplicativo de email.");
+      setErrorAlertTitle("Erro");
+    }
+    handleCloseSheet();
+  };
 
-	const renderBackdrop = useCallback(
-		(props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-		[],
-	)
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
+    ),
+    [],
+  );
 
-	// Handle redirects
-	if (shouldRedirect) {
-		return <Redirect href={shouldRedirect} />
-	}
+  // Handle redirects
+  if (shouldRedirect) {
+    return <Redirect href={shouldRedirect} />;
+  }
 
-	// Show loading while checking user details
-	if (isLoading) {
-		return <Spinner />
-	}
+  // Show loading while checking user details
+  if (isLoading) {
+    return <Spinner />;
+  }
 
-	const handleSignOut = async () => {
-		await signOut()
-		// The auth store will handle the sign-out process
-		// and the root layout will redirect to login
-	}
+  const handleSignOut = async () => {
+    await signOut();
+    // The auth store will handle the sign-out process
+    // and the root layout will redirect to login
+  };
 
-	return (
-		<View style={styles.container}>
-			<View style={{ flex: 1 }}>
-				<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
-					{/* Header Section */}
-					<View className="flex-1/3 justify-center items-center space-y-3">
-						<HeroCard title="MyCoop" description="Aguarde Autorização. A autorização da sua conta está a ser processada. Você receberá um email assim que for aprovada." />
-					</View>
+  return (
+    <View
+      className="flex-1 bg-white dark:bg-black"
+      style={{ backgroundColor: isDark ? "#000000" : "#ffffff" }}
+    >
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
+        >
+          <View className="w-full max-w-md self-center">
+            <View className="pt-8">
+              <HeroCard
+                title="MyCoop"
+                description="Aguarde Autorização. A autorização da sua conta está a ser processada. Você receberá um email assim que for aprovada."
+              />
+            </View>
 
-					<View className="flex-1 justify-center space-y-3">
-						<View style={styles.actionSection} className="space-y-3">
-							<View className="w-full">
-								<SubmitButton
-									onPress={handleCheckStatus}
-									title={isCheckingStatus ? 'Verificando...' : 'Verificar Status'}
-									isSubmitting={isCheckingStatus}
-									disabled={isCheckingStatus}
-								/>
-							</View>
-							<View className="w-full">
-								<CancelButton
-									onCancel={handleContactSupport}
-									disabled={isCheckingStatus}
-									cancelText="Contactar Suporte"
-								/>
-							</View>
-							<TouchableOpacity
-								style={[
-									styles.cancelButton,
-									{
-										backgroundColor: !isSigningOut ? '#fecaca' : '#E9E1E1FF',
-										borderColor: !isSigningOut ? '#fecaca' : '#E9E1E1FF',
-									},
-								]}
-								onPress={handleSignOut}
-								disabled={isSigningOut}
-								activeOpacity={0.5}
-							>
-								<Text style={styles.cancelButtonText} className={`${isSigningOut ? 'text-red-800' : 'text-red-800'}`}>
-									{isSigningOut ? 'A sair...' : 'Sair'}
-								</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</ScrollView>
-			</View>
+            <View className="pt-6 gap-4">
+              <View className="w-full">
+                <SubmitButton
+                  onPress={handleCheckStatus}
+                  title={
+                    isCheckingStatus ? "Verificando..." : "Verificar Status"
+                  }
+                  isSubmitting={isCheckingStatus}
+                  disabled={isCheckingStatus}
+                />
+              </View>
 
-			{/* Bottom Sheet */}
-			<BottomSheet
-				ref={bottomSheetRef}
-				index={-1}
-				snapPoints={snapPoints}
-				enablePanDownToClose={true}
-				backdropComponent={renderBackdrop}
-				onClose={() => {
-					setShowContactSheet(false)
-					setShowStatusSheet(false)
-				}}
-			>
-				<BottomSheetView>
-					<View className="px-3 pb-6 pt-3">
-						{showContactSheet && (
-							<>
-								<Text style={styles.bottomSheetTitle}>Como deseja contactar o suporte?</Text>
+              <View className="w-full">
+                <CancelButton
+                  onCancel={handleContactSupport}
+                  disabled={isCheckingStatus}
+                  cancelText="Contactar Suporte"
+                />
+              </View>
 
-								<TouchableOpacity style={styles.contactOption} onPress={handleWhatsApp}>
-									<Ionicons name="logo-whatsapp" size={24} color="black" />
-									<Text style={styles.contactText}>WhatsApp</Text>
-								</TouchableOpacity>
+              <View className="w-full pt-2">
+                <TouchableOpacity
+                  style={styles.signOutButton}
+                  onPress={handleSignOut}
+                  disabled={isSigningOut}
+                  activeOpacity={0.6}
+                >
+                  <Text
+                    style={styles.signOutButtonText}
+                    className={isDark ? "text-red-200" : "text-red-800"}
+                  >
+                    {isSigningOut ? "A sair..." : "Sair"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
 
-								<TouchableOpacity style={styles.contactOption} onPress={handleCall}>
-									<Ionicons name="call-outline" size={24} color="black" />
-									<Text style={styles.contactText}>Ligar</Text>
-								</TouchableOpacity>
+      {/* Bottom Sheet */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: isDark ? "#000000" : "#ffffff" }}
+        onClose={() => {
+          setShowContactSheet(false);
+          setShowStatusSheet(false);
+        }}
+      >
+        <BottomSheetView>
+          <View className="px-3 pb-6 pt-3">
+            {showContactSheet && (
+              <>
+                <Text
+                  style={[
+                    styles.bottomSheetTitle,
+                    { color: isDark ? "#ffffff" : "#1a1a1a" },
+                  ]}
+                >
+                  Como deseja contactar o suporte?
+                </Text>
 
-								<TouchableOpacity style={styles.contactOption} onPress={handleEmail}>
-									<Ionicons name="mail-outline" size={24} color="black" />
-									<Text style={styles.contactText}>Email</Text>
-								</TouchableOpacity>
-							</>
-						)}
+                <TouchableOpacity
+                  style={[
+                    styles.contactOption,
+                    {
+                      backgroundColor: isDark ? "#0b0b0b" : "#f8f9fa",
+                      borderColor: isDark ? "#1f1f1f" : "#e9ecef",
+                    },
+                  ]}
+                  onPress={handleWhatsApp}
+                >
+                  <Ionicons
+                    name="logo-whatsapp"
+                    size={24}
+                    color={isDark ? "#ffffff" : "#000000"}
+                  />
+                  <Text
+                    style={[
+                      styles.contactText,
+                      { color: isDark ? "#ffffff" : "#1a1a1a" },
+                    ]}
+                  >
+                    WhatsApp
+                  </Text>
+                </TouchableOpacity>
 
-						{showStatusSheet && (
-							<>
-								<Text style={styles.bottomSheetTitle}>{statusTitle}</Text>
-								<Text style={styles.statusMessage}>{statusMessage}</Text>
-								<TouchableOpacity style={styles.contactOption} onPress={handleContactSupport}>
-									<Ionicons name="help-circle-outline" size={24} color="black" />
-									<Text style={styles.contactText}>Contactar Suporte</Text>
-								</TouchableOpacity>
-							</>
-						)}
-					</View>
-				</BottomSheetView>
-			</BottomSheet>
-			<ErrorAlert
-				visible={showErrorAlert}
-				setVisible={setShowErrorAlert}
-				message={errorAlertMessage}
-				setMessage={setErrorAlertMessage}
-				title={errorAlertTitle}
-			/>
-		</View>
-	)
+                <TouchableOpacity
+                  style={[
+                    styles.contactOption,
+                    {
+                      backgroundColor: isDark ? "#0b0b0b" : "#f8f9fa",
+                      borderColor: isDark ? "#1f1f1f" : "#e9ecef",
+                    },
+                  ]}
+                  onPress={handleCall}
+                >
+                  <Ionicons
+                    name="call-outline"
+                    size={24}
+                    color={isDark ? "#ffffff" : "#000000"}
+                  />
+                  <Text
+                    style={[
+                      styles.contactText,
+                      { color: isDark ? "#ffffff" : "#1a1a1a" },
+                    ]}
+                  >
+                    Ligar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.contactOption,
+                    {
+                      backgroundColor: isDark ? "#0b0b0b" : "#f8f9fa",
+                      borderColor: isDark ? "#1f1f1f" : "#e9ecef",
+                    },
+                  ]}
+                  onPress={handleEmail}
+                >
+                  <Ionicons
+                    name="mail-outline"
+                    size={24}
+                    color={isDark ? "#ffffff" : "#000000"}
+                  />
+                  <Text
+                    style={[
+                      styles.contactText,
+                      { color: isDark ? "#ffffff" : "#1a1a1a" },
+                    ]}
+                  >
+                    Email
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {showStatusSheet && (
+              <>
+                <Text
+                  style={[
+                    styles.bottomSheetTitle,
+                    { color: isDark ? "#ffffff" : "#1a1a1a" },
+                  ]}
+                >
+                  {statusTitle}
+                </Text>
+                <Text
+                  style={[
+                    styles.statusMessage,
+                    { color: isDark ? "#cfcfcf" : "#666666" },
+                  ]}
+                >
+                  {statusMessage}
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.contactOption,
+                    {
+                      backgroundColor: isDark ? "#0b0b0b" : "#f8f9fa",
+                      borderColor: isDark ? "#1f1f1f" : "#e9ecef",
+                    },
+                  ]}
+                  onPress={handleContactSupport}
+                >
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={24}
+                    color={isDark ? "#ffffff" : "#000000"}
+                  />
+                  <Text
+                    style={[
+                      styles.contactText,
+                      { color: isDark ? "#ffffff" : "#1a1a1a" },
+                    ]}
+                  >
+                    Contactar Suporte
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
+      <ErrorAlert
+        visible={showErrorAlert}
+        setVisible={setShowErrorAlert}
+        message={errorAlertMessage}
+        setMessage={setErrorAlertMessage}
+        title={errorAlertTitle}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: '#ffffff',
-	},
-	scrollContainer: {
-		flexGrow: 1,
-		paddingHorizontal: 20,
-		paddingTop: 20,
-		paddingBottom: 80,
-	},
-	headerSection: {
-		alignItems: 'center',
-		marginBottom: 20,
-		paddingTop: 10,
-	},
-	statusIcon: {
-		width: 60,
-		height: 60,
-		borderRadius: 30,
-		backgroundColor: '#fff3cd',
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginBottom: 10,
-		borderWidth: 2,
-		borderColor: '#ffc107',
-	},
-	statusIconText: {
-		fontSize: 40,
-	},
-	title: {
-		fontSize: 18,
-		fontWeight: 'bold',
-		color: '#1a1a1a',
-		marginBottom: 12,
-		textAlign: 'center',
-	},
-	subtitle: {
-		fontSize: 16,
-		color: '#666',
-		textAlign: 'center',
-		lineHeight: 22,
-		paddingHorizontal: 10,
-	},
-	statusCard: {
-		backgroundColor: '#ffffff',
-		borderRadius: 16,
-		padding: 20,
-		marginBottom: 20,
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3.84,
-		elevation: 5,
-	},
-	statusTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: '#1a1a1a',
-		marginBottom: 3,
-	},
-	statusRow: {
-		marginBottom: 3,
-	},
-	statusItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	statusDot: {
-		width: 8,
-		height: 8,
-		borderRadius: 6,
-		marginRight: 6,
-	},
-	statusCompleted: {
-		backgroundColor: '#28a745',
-	},
-	statusPending: {
-		backgroundColor: '#ffc107',
-	},
-	statusWaiting: {
-		backgroundColor: '#e9ecef',
-	},
-	statusText: {
-		fontSize: 12,
-		color: '#495057',
-	},
-	infoSection: {
-		marginBottom: 30,
-	},
-	infoCard: {
-		backgroundColor: '#ffffff',
-		borderRadius: 12,
-		padding: 8,
-		marginBottom: 8,
-		borderLeftWidth: 4,
-		borderLeftColor: '#008000',
-	},
-	infoCardTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: '#1a1a1a',
-		marginBottom: 8,
-	},
-	infoCardText: {
-		fontSize: 12,
-		color: '#666',
-		lineHeight: 14,
-	},
-	actionSection: {
-		marginBottom: 30,
-	},
-	primaryButton: {
-		backgroundColor: '#008000',
-		borderRadius: 12,
-		paddingVertical: 16,
-		paddingHorizontal: 24,
-		alignItems: 'center',
-		marginBottom: 12,
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3.84,
-		elevation: 5,
-	},
-	primaryButtonText: {
-		color: '#ffffff',
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	secondaryButton: {
-		backgroundColor: 'transparent',
-		borderWidth: 2,
-		borderColor: '#008000',
-		borderRadius: 12,
-		paddingVertical: 16,
-		paddingHorizontal: 24,
-		alignItems: 'center',
-	},
-	secondaryButtonText: {
-		color: '#008000',
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	footer: {
-		alignItems: 'center',
-		paddingVertical: 0,
-	},
-	footerText: {
-		fontSize: 12,
-		color: '#999',
-		textAlign: 'center',
-		lineHeight: 14,
-		fontStyle: 'italic',
-	},
-	bottomSheetContent: {
-		flex: 1,
-		padding: 24,
-	},
-	bottomSheetTitle: {
-		fontSize: 18,
-		fontWeight: '600',
-		color: '#1a1a1a',
-		textAlign: 'center',
-		marginBottom: 24,
-	},
-	statusMessage: {
-		fontSize: 16,
-		color: '#666',
-		textAlign: 'center',
-		lineHeight: 22,
-		marginBottom: 24,
-		paddingHorizontal: 10,
-	},
-	contactOption: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 16,
-		paddingHorizontal: 20,
-		borderRadius: 12,
-		backgroundColor: '#f8f9fa',
-		marginBottom: 12,
-		borderWidth: 1,
-		borderColor: '#e9ecef',
-		gap: 5,
-	},
-	contactIcon: {
-		fontSize: 24,
-		marginRight: 16,
-	},
-	contactText: {
-		fontSize: 16,
-		// fontWeight: '500',
-		color: '#1a1a1a',
-	},
-	cancelButton: {
-		marginTop: 16,
-		borderWidth: 1,
-		borderColor: '#008000',
-		paddingVertical: 16,
-		paddingHorizontal: 24,
-		borderRadius: 12,
-		// backgroundColor: '#6c757d',
-		alignItems: 'center',
-	},
-	cancelButtonText: {
-		fontSize: 16,
-		fontWeight: '600',
-	},
-})
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 64,
+  },
+  headerSection: {
+    alignItems: "center",
+    marginBottom: 20,
+    paddingTop: 10,
+  },
+  statusIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#fff3cd",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: "#ffc107",
+  },
+  statusIconText: {
+    fontSize: 40,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 10,
+  },
+  statusCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  statusTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 3,
+  },
+  statusRow: {
+    marginBottom: 3,
+  },
+  statusItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  statusCompleted: {
+    backgroundColor: "#28a745",
+  },
+  statusPending: {
+    backgroundColor: "#ffc107",
+  },
+  statusWaiting: {
+    backgroundColor: "#e9ecef",
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#495057",
+  },
+  infoSection: {
+    marginBottom: 30,
+  },
+  infoCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 8,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#008000",
+  },
+  infoCardTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 8,
+  },
+  infoCardText: {
+    fontSize: 12,
+    color: "#666",
+    lineHeight: 14,
+  },
+  actionSection: {
+    marginBottom: 30,
+  },
+  primaryButton: {
+    backgroundColor: "#008000",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#008000",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    color: "#008000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  footer: {
+    alignItems: "center",
+    paddingVertical: 0,
+  },
+  footerText: {
+    fontSize: 12,
+    color: "#999",
+    textAlign: "center",
+    lineHeight: 14,
+    fontStyle: "italic",
+  },
+  bottomSheetContent: {
+    flex: 1,
+    padding: 24,
+  },
+  bottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  statusMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 24,
+    paddingHorizontal: 10,
+  },
+  contactOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: "#f8f9fa",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    gap: 5,
+  },
+  contactIcon: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  contactText: {
+    fontSize: 16,
+    // fontWeight: '500',
+    color: "#1a1a1a",
+  },
+  cancelButton: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#008000",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    // backgroundColor: '#6c757d',
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  signOutButton: {
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  signOutButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+});

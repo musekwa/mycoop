@@ -12,7 +12,7 @@ import { z } from 'zod'
 
 // Constants and Types
 import { colors } from '@/constants/colors'
-import { userRoles } from '@/constants/user-roles'
+import { userRoles } from '@/constants/roles'
 import { UserRoles } from '@/types'
 
 // Supabase functions
@@ -27,6 +27,7 @@ import { AUTH_CODES } from '@/data/auth-codes'
 import { userSignUp } from '@/library/supabase/user-auth'
 import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'expo-router'
+import { capitalize } from '@/helpers/capitalize'
 const UserSchema = z
 	.object({
 		// enforce full name
@@ -85,14 +86,10 @@ const UserSchema = z
 type UserFormData = z.infer<typeof UserSchema>
 
 const roles = userRoles.map((role) => {
-	if (role === UserRoles.INSPECTOR) {
-		return { label: 'Fiscal', value: role }
-	} else if (role === UserRoles.COOP_ADMIN) {
+	if (role === UserRoles.COOP_ADMIN) {
 		return { label: 'Gestor de Cooperativa', value: role }
-	} else if (role === UserRoles.SUPERVISOR) {
-		return { label: 'Supervisor Distrital', value: role }
 	} else {
-		return { label: 'Extensionista', value: role }
+		return { label: 'Oficial Distrital', value: role }
 	}
 })
 
@@ -185,7 +182,7 @@ export default function SignUpForm() {
 		try {
 			setCurrentEmail(email)
 			const { message, code } = await userSignUp(email, password, {
-				full_name: name,
+				full_name: capitalize(name),
 				phone,
 				user_role: role,
 				district_id,
@@ -238,7 +235,7 @@ export default function SignUpForm() {
 
 	return (
 		<View className="pt-4">
-			<View className="space-y-3">
+			<View className="gap-4">
 				{/* Full Name */}
 				<View>
 					<Controller
@@ -253,7 +250,7 @@ export default function SignUpForm() {
 									placeholder="Nome completo"
 									keyboardType="default"
 									autoCapitalize="words"
-									autoCompleteType="name"
+									autoComplete="name"
 									textContentType="name"
 									onChangeText={onChange}
 									value={value}
@@ -282,7 +279,7 @@ export default function SignUpForm() {
 									placeholder="Endereço email"
 									keyboardType="email-address"
 									autoCapitalize="none"
-									autoCompleteType="email"
+									autoComplete="email"
 									textContentType="emailAddress"
 									onChangeText={onChange}
 									value={value}
@@ -406,7 +403,7 @@ export default function SignUpForm() {
 									placeholder="Número de telefone"
 									keyboardType="phone-pad"
 									autoCapitalize="none"
-									autoCompleteType="tel"
+									autoComplete="tel"
 									textContentType="telephoneNumber"
 									onChangeText={onChange}
 									value={value}
@@ -446,7 +443,7 @@ export default function SignUpForm() {
 				</View>
 
 				{/* Province & Distrito*/}
-				<View className="flex flex-row space-x-2">
+				<View className="flex flex-row gap-x-2">
 					{/* Province */}
 					<View className="flex-1">
 						<Controller
@@ -519,7 +516,7 @@ export default function SignUpForm() {
 				/>
 			</View>
 			{/* Already have an account? */}
-			<Pressable onPress={navigateToLogin} className="py-3 flex flex-row space-x-2 justify-center ">
+			<Pressable onPress={navigateToLogin} className="py-3 flex flex-row gap-x-2 justify-center ">
 				<Text className="text-[14px] text-gray-600 text-center dark:text-gray-400">Já tem conta?</Text>
 				<Text className="text-[14px] font-bold text-[#008000] text-center underline">Entrar</Text>
 			</Pressable>
