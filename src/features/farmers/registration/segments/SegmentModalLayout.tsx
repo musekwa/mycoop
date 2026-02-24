@@ -36,14 +36,14 @@ export default function SegmentModalLayout({
       <View
         style={{
           backgroundColor: isDark ? colors.gray800 : colors.white,
-          borderRadius: 12,
-          padding: 16,
+          // borderRadius: 12,
+          paddingHorizontal: 16,
           marginTop: 12,
-          borderWidth: 1,
-          borderColor: isDark ? "#374151" : "#e5e7eb",
+          // borderWidth: 1,
+          // borderColor: isDark ? "#374151" : "#e5e7eb",
         }}
       >
-        <View
+        {/* <View
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -53,15 +53,15 @@ export default function SegmentModalLayout({
             borderBottomWidth: 1,
             borderBottomColor: isDark ? "#374151" : "#e5e7eb",
           }}
-        >
-          <TouchableOpacity
+        > */}
+          {/* <TouchableOpacity
             onPress={onClose}
             style={{ padding: 8 }}
             activeOpacity={0.7}
           >
             <Fontisto name="close" size={22} color={colors.gray600} />
-          </TouchableOpacity>
-          <Text
+          </TouchableOpacity> */}
+          {/* <Text
             style={{
               fontSize: 16,
               fontWeight: "600",
@@ -71,9 +71,9 @@ export default function SegmentModalLayout({
             }}
           >
             {title}
-          </Text>
-          <View style={{ width: 38 }} />
-        </View>
+          </Text> */}
+          {/* <View style={{ width: 38 }} /> */}
+        {/* </View> */}
 
         {children}
 
@@ -87,7 +87,7 @@ export default function SegmentModalLayout({
             borderRadius: 12,
             alignItems: "center",
             justifyContent: "center",
-            marginTop: 24,
+            marginTop: 20,
             marginBottom: 16,
           }}
         >
