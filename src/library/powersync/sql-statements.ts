@@ -515,7 +515,7 @@ export const insertLicense = async (data: LicenseRecord) => {
             ?,
             ?,
             ?,
-			?
+			      ?
         )`,
       [
         id,
@@ -731,9 +731,8 @@ export async function insertGroup(
   }
 
   try {
-    
     const actor_row = buildActor({
-      category: ResourceName.FARMER,
+      category: ResourceName.GROUP,
       sync_id: userDistrictId,
     });
 
@@ -752,7 +751,7 @@ export async function insertGroup(
     const actor_category_row = buildActorCategories({
       actor_id: actor_row.id,
       category: "GROUP",
-      subcategory: "COOPERATIVE",
+      subcategory: groupType,
       sync_id: userDistrictId,
     });
     await insertActorCategory(actor_category_row);

@@ -36,7 +36,7 @@ export default function OrganizationsList({ items, organizationType }: Props) {
 			}}
 			showsVerticalScrollIndicator={false}
 			ListEmptyComponent={() => (
-				<View className="flex-1 items-center justify-center h-[400px]">
+				<View className="flex-1 items-center justify-center h-100">
 					<EmptyPlaceholder message={`Não há ${translatedOrganizationType} para mostrar`} />
 				</View>
 			)}

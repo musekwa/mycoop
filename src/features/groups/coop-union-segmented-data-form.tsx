@@ -1,18 +1,20 @@
+import ErrorAlert from "@/components/alerts/error-alert";
+import SuccessAlert from "@/components/alerts/success-alert";
+import SubmitButton from "@/components/buttons/submit-button";
 import { colors } from "@/constants/colors";
 import { useUserDetails } from "@/hooks/queries";
 import { useCheckOrganizationDuplicate } from "@/hooks/use-check-organization-duplicates";
+import { insertGroup } from "@/library/powersync/sql-statements";
 import { useAddressStore } from "@/store/address";
 import { useCoopUnionStore } from "@/store/organizations";
-import { OrganizationTypes } from "@/types";
+import { CoopAffiliationStatus, OrganizationTypes } from "@/types";
 import { Fontisto } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import GroupAddressSegment from "./segments/GroupAddressSegment";
 import GroupBasicInfoSegment from "./segments/GroupBasicInfoSegment";
 import GroupLegalStatusSegment from "./segments/GroupLegalStatusSegment";
-import GroupAddressSegment from "./segments/GroupAddressSegment";
-import SubmitButton from "@/components/buttons/submit-button";
-
 
 type SegmentId = "basicInfo" | "legalStatus" | "address";
 
@@ -53,73 +55,108 @@ function useSegmentCompletion() {
   };
 }
 
-
 export default function CoopUnionSegmentedDataForm() {
-    const router = useRouter();
-    const { userDetails } = useUserDetails();
-      const { resetFormData, formData } = useCoopUnionStore();
-      const { reset: resetAddress } = useAddressStore();
-      const [activeSegment, setActiveSegment] = useState<SegmentId | null>(null);
-    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [hasError, setHasError] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
-    const completion = useSegmentCompletion();
-    
-      const allComplete =
-        completion.basicInfo && completion.legalStatus && completion.address && !activeSegment;
-    
-     useEffect(() => {
+  const router = useRouter();
+  const { userDetails } = useUserDetails();
+  const { resetFormData, formData } = useCoopUnionStore();
+  const { reset: resetAddress, partialAddress } = useAddressStore();
+  const [activeSegment, setActiveSegment] = useState<SegmentId | null>(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const completion = useSegmentCompletion();
+
+  const allComplete =
+    completion.basicInfo &&
+    completion.legalStatus &&
+    completion.address &&
+    !activeSegment;
+
+  useEffect(() => {
+    resetFormData();
+    resetAddress();
+  }, []);
+
+  const {
+    hasDuplicate,
+    duplicateType,
+    message: duplicateMessage,
+    isLoading: isCheckingDuplicate,
+    duplicateOrganizations,
+  } = useCheckOrganizationDuplicate({
+    name: formData.name || "",
+    nuit: formData.nuit || undefined,
+    nuel: formData.nuel || undefined,
+    organizationType: OrganizationTypes.COOP_UNION,
+  });
+
+  const handleSegmentPress = (id: SegmentId) => {
+    setActiveSegment((prev) => (prev === id ? null : id));
+  };
+
+  const handleSegmentClose = () => {
+    setActiveSegment(null);
+  };
+
+  const handleSubmit = useCallback(async () => {
+    if (isCheckingDuplicate) return;
+
+    if (!userDetails?.district_id || !userDetails?.province_id) {
+      setHasError(true);
+      setErrorMessage(
+        "Por favor, selecione a província e o distrito antes de continuar.",
+      );
+      return;
+    }
+    setIsSaving(true);
+    setHasError(false);
+    setErrorMessage("");
+
+    if (hasDuplicate) {
+      setShowDuplicateModal(true);
+      return;
+    }
+
+    if (allComplete && !hasError) {
+      //
+      const { success, message } = await insertGroup({
+        group: {
+          name: formData.name,
+          creationYear:
+            formData.affiliationYear || new Date().getFullYear().toString(),
+          affiliationStatus: "AFFILIATED" as CoopAffiliationStatus,
+          affiliationYear: formData.affiliationYear,
+          license: formData.license,
+          nuel: formData.nuel,
+          nuit: formData.nuit,
+        },
+        groupType: "COOP_UNION" as OrganizationTypes,
+        userDistrictId: userDetails.district_id,
+        userProvinceId: userDetails.province_id,
+        partialAddress: {
+          adminPostId: partialAddress.adminPostId || "",
+          villageId: partialAddress.villageId || "",
+        },
+      });
+
+      setIsSaving(false);
+      if (success) {
         resetFormData();
         resetAddress();
-      }, []);
-    
-      const {
-        hasDuplicate,
-        duplicateType,
-        message: duplicateMessage,
-        isLoading: isCheckingDuplicate,
-        duplicateOrganizations,
-      } = useCheckOrganizationDuplicate({
-        name: formData.name || "",
-        nuit: formData.nuit || undefined,
-        nuel: formData.nuel || undefined,
-        organizationType: OrganizationTypes.COOP_UNION,
-      });
-    
-      const handleSegmentPress = (id: SegmentId) => {
-        setActiveSegment((prev) => (prev === id ? null : id));
-      };
-    
-      const handleSegmentClose = () => {
-        setActiveSegment(null);
-      };
-    
-    const handleSubmit = useCallback(async () => {
-      if (isCheckingDuplicate) return;
-  
-      if (!userDetails?.district_id || !userDetails?.province_id) {
+        setSuccess(true);
+        setTimeout(() => {
+          router.replace("/(tabs)/actors/coop-unions" as Href);
+        }, 400);
+      } else {
+        console.log("error", message);
         setHasError(true);
-        setErrorMessage(
-          "Por favor, selecione a província e o distrito antes de continuar.",
-        );
-        return;
+        setErrorMessage(message);
       }
-      setIsSaving(true);
-      setHasError(false);
-      setErrorMessage("");
-  
-      if (hasDuplicate) {
-        setShowDuplicateModal(true);
-        return;
-      }
-  
-      if (allComplete) {
-        //
-      }
-    }, [isCheckingDuplicate, hasDuplicate, allComplete]);
-    
-    
+    }
+  }, [isCheckingDuplicate, hasDuplicate, allComplete]);
+
   return (
     <View className="flex-1">
       <ScrollView
@@ -196,12 +233,12 @@ export default function CoopUnionSegmentedDataForm() {
 
       {allComplete && (
         <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
-                  <SubmitButton
-                      onPress={handleSubmit}
-                      title="Gravar Dados"
-                      isSubmitting={isSaving}
-                      disabled={isSaving}
-                  />
+          <SubmitButton
+            onPress={handleSubmit}
+            title="Gravar Dados"
+            isSubmitting={isSaving}
+            disabled={isSaving}
+          />
         </View>
       )}
 
@@ -269,6 +306,18 @@ export default function CoopUnionSegmentedDataForm() {
           </View>
         </View>
       </Modal> */}
+      <ErrorAlert
+        visible={hasError}
+        title="Erro ao gravar dados"
+        message={errorMessage}
+        setMessage={setErrorMessage}
+        setVisible={setHasError}
+      />
+      <SuccessAlert
+        visible={success}
+        setVisible={setSuccess}
+        route={"/(tabs)/actors/coop-unions" as Href}
+      />
     </View>
   );
 }

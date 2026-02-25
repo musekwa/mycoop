@@ -1,3 +1,5 @@
+import ErrorAlert from "@/components/alerts/error-alert";
+import SuccessAlert from "@/components/alerts/success-alert";
 import SubmitButton from "@/components/buttons/submit-button";
 import { colors } from "@/constants/colors";
 import { useUserDetails } from "@/hooks/queries";
@@ -13,8 +15,6 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import GroupAddressSegment from "./segments/GroupAddressSegment";
 import GroupBasicInfoSegment from "./segments/GroupBasicInfoSegment";
 import GroupLegalStatusSegment from "./segments/GroupLegalStatusSegment";
-import SuccessAlert from "@/components/alerts/success-alert";
-import ErrorAlert from "@/components/alerts/error-alert";
 
 type SegmentId = "basicInfo" | "legalStatus" | "address";
 
@@ -141,7 +141,7 @@ export default function CooperativeSegmentedDataForm() {
           nuel: formData.nuel,
           nuit: formData.nuit,
         },
-        groupType: 'COOPERATIVE' as OrganizationTypes,
+        groupType: "COOPERATIVE" as OrganizationTypes,
         userDistrictId: userDetails.district_id,
         userProvinceId: userDetails.province_id,
         partialAddress: {
@@ -150,8 +150,7 @@ export default function CooperativeSegmentedDataForm() {
         },
       });
 
-
-      setIsSaving(false)
+      setIsSaving(false);
       if (success) {
         resetFormData();
         resetAddress();
@@ -160,7 +159,7 @@ export default function CooperativeSegmentedDataForm() {
           router.replace("/(tabs)/actors/cooperatives" as Href);
         }, 400);
       } else {
-        console.log("error", message)
+        console.log("error", message);
         setHasError(true);
         setErrorMessage(message);
       }
@@ -316,19 +315,19 @@ export default function CooperativeSegmentedDataForm() {
             </View>
           </View>
         </Modal> */}
-      
-       <ErrorAlert
-              visible={hasError}
-              title="Erro ao gravar dados"
-              message={errorMessage}
-              setMessage={setErrorMessage}
-              setVisible={setHasError}
-            />
-            <SuccessAlert
-              visible={success}
-              setVisible={setSuccess}
-              route={"/(tabs)/actors/cooperatives" as Href}
-            />
+
+      <ErrorAlert
+        visible={hasError}
+        title="Erro ao gravar dados"
+        message={errorMessage}
+        setMessage={setErrorMessage}
+        setVisible={setHasError}
+      />
+      <SuccessAlert
+        visible={success}
+        setVisible={setSuccess}
+        route={"/(tabs)/actors/cooperatives" as Href}
+      />
     </View>
   );
 }
