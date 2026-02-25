@@ -15,7 +15,6 @@ type ActorListItemProps = {
     id: string;
     surname: string;
     other_names: string;
-    multicategory: string;
     admin_post_id: string;
     primary_phone: string;
     secondary_phone: string;
@@ -44,29 +43,6 @@ export default function ActorListItem({
       : item.surname?.toLowerCase().includes("company")
         ? `(Empresa)`
         : item.surname;
-  const categories = [] as string[];
-  if (item.multicategory) {
-    const multicategoryArray = item.multicategory.split(";");
-    multicategoryArray.forEach((cat) => {
-      if (cat.toLowerCase().includes("provider")) {
-        categories.push("Provedor de Serviços");
-      } else if (cat.toLowerCase().includes("farmer_small_scale")) {
-        categories.push("Familiar");
-      } else if (cat.toLowerCase().includes("farmer_large_scale")) {
-        categories.push("Comercial");
-      } else if (cat.toLowerCase().includes("trader_primary")) {
-        categories.push("Primário");
-      } else if (cat.toLowerCase().includes("trader_secondary")) {
-        categories.push("Intermediário");
-      } else if (cat.toLowerCase().includes("export")) {
-        categories.push("Exportador");
-      } else if (cat.toLowerCase().includes("trader_small_scale_processing")) {
-        categories.push("Artisanal");
-      } else if (cat.toLowerCase().includes("trader_large_scale_processing")) {
-        categories.push("Industrial");
-      }
-    });
-  }
 
   const handleNavigation = (id: string) => {
     setCurrentResource({

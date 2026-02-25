@@ -195,7 +195,7 @@ export const useQueryOne = <T>(query: string, params: string[]) => {
 				setIsLoading(false)
 			})
 			.catch((error) => {
-				console.log('PowerSync query error:', error)
+				console.log('PowerSync query error (useQueryOne):', error)
 				setError(`PowerSync query error: ${error}`)
 				setIsError(true)
 				setIsLoading(false)
@@ -224,7 +224,7 @@ export const useQueryMany = <T>(query: string) => {
 				setIsLoading(false)
 			})
 			.catch((error) => {
-				console.log('PowerSync query error:', error)
+				console.log('PowerSync query error (useQueryMany):', error)
 				setError(`PowerSync query error: ${error}`)
 				setIsError(true)
 				setIsLoading(false)
@@ -260,7 +260,7 @@ export const useQueryOneAndWatchChanges = <T>(query: string, params: string[]) =
 					}
 				},
 				onError: (error) => {
-					console.log('PowerSync query error:', error)
+					console.log('PowerSync query error (useQueryOneAndWatchChanges):', error)
 					console.log('Query that failed:', query)
 					console.log('Query params:', params)
 					setError(`PowerSync query error: ${error}`)
@@ -305,7 +305,7 @@ export const useQueryManyAndWatchChanges = <T>(query: string) => {
 					}
 				},
 				onError: (error) => {
-					console.log('PowerSync query error:', error)
+					console.log('PowerSync query error (useQueryManyAndWatchChanges):', error)
 					setError(`PowerSync query error: ${error}`)
 					setIsError(true)
 					setIsLoading(false)
@@ -350,7 +350,7 @@ export const useAddressById = (id: string) => {
 					}
 				},
 				onError: (error) => {
-					console.log('PowerSync query error:', error)
+					console.log('PowerSync query error (useAddressById):', error)
 					setError(`PowerSync query error: ${error}`)
 					setIsError(true)
 					setIsLoading(false)
@@ -500,7 +500,7 @@ export const useTraderById = (id: string) => {
 				setIsLoading(false)
 			})
 			.catch((error) => {
-				console.log('PowerSync query error:', error)
+				console.log('PowerSync query error (useTraderById):', error)
 				setError(`PowerSync query error: ${error}`)
 				setIsError(true)
 				setIsLoading(false)

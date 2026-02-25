@@ -1,5 +1,5 @@
 import { colors } from '@/constants/colors';
-import { FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useColorScheme, View } from 'react-native';
@@ -79,6 +79,29 @@ export default function TabLayout() {
               }
             />
           ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="user"
+        options={{
+          title: "Você",
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => {
+            return (
+              <FontAwesome
+                name="user-circle-o"
+                size={24}
+                color={
+                  focused
+                    ? colors.primary
+                    : isDarkMode
+                      ? colors.gray600
+                      : colors.black
+                }
+              />
+            );
+          },
         }}
       />
     </Tabs>

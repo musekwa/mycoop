@@ -79,7 +79,11 @@ export default function PowersyncProvider({ children }: { children: React.ReactN
 
 					// First try to refresh session if needed
 					if (isExpired || needsAttention) {
+						console.log("Session refreshed")
 						await refreshSession()
+					}
+					else {
+						console.log("session still valid")
 					}
 
 					const success = await setupPowerSync()

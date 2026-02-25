@@ -32,7 +32,7 @@ export default new Table(
 
 export const buildActorDetails = (data: ActorDetailsType) => {
     const { actor_id, surname, other_names, photo, sync_id } = data
-    const uaid = generateUAID(actor_id)
+    const uaid = generateUAID(actor_id) as string
     const id = uuidv4()
     return {
         id,

@@ -1,3 +1,4 @@
+import { isNineDigitString } from "@/helpers/validators";
 import {
   ActorCategoryRecord,
   ActorDetailRecord,
@@ -23,7 +24,11 @@ import {
 } from "@/library/powersync/app-schemas";
 import { buildWarehouseDetail } from "@/library/powersync/schemas/warehouse-details";
 import { FarmerFormDataType } from "@/store/farmer";
-import { MultiCategory, ResourceName } from "@/types";
+import {
+  CoopAffiliationStatus,
+  OrganizationTypes,
+  ResourceName,
+} from "@/types";
 import { buildActorCategories } from "./schemas/actor-categories";
 import { buildActorDetails } from "./schemas/actor-details";
 import { buildActorDocument } from "./schemas/actor-document";
@@ -32,6 +37,8 @@ import { buildAddressDetail } from "./schemas/address-details";
 import { buildBirthDate } from "./schemas/birth-dates";
 import { buildContactDetail } from "./schemas/contact-details";
 import { buildGenders } from "./schemas/genders";
+import { buildLicense } from "./schemas/licenses";
+import { buildNuel } from "./schemas/nuels";
 import { buildNuit } from "./schemas/nuits";
 import { powersync } from "./system";
 
@@ -566,13 +573,274 @@ export type CreateFarmerParams = {
   };
 };
 
-export type CreateFarmerResult =
-  | { success: true }
+export type GroupDataType = {
+  name: string;
+  creationYear: string;
+  affiliationYear?: string;
+  affiliationStatus?: string;
+  license?: string;
+  nuel?: string;
+  nuit?: string;
+};
+
+export type CreateGroupParams = {
+  group: GroupDataType;
+  groupType: OrganizationTypes;
+  userDistrictId: string;
+  userProvinceId: string;
+  partialAddress: {
+    adminPostId?: string;
+    villageId?: string;
+  };
+};
+
+export type CreateResult =
+  | { success: true; message: string }
   | { success: false; message: string };
+
+export async function insertGroup(
+  params: CreateGroupParams,
+): Promise<CreateResult> {
+  const { group, groupType, userDistrictId, userProvinceId, partialAddress } =
+    params;
+
+  const newGroupType =
+    groupType ===
+    Object.values(OrganizationTypes).find(
+      (type) => type === OrganizationTypes.ASSOCIATION,
+    )
+      ? "Associação"
+      : groupType ===
+          Object.values(OrganizationTypes).find(
+            (type) => type === OrganizationTypes.COOPERATIVE,
+          )
+        ? "Cooperativa"
+        : "União";
+
+  if (!userDistrictId || !userProvinceId) {
+    return {
+      success: false,
+      message: "Por favor, verifique os dados do usuário",
+    };
+  }
+
+  if (!group?.name || String(group.name).trim() === "") {
+    return {
+      success: false,
+      message: `Verifique o nome da ${newGroupType.toLowerCase()}`,
+    };
+  }
+
+  if (
+    groupType !== OrganizationTypes.COOP_UNION &&
+    (!group?.affiliationStatus ||
+      !Object.values(CoopAffiliationStatus).includes(
+        group.affiliationStatus as CoopAffiliationStatus,
+      ))
+  ) {
+    return {
+      success: false,
+      message: `Verifique o estado legal da ${newGroupType.toLowerCase()}`,
+    };
+  }
+
+  if (!group?.creationYear || isNaN(Number(group.creationYear))) {
+    return {
+      success: false,
+      message: `Verifique o ano de criação desta ${newGroupType.toLowerCase()}`,
+    };
+  }
+
+  if (
+    group.affiliationStatus === CoopAffiliationStatus.AFFILIATED &&
+    (!group?.affiliationYear ||
+      isNaN(Number(group.affiliationYear)) ||
+      !isNineDigitString(group.nuel) ||
+      !isNineDigitString(group.nuit) ||
+      !group?.license ||
+      group.license.trim() === "N/A" ||
+      group.license.trim() === "")
+  ) {
+    return {
+      success: false,
+      message: `Verifique os dados da legalização desta ${newGroupType.toLowerCase()}`,
+    };
+  }
+
+  const safePartialAddr = partialAddress ?? {};
+
+  if (!safePartialAddr.adminPostId || !safePartialAddr.villageId) {
+    return {
+      success: false,
+      message: "Verifique os dados do endereço",
+    };
+  }
+
+  if (
+    group.nuit &&
+    group.nuit.trim().length === 9 &&
+    group.nuit.trim() !== "N/A"
+  ) {
+    try {
+      const existingNuit = await powersync.get<{ actor_id: string }>(
+        `SELECT actor_id FROM ${TABLES.NUITS} WHERE nuit = ? LIMIT 1`,
+        [group.nuit.trim()],
+      );
+      if (existingNuit) {
+        return {
+          success: false,
+          message: `NUIT ${group.nuit.trim()} já está registado para outro actor. Não é possível criar esta ${newGroupType.toLowerCase()}.`,
+        };
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      if (
+        !err?.message?.includes("Result set is empty") &&
+        !String(error).includes("Result set is empty")
+      ) {
+        console.error("Error checking duplicate NUIT:", error);
+      }
+    }
+  }
+
+  if (
+    group.nuel &&
+    group.nuel.trim().length === 9 &&
+    group.nuel.trim() !== "N/A"
+  ) {
+    try {
+      const existingNuel = await powersync.get<{ actor_id: string }>(
+        `SELECT actor_id FROM ${TABLES.NUELS} WHERE nuel = ? LIMIT 1`,
+        [group.nuel.trim()],
+      );
+      if (existingNuel) {
+        return {
+          success: false,
+          message: `NUEL ${group.nuel.trim()} já está registado para outro actor. Não é possível criar esta ${newGroupType.toLowerCase()}.`,
+        };
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      if (
+        !err?.message?.includes("Result set is empty") &&
+        !String(error).includes("Result set is empty")
+      ) {
+        console.error("Error checking duplicate NUIT:", error);
+      }
+    }
+  }
+
+  try {
+    
+    const actor_row = buildActor({
+      category: ResourceName.FARMER,
+      sync_id: userDistrictId,
+    });
+
+    await insertActor(actor_row);
+
+    const actor_details_row = buildActorDetails({
+      actor_id: actor_row.id,
+      other_names: group.name,
+      surname: "GROUP",
+      photo: "",
+      sync_id: userDistrictId,
+    });
+
+    await insertActorDetails(actor_details_row);
+
+    const actor_category_row = buildActorCategories({
+      actor_id: actor_row.id,
+      category: "GROUP",
+      subcategory: "COOPERATIVE",
+      sync_id: userDistrictId,
+    });
+    await insertActorCategory(actor_category_row);
+
+    const address_detail_row = buildAddressDetail({
+      owner_id: actor_row.id,
+      owner_type: "GROUP",
+      village_id: safePartialAddr.villageId || "",
+      admin_post_id: safePartialAddr.adminPostId || "",
+      district_id: userDistrictId,
+      province_id: userProvinceId,
+      gps_lat: "0",
+      gps_long: "0",
+      sync_id: userDistrictId,
+    });
+
+    await insertAddressDetail(address_detail_row);
+
+    if (group.nuel && group.nuel !== "N/A") {
+      const nuel_row = buildNuel({
+        nuel: group.nuel,
+        actor_id: actor_row.id,
+        sync_id: userDistrictId,
+      });
+      await insertNuel(nuel_row);
+    }
+
+    if (group.nuit && group.nuit !== "N/A") {
+      const nuit_row = buildNuit({
+        nuit: group.nuit,
+        actor_id: actor_row.id,
+        sync_id: userDistrictId,
+      });
+      await insertNuit(nuit_row);
+    }
+
+    // 3. build and insert birth date record
+    const birth_date_row = buildBirthDate({
+      month: 1,
+      day: 1,
+      year: Number(group.creationYear),
+      owner_id: actor_row.id,
+      owner_type: "GROUP",
+      sync_id: userDistrictId,
+    });
+    await insertBirthDate(birth_date_row);
+
+    // 8. build and insert license record
+    if (group.license && group.license !== "N/A") {
+      const license_row = buildLicense({
+        number: `${group.license}-BUSINESS_LICENSE`,
+        owner_id: actor_row.id,
+        owner_type: "GROUP",
+        photo: "",
+        issue_date: new Date().toISOString(),
+        expiration_date: new Date().toISOString(),
+        issue_place_id: userDistrictId,
+        issue_place_type: "DISTRICT",
+        sync_id: userDistrictId,
+      });
+      await insertLicense(license_row);
+    }
+
+    return { success: true, message: `${newGroupType} criada com sucesso` };
+  } catch (error) {
+    const err = error as { message?: string; code?: string };
+    console.error("Error creating group", error);
+    if (
+      err?.message?.includes("NUIT") ||
+      err?.message?.includes("NUEL") ||
+      err?.message?.includes("duplicate") ||
+      err?.code === "23505"
+    ) {
+      return {
+        success: false,
+        message: `Erro: NUIT ou NUEL duplicado. ${err.message || "Este NUIT ou NUEL já está registado para outro produtor."}`,
+      };
+    }
+    return {
+      success: false,
+      message: `Erro ao criar ${newGroupType.toLowerCase()}. Tente novamente.`,
+    };
+  }
+}
 
 export async function insertFarmer(
   params: CreateFarmerParams,
-): Promise<CreateFarmerResult> {
+): Promise<CreateResult> {
   const { farmer, userDistrictId, userProvinceId, partialAddress } = params;
 
   if (!userDistrictId || !userProvinceId) {
@@ -627,18 +895,6 @@ export async function insertFarmer(
     }
   }
 
-  const isCompany = (farmer?.surname ?? "").toLowerCase().includes("company");
-  const categories: MultiCategory[] = [];
-
-  if (farmer.isSmallScale === "YES") {
-    categories.push(MultiCategory.FARMER_SMALL_SCALE);
-  } else if (farmer.isSmallScale === "NO") {
-    categories.push(MultiCategory.FARMER_LARGE_SCALE);
-  }
-  if (farmer.isServiceProvider === "YES") {
-    categories.push(MultiCategory.FARMER_SPRAYING_SERVICE_PROVIDER);
-  }
-
   try {
     const actor_row = buildActor({
       category: ResourceName.FARMER,
@@ -655,7 +911,7 @@ export async function insertFarmer(
     });
     await insertActorDetails(actor_details_row);
 
-    if (!isCompany && farmer.gender) {
+    if (farmer && farmer.gender) {
       const gender_row = buildGenders({
         actor_id: actor_row.id,
         name: farmer.gender,
@@ -663,18 +919,6 @@ export async function insertFarmer(
         sync_id: userDistrictId,
       });
       await insertGenders(gender_row);
-    }
-
-    if (categories.length > 0) {
-      for (const category of categories) {
-        const actor_category_row = buildActorCategories({
-          actor_id: actor_row.id,
-          category: ResourceName.FARMER,
-          subcategory: category,
-          sync_id: userDistrictId,
-        });
-        await insertActorCategory(actor_category_row);
-      }
     }
 
     const contact_detail_row = buildContactDetail({
@@ -732,7 +976,7 @@ export async function insertFarmer(
     }
 
     if (
-      !isCompany &&
+      farmer &&
       farmer.birthDate &&
       new Date(farmer.birthDate).getFullYear() + 12 < new Date().getFullYear()
     ) {
@@ -747,7 +991,7 @@ export async function insertFarmer(
       await insertBirthDate(birth_date_row);
     }
 
-    return { success: true };
+    return { success: true, message: "Produtor criado com sucesso" };
   } catch (error: unknown) {
     const err = error as { message?: string; code?: string };
     console.error("Error creating farmer", error);

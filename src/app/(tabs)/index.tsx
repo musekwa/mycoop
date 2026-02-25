@@ -12,7 +12,7 @@ import { Image } from 'expo-image'
 import { actorOrganizationsImageUri, farmerCategoryImageUri } from '@/constants/image-uris'
 
 // Types
-import { MultiCategory, OrganizationTypes } from '@/types'
+import { OrganizationTypes } from '@/types'
 
 import { useRouter } from 'expo-router'
 import { useQueryMany, useUserDetails } from '@/hooks/queries'
@@ -61,16 +61,13 @@ const useProcessedData = (userDetails: UserDetailsRecord | null) => {
 	} = useQueryMany<{
 		id: string
 		admin_post_id: string
-		multicategory: string
 	}>(
 		shouldQuery
 			? `
 		SELECT 
 			ad.actor_id as id,
-			GROUP_CONCAT(ac.subcategory, ';') as multicategory,
 			addr.admin_post_id as admin_post_id
 		FROM ${TABLES.ACTOR_DETAILS} ad
-		INNER JOIN ${TABLES.ACTOR_CATEGORIES} ac ON ac.actor_id = ad.actor_id AND ac.category = 'FARMER'
 		JOIN ${TABLES.ADDRESS_DETAILS} addr 
 			ON addr.owner_id = ad.actor_id AND addr.owner_type = 'FARMER'
 		WHERE addr.district_id = '${districtId}'
@@ -151,15 +148,9 @@ const useProcessedData = (userDetails: UserDetailsRecord | null) => {
 			return {
 				farmers: {
 					adminPost: post,
-					smallScaleFarmerCount: postFarmers.filter((farmer) =>
-						farmer.multicategory?.includes(MultiCategory.FARMER_SMALL_SCALE),
-					).length,
-					largeScaleFarmerCount: postFarmers.filter((farmer) =>
-						farmer.multicategory?.includes(MultiCategory.FARMER_LARGE_SCALE),
-					).length,
-					sprayingServiceProviderCount: postFarmers.filter((farmer) =>
-						farmer.multicategory?.includes(MultiCategory.FARMER_SPRAYING_SERVICE_PROVIDER),
-					).length,
+					smallScaleFarmerCount: postFarmers.length,
+					largeScaleFarmerCount: postFarmers.length,
+					sprayingServiceProviderCount: postFarmers.length,
 				},
 				organizations: {
 					adminPost: post,
@@ -181,26 +172,26 @@ const useProcessedData = (userDetails: UserDetailsRecord | null) => {
 	}, [shouldQuery, foundAdminPosts, farmers, organizations])
 
 
-	const computedFarmers = useMemo(
-		() => [
-			{
-				name: 'Familiares',
-				icon: 'person',
-				count: farmersByAdminPost.reduce((sum, post) => sum + post.smallScaleFarmerCount, 0),
-			},
-			{
-				name: 'Comerciais',
-				icon: 'person',
-				count: farmersByAdminPost.reduce((sum, post) => sum + post.largeScaleFarmerCount, 0),
-			},
-			{
-				name: 'Prov. de Serviços',
-				icon: 'person',
-				count: farmersByAdminPost.reduce((sum, post) => sum + post.sprayingServiceProviderCount, 0),
-			},
-		],
-		[farmersByAdminPost],
-	)
+	// const computedFarmers = useMemo(
+	// 	() => [
+	// 		{
+	// 			name: 'Familiares',
+	// 			icon: 'person',
+	// 			count: farmersByAdminPost.reduce((sum, post) => sum + post.smallScaleFarmerCount, 0),
+	// 		},
+	// 		{
+	// 			name: 'Comerciais',
+	// 			icon: 'person',
+	// 			count: farmersByAdminPost.reduce((sum, post) => sum + post.largeScaleFarmerCount, 0),
+	// 		},
+	// 		{
+	// 			name: 'Prov. de Serviços',
+	// 			icon: 'person',
+	// 			count: farmersByAdminPost.reduce((sum, post) => sum + post.sprayingServiceProviderCount, 0),
+	// 		},
+	// 	],
+	// 	[farmersByAdminPost],
+	// )
 
 	const computedOrganizations = useMemo(
 		() => [
@@ -226,7 +217,7 @@ const useProcessedData = (userDetails: UserDetailsRecord | null) => {
 	return {
 		farmersByAdminPost,
 		organizationsByAdminPost,
-		computedFarmers,
+		// computedFarmers,
 		computedOrganizations,
 		// isLoading,
 		foundAdminPosts,
@@ -499,7 +490,7 @@ export default function HomeScreen() {
 	const {
 		farmersByAdminPost,
 		organizationsByAdminPost,
-		computedFarmers,
+		// computedFarmers,
 		computedOrganizations,
 		// isLoading: isDataLoading,
 		// foundAdminPosts,
@@ -571,7 +562,7 @@ export default function HomeScreen() {
 								<SummaryStats
 									title="Produtores"
 									iconUri={farmerCategoryImageUri}
-									totals={computedFarmers}
+									totals={[]}
 									isLoading={isUserDetailsLoading}
 								/>
 								<SummaryStats
@@ -592,7 +583,7 @@ export default function HomeScreen() {
 									iconUri={farmerCategoryImageUri}
 									labels={['Familiares', 'Comerciais', 'Prov. Serviços']}
 									data={farmersByAdminPost}
-									totals={computedFarmers}
+									totals={[]}
 									isLoading={isUserDetailsLoading}
 								/>
 								<DataCard

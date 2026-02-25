@@ -10,7 +10,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 
 // Constants and Types
 import { colors } from '@/constants/colors'
-import { MultiCategory, TransactionFlowType } from '@/types'
+import {  TransactionFlowType } from '@/types'
 
 import { ActorDetailRecord, TABLES, WarehouseDetailRecord } from '@/library/powersync/app-schemas'
 import { useQueryManyAndWatchChanges, useUserDetails } from '@/hooks/queries'
@@ -342,126 +342,13 @@ const CashewTradesStats = ({ stats }: { stats: TransactionStats }) => {
 	)
 }
 
-const useTraderCounts = (): TraderCounts => {
-	const { userDetails } = useUserDetails()
-	const [counts, setCounts] = useState<TraderCounts>({
-		primary: 0,
-		secondary: 0,
-		final: 0,
-		informal: 0,
-		total: 0,
-	})
-
-	const {
-		data: districtTraders,
-		isLoading: isDistrictTradersLoading,
-		error: districtTradersError,
-		isError: isDistrictTradersError,
-	} = useQueryManyAndWatchChanges<{
-		id: string
-		multicategory: string
-	}>(
-		`SELECT DISTINCT 
-			t.actor_id as id, 
-			GROUP_CONCAT(ac.subcategory, ';') as multicategory
-		FROM ${TABLES.ACTOR_DETAILS} t
-		INNER JOIN ${TABLES.ACTOR_CATEGORIES} ac ON ac.actor_id = t.actor_id AND ac.category = 'TRADER'
-		JOIN ${TABLES.WAREHOUSE_DETAILS} wd ON wd.owner_id = t.actor_id
-		LEFT JOIN ${TABLES.ADDRESS_DETAILS} ad ON ad.owner_id = wd.id AND ad.owner_type = 'WAREHOUSE'
-		WHERE ad.district_id = '${userDetails?.district_id}'
-		AND wd.is_active = 'true'
-		GROUP BY t.actor_id`,
-	)
-
-	useEffect(() => {
-		if (districtTraders) {
-			const counts = districtTraders.reduce(
-				(acc, trader) => {
-					const categories = trader.multicategory.split(';')
-
-					if (categories.includes(MultiCategory.TRADER_PRIMARY)) {
-						acc.primary++
-					}
-					if (categories.includes(MultiCategory.TRADER_SECONDARY)) {
-						acc.secondary++
-					}
-					if (
-						categories.some((cat) =>
-							[
-								MultiCategory.TRADER_EXPORT,
-								MultiCategory.TRADER_LARGE_SCALE_PROCESSING,
-								MultiCategory.TRADER_SMALL_SCALE_PROCESSING,
-							].includes(cat as MultiCategory),
-						)
-					) {
-						acc.final++
-					}
-					if (categories.includes(MultiCategory.TRADER_INFORMAL)) {
-						acc.informal++
-					}
-					return acc
-				},
-				{
-					primary: 0,
-					secondary: 0,
-					final: 0,
-					informal: 0,
-					total: districtTraders.length,
-				},
-			)
-
-			setCounts(counts)
-		}
-	}, [districtTraders])
-	return counts
-}
 
 const ActiveTradersCounts = () => {
-	const counts = useTraderCounts()
+	
 
 	return (
 		<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-			<View className="flex-row justify-between space-x-3 w-full">
-				<View className="flex-row justify-between space-x-2">
-					<Ionicons name="people-outline" size={20} color={colors.primary} />
-					<Text className="text-[#008000] text-[14px] font-semibold">Comerciantes activos</Text>
-				</View>
-				<View className="flex-row justify-between space-x-2 bg-green-100 rounded-md px-2 py-1">
-					<Text className="text-green-600 font-semibold text-[10px] italic">
-						Total: {Intl.NumberFormat('pt-BR').format(counts.total)}
-					</Text>
-				</View>
-			</View>
-			<View className="flex-row justify-between space-x-3 w-full">
-				<SingleTradeStats
-					label="Primários"
-					value={counts.primary}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-				<SingleTradeStats
-					label="Intermediários"
-					value={counts.secondary}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-				<SingleTradeStats
-					label="Finais"
-					value={counts.final}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-				<SingleTradeStats
-					label="Informais"
-					value={counts.informal}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-			</View>
+
 		</View>
 	)
 }

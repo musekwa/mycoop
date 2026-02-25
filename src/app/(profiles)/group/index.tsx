@@ -16,7 +16,7 @@ import { Href, useNavigation, useRouter } from 'expo-router'
 import { useActionStore } from '@/store/actions/actions'
 import { FontAwesome } from '@expo/vector-icons'
 
-export default function OrganizationIndexScreen() {
+export default function GroupsIndexScreen() {
 	const navigation = useNavigation()
 	const router = useRouter()
 	const isDark = useColorScheme() === 'dark'
@@ -65,7 +65,7 @@ export default function OrganizationIndexScreen() {
 						<CurrentStock label="Estoque Disponível" currentStock={currentStock} />
 
 						<View className="space-y-2 border border-gray-200 dark:border-gray-800 rounded-lg p-1">
-							<View className="flex-row justify-between items-center h-[50px]">
+							<View className="flex-row justify-between items-center h-12.5">
 								<View className="flex-row items-center space-x-2">
 									<Ionicons name="stats-chart" size={24} color="#4A90E2" className="mr-2" />
 									<Text className="text-gray-900 dark:text-gray-100 text-[12px]">Visitas de Monitoria:</Text>
@@ -77,7 +77,7 @@ export default function OrganizationIndexScreen() {
 								</View>
 							</View>
 
-							<View className="h-[50px] flex-row justify-between items-center ">
+							<View className="h-12.5 flex-row justify-between items-center ">
 								<View className="flex-row items-center space-x-2">
 									<Ionicons name="people" size={24} color={colors.primary} className="mr-2" />
 									<Text className="text-gray-900 dark:text-gray-100 text-[12px]">Membros activos:</Text>

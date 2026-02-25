@@ -2,16 +2,19 @@ import SubmitButton from "@/components/buttons/submit-button";
 import { colors } from "@/constants/colors";
 import { useUserDetails } from "@/hooks/queries";
 import { useCheckOrganizationDuplicate } from "@/hooks/use-check-organization-duplicates";
+import { insertGroup } from "@/library/powersync/sql-statements";
 import { useAddressStore } from "@/store/address";
 import { useCoopStore } from "@/store/organizations";
 import { CoopAffiliationStatus, OrganizationTypes } from "@/types";
 import { Fontisto } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import GroupAddressSegment from "./segments/GroupAddressSegment";
 import GroupBasicInfoSegment from "./segments/GroupBasicInfoSegment";
 import GroupLegalStatusSegment from "./segments/GroupLegalStatusSegment";
+import SuccessAlert from "@/components/alerts/success-alert";
+import ErrorAlert from "@/components/alerts/error-alert";
 
 type SegmentId = "basicInfo" | "legalStatus" | "address";
 
@@ -66,12 +69,13 @@ export default function CooperativeSegmentedDataForm() {
   const { userDetails } = useUserDetails();
 
   const { resetFormData, formData } = useCoopStore();
-  const { reset: resetAddress } = useAddressStore();
+  const { reset: resetAddress, partialAddress } = useAddressStore();
   const [activeSegment, setActiveSegment] = useState<SegmentId | null>(null);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const completion = useSegmentCompletion();
 
   const allComplete =
@@ -125,8 +129,41 @@ export default function CooperativeSegmentedDataForm() {
       return;
     }
 
-    if (allComplete) {
+    if (allComplete && !hasError) {
       //
+      const { success, message } = await insertGroup({
+        group: {
+          name: formData.name,
+          creationYear: formData.creationYear,
+          affiliationStatus: formData.affiliationStatus,
+          affiliationYear: formData.affiliationYear,
+          license: formData.license,
+          nuel: formData.nuel,
+          nuit: formData.nuit,
+        },
+        groupType: 'COOPERATIVE' as OrganizationTypes,
+        userDistrictId: userDetails.district_id,
+        userProvinceId: userDetails.province_id,
+        partialAddress: {
+          adminPostId: partialAddress.adminPostId || "",
+          villageId: partialAddress.villageId || "",
+        },
+      });
+
+
+      setIsSaving(false)
+      if (success) {
+        resetFormData();
+        resetAddress();
+        setSuccess(true);
+        setTimeout(() => {
+          router.replace("/(tabs)/actors/cooperatives" as Href);
+        }, 400);
+      } else {
+        console.log("error", message)
+        setHasError(true);
+        setErrorMessage(message);
+      }
     }
   }, [isCheckingDuplicate, hasDuplicate, allComplete]);
 
@@ -142,7 +179,7 @@ export default function CooperativeSegmentedDataForm() {
       >
         <Text className="text-xs italic text-gray-600 dark:text-gray-400 mb-6">
           Toque num segmento para abrir e preencher. Assim que todos estiverem
-          preenchidos, o botão para pré-visualizar aparecerá em baixo.
+          preenchidos, o botão para gravar aparecerá em baixo.
         </Text>
 
         {SEGMENTS.map((segment) => {
@@ -279,6 +316,19 @@ export default function CooperativeSegmentedDataForm() {
             </View>
           </View>
         </Modal> */}
+      
+       <ErrorAlert
+              visible={hasError}
+              title="Erro ao gravar dados"
+              message={errorMessage}
+              setMessage={setErrorMessage}
+              setVisible={setHasError}
+            />
+            <SuccessAlert
+              visible={success}
+              setVisible={setSuccess}
+              route={"/(tabs)/actors/cooperatives" as Href}
+            />
     </View>
   );
 }

@@ -38,7 +38,6 @@ type FarmerItem = {
   id: string;
   surname: string;
   other_names: string;
-  multicategory: string;
   admin_post_id: string;
   primary_phone: string;
   secondary_phone: string;
@@ -66,7 +65,6 @@ export default function FarmersScreen() {
 			ad.actor_id as id, 
 			ad.surname, 
 			ad.other_names, 
-			'' as multicategory, 
 			addr.admin_post_id, 
 			cd.primary_phone, 
 			cd.secondary_phone 
@@ -89,7 +87,6 @@ export default function FarmersScreen() {
     id: string;
     surname: string;
     other_names: string;
-    multicategory: string;
     admin_post_id: string;
     primary_phone: string;
     secondary_phone: string;
