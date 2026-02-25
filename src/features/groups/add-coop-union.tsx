@@ -1,625 +1,279 @@
-import NextAndPreviousButtons from '@/components/buttons/next-and-previous-button'
-import Label from '@/components/form-items/custom-label'
-import { CustomPicker } from '@/components/form-items/custom-picker'
-import CustomTextInput from '@/components/form-items/custom-text-input'
-import FormFieldPreview from '@/components/form-items/form-field-preview'
-import FormItemDescription from '@/components/form-items/form-item-description'
-import FormStepIndicator from '@/components/form-items/form-step-indicator'
-import PickAddress from '@/components/form-items/pick-address'
-import { colors } from '@/constants/colors'
-import { errorMessages } from '@/constants/error-messages'
-import { capitalize } from '@/helpers/capitalize'
-import { getFullYears } from '@/helpers/dates'
-import { useUserDetails } from '@/hooks/queries'
-import { useCheckOrganizationDuplicate } from '@/hooks/use-check-organization-duplicates'
-import { useAddressStore } from '@/store/address'
-import { useCoopUnionStore } from '@/store/organizations'
-import { AddressLevel, OrganizationTypes } from '@/types'
-import { Fontisto } from '@expo/vector-icons'
-import { zodResolver } from '@hookform/resolvers/zod'
-import React, { useEffect, useState } from 'react'
-import { Control, Controller, FieldErrors, useForm } from 'react-hook-form'
-import { Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-tools'
-import { Divider } from 'react-native-paper'
-import { z } from 'zod'
+import FormFieldPreview from "@/components/form-items/form-field-preview";
+import { colors } from "@/constants/colors";
+import { capitalize } from "@/helpers/capitalize";
+import { useCheckOrganizationDuplicate } from "@/hooks/use-check-organization-duplicates";
+import { useAddressStore } from "@/store/address";
+import { useCoopUnionStore } from "@/store/organizations";
+import { OrganizationTypes } from "@/types";
+import { Fontisto } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Divider } from "react-native-paper";
+import GroupAddressSegment from "./segments/GroupAddressSegment";
+import GroupBasicInfoSegment from "./segments/GroupBasicInfoSegment";
+import GroupLegalStatusSegment from "./segments/GroupLegalStatusSegment";
 
-const CoopUnionSchema = z
-	.object({
-		name: z.string().trim().min(2, 'Indica o nome da União.'),
-		affiliationYear: z.string().optional(),
-		license: z.string().optional(),
-		nuel: z
-			.union([
-				z.literal(''),
-				z.string().regex(/^\d{9}$/, {
-					message: 'NUEL deve ter 9 dígitos',
-				}),
-			])
-			.optional(),
-		nuit: z.union([
-			z.literal(''),
-			z
-				.string()
-				.regex(/^\d{9}$/, {
-					message: 'NUIT deve ter 9 dígitos',
-				})
-				.optional(),
-		]),
-	})
-	.superRefine((data, ctx) => {
-		if (!data.nuel) {
-			ctx.addIssue({
-				path: ['nuel'],
-				message: 'Indica o NUEL da cooperativa',
-				code: 'custom',
-			})
-		}
-		if (!data.nuit) {
-			ctx.addIssue({
-				path: ['nuit'],
-				message: 'Indica o NUIT da cooperativa',
-				code: 'custom',
-			})
-		}
-		if (!data.license) {
-			ctx.addIssue({
-				path: ['license'],
-				message: 'Indica o número de licença da cooperativa',
-				code: 'custom',
-			})
-		}
-		if (!data.affiliationYear) {
-			ctx.addIssue({
-				path: ['affiliationYear'],
-				message: 'Indica o ano de legalização da cooperativa',
-				code: 'custom',
-			})
-		}
-	})
+type SegmentId = "basicInfo" | "legalStatus" | "address";
 
-type CoopUnionFormData = z.infer<typeof CoopUnionSchema>
+const SEGMENTS: { id: SegmentId; title: string }[] = [
+  { id: "basicInfo", title: "Informação Básica" },
+  { id: "legalStatus", title: "Estado Legal" },
+  { id: "address", title: "Endereço" },
+];
 
-type CustomErrorType = {
-	[key: string]: string
+function useSegmentCompletion() {
+  const { formData } = useCoopUnionStore();
+  const { partialAddress } = useAddressStore();
+
+  const isBasicInfoComplete = Boolean(
+    formData.name && formData.name.trim().length >= 2,
+  );
+
+  const isLegalStatusComplete = Boolean(
+    formData.affiliationYear &&
+    formData.license &&
+    formData.nuel &&
+    /^\d{9}$/.test((formData.nuel || "").trim()) &&
+    formData.nuit &&
+    /^\d{9}$/.test((formData.nuit || "").trim()),
+  );
+
+  const isAddressComplete = Boolean(
+    partialAddress?.adminPostId &&
+    partialAddress.adminPostId.trim() !== "" &&
+    partialAddress?.villageId &&
+    partialAddress.villageId.trim() !== "",
+  );
+
+  return {
+    basicInfo: isBasicInfoComplete,
+    legalStatus: isLegalStatusComplete,
+    address: isAddressComplete,
+  };
 }
 
 type AddCoopUnionFormProps = {
-	setPreviewData: (preview: boolean) => void
-	setErrorMessage: (message: string) => void
-	setHasError: (error: boolean) => void
-}
-
-type BasicInfoScreenProps = {
-	control: Control<CoopUnionFormData>
-	errors: FieldErrors<CoopUnionFormData>
-	customErrors: CustomErrorType
-	clearFieldError: (fieldName: string) => void
-}
-
-type LegalStatusScreenProps = {
-	control: Control<CoopUnionFormData>
-	errors: FieldErrors<CoopUnionFormData>
-	customErrors: CustomErrorType
-	clearFieldError: (fieldName: string) => void
-}
-
-type AddressScreenProps = {
-	control: any
-	errors: any
-	customErrors: CustomErrorType
-	clearFieldError: (fieldName: string) => void
-	districtId: string
-}
-
-// Screen Components
-const BasicInfoScreen = ({ control, errors, customErrors, clearFieldError }: BasicInfoScreenProps) => {
-	return (
-		<View className="w-full space-y-4">
-			<FormItemDescription description="Informações básicas da união de cooperativas" />
-			<View className="">
-				<Label label="Nome da União" />
-				<Controller
-					control={control}
-					name="name"
-					rules={{ required: true }}
-					render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
-						<>
-							<CustomTextInput
-								label=""
-								value={value}
-								onChangeText={(text) => {
-									onChange(text)
-									clearFieldError('name')
-								}}
-								onBlur={onBlur}
-								autoCapitalize="words"
-								placeholder="Nome da união"
-							/>
-							{error ? (
-								<Text className="text-xs text-red-500">{error.message}</Text>
-							) : customErrors?.name ? (
-								<Text className="text-xs text-red-500">{customErrors.name}</Text>
-							) : (
-								<Text className="text-xs text-gray-500">Nome da união das cooperativas</Text>
-							)}
-						</>
-					)}
-				/>
-			</View>
-		</View>
-	)
-}
-
-const LegalStatusScreen = ({ control, errors, customErrors, clearFieldError }: LegalStatusScreenProps) => {
-	return (
-		<View className="w-full space-y-4">
-			<FormItemDescription description="Informações sobre a legalização da união" />
-			<View className="">
-				<Label label="Ano de Legalização" />
-				<Controller
-					control={control}
-					name="affiliationYear"
-					rules={{ required: true }}
-					render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
-						<>
-							<CustomPicker
-								value={value || ''}
-								setValue={(val) => {
-									onChange(val)
-									clearFieldError('affiliationYear')
-								}}
-								items={getFullYears()}
-								placeholder={{ label: 'Ano de Legalização', value: null }}
-							/>
-							{error ? (
-								<Text className="text-xs text-red-500">{error.message}</Text>
-							) : customErrors?.affiliationYear ? (
-								<Text className="text-xs text-red-500">{customErrors.affiliationYear}</Text>
-							) : (
-								<Text className="text-xs text-gray-500">Ano de Legalização</Text>
-							)}
-						</>
-					)}
-				/>
-			</View>
-			<View className="">
-				<Label label="Número de Licença" />
-				<Controller
-					control={control}
-					name="license"
-					rules={{ required: true }}
-					render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
-						<>
-							<CustomTextInput
-								label=""
-								value={value}
-								onChangeText={(text) => {
-									onChange(text)
-									clearFieldError('license')
-								}}
-								onBlur={onBlur}
-								autoCapitalize="characters"
-								placeholder="Número de Licença"
-							/>
-							{error ? (
-								<Text className="text-xs text-red-500">{error.message}</Text>
-							) : customErrors?.license ? (
-								<Text className="text-xs text-red-500">{customErrors.license}</Text>
-							) : (
-								<Text className="text-xs text-gray-500">Número de Licença</Text>
-							)}
-						</>
-					)}
-				/>
-			</View>
-			<View className="">
-				<Label label="NUEL" />
-				<Controller
-					control={control}
-					name="nuel"
-					rules={{ required: true }}
-					render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
-						<>
-							<CustomTextInput
-								label=""
-								value={value}
-								onChangeText={(text) => {
-									onChange(text)
-									clearFieldError('nuel')
-								}}
-								onBlur={onBlur}
-								keyboardType="numeric"
-								placeholder="NUEL"
-							/>
-							{error ? (
-								<Text className="text-xs text-red-500">{error.message}</Text>
-							) : customErrors?.nuel ? (
-								<Text className="text-xs text-red-500">{customErrors.nuel}</Text>
-							) : (
-								<Text className="text-xs text-gray-500">Número Único de Entidade Legal</Text>
-							)}
-						</>
-					)}
-				/>
-			</View>
-			<View className="">
-				<Label label="NUIT" />
-				<Controller
-					control={control}
-					name="nuit"
-					rules={{ required: true }}
-					render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
-						<>
-							<CustomTextInput
-								label=""
-								value={value}
-								onChangeText={(text) => {
-									onChange(text)
-									clearFieldError('nuit')
-								}}
-								onBlur={onBlur}
-								keyboardType="numeric"
-								placeholder="NUIT"
-							/>
-							{error ? (
-								<Text className="text-xs text-red-500">{error.message}</Text>
-							) : customErrors?.nuit ? (
-								<Text className="text-xs text-red-500">{customErrors.nuit}</Text>
-							) : (
-								<Text className="text-xs text-gray-500">Número Único de Identificação Tributária</Text>
-							)}
-						</>
-					)}
-				/>
-			</View>
-		</View>
-	)
-}
-
-const AddressScreen = ({ control, errors, customErrors, clearFieldError, districtId }: AddressScreenProps) => {
-	return (
-		<PickAddress
-			control={control}
-			errors={errors}
-			customErrors={customErrors}
-			clearFieldError={clearFieldError}
-			districtId={districtId}
-			addressLevel={AddressLevel.FROM_ADMIN_POSTS}
-			description="Indica o endereço da união"
-		/>
-	)
-}
+  setPreviewData: (preview: boolean) => void;
+  setErrorMessage: (message: string) => void;
+  setHasError: (error: boolean) => void;
+};
 
 export default function AddCoopUnionForm({
-	setPreviewData,
-	setErrorMessage,
-	setHasError,
+  setPreviewData,
+  setErrorMessage,
+  setHasError,
 }: AddCoopUnionFormProps) {
-	const { userDetails } = useUserDetails()
-	const { resetFormData, setFormData, formData } = useCoopUnionStore()
-	const { validateByAddressLevel } = useAddressStore()
-	const { width } = useWindowDimensions()
-	const barWidth = width - 5 * 8
+  const { resetFormData, formData } = useCoopUnionStore();
+  const { reset: resetAddress } = useAddressStore();
+  const [activeSegment, setActiveSegment] = useState<SegmentId | null>(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const completion = useSegmentCompletion();
 
-	const {
-		control,
-		handleSubmit,
-		formState: { errors },
-		getValues,
-		watch,
-	} = useForm<CoopUnionFormData>({
-		defaultValues: {
-			name: formData?.name || '',
-			affiliationYear: formData?.affiliationYear || '',
-			license: formData?.license || '',
-			nuel: formData?.nuel || '',
-			nuit: formData?.nuit || '',
-		},
-		resolver: zodResolver(CoopUnionSchema),
-	})
+  const allComplete =
+    completion.basicInfo && completion.legalStatus && completion.address;
 
-	const [customErrors, setCustomErrors] = useState<CustomErrorType>({})
-	const [currentScreen, setCurrentScreen] = useState(0)
-	const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  useEffect(() => {
+    resetFormData();
+    resetAddress();
+  }, []);
 
-	// Watch form values for duplicate checking
-	const nameValue = watch('name')
-	const nuitValue = watch('nuit')
-	const nuelValue = watch('nuel')
+  const {
+    hasDuplicate,
+    duplicateType,
+    message: duplicateMessage,
+    isLoading: isCheckingDuplicate,
+    duplicateOrganizations,
+  } = useCheckOrganizationDuplicate({
+    name: formData.name || "",
+    nuit: formData.nuit || undefined,
+    nuel: formData.nuel || undefined,
+    organizationType: OrganizationTypes.COOP_UNION,
+  });
 
-	// Check for duplicates
-	const {
-		hasDuplicate,
-		duplicateType,
-		message: duplicateMessage,
-		isLoading: isCheckingDuplicate,
-		duplicateOrganizations,
-	} = useCheckOrganizationDuplicate({
-		name: nameValue || '',
-		nuit: nuitValue || undefined,
-		nuel: nuelValue || undefined,
-		organizationType: OrganizationTypes.COOP_UNION,
-	})
+  const handleSegmentPress = (id: SegmentId) => {
+    setActiveSegment((prev) => (prev === id ? null : id));
+  };
 
-	const clearFieldError = (fieldName: string) => {
-		setCustomErrors((prev) => {
-			const newErrors = { ...prev }
-			delete newErrors[fieldName]
-			return newErrors
-		})
-	}
+  const handleSegmentClose = () => {
+    setActiveSegment(null);
+  };
 
-	// Reset duplicate state when inputs change - clear errors immediately when inputs change
-	useEffect(() => {
-		// Clear name error immediately when name changes - will be re-set if duplicate still exists
-		setCustomErrors((prev) => {
-			const newErrors = { ...prev }
-			delete newErrors.name
-			return newErrors
-		})
-	}, [nameValue])
+  const handlePreview = () => {
+    if (isCheckingDuplicate) return;
 
-	useEffect(() => {
-		// Clear NUIT error immediately when NUIT changes
-		setCustomErrors((prev) => {
-			const newErrors = { ...prev }
-			delete newErrors.nuit
-			return newErrors
-		})
-	}, [nuitValue])
+    if (hasDuplicate) {
+      setShowDuplicateModal(true);
+      return;
+    }
 
-	useEffect(() => {
-		// Clear NUEL error immediately when NUEL changes
-		setCustomErrors((prev) => {
-			const newErrors = { ...prev }
-			delete newErrors.nuel
-			return newErrors
-		})
-	}, [nuelValue])
+    if (allComplete) {
+    //   setPreviewData(true);
+    }
+  };
 
-	// Separate effect to handle duplicate state changes
-	useEffect(() => {
-		// Close modal if duplicates are resolved
-		if (!hasDuplicate && showDuplicateModal) {
-			setShowDuplicateModal(false)
-		}
+  return (
+    <View className="flex-1">
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 16,
+          paddingBottom: 200,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text className="text-xs italic text-gray-600 dark:text-gray-400 mb-6">
+          Toque num segmento para abrir e preencher. Assim que todos estiverem
+          preenchidos, o botão para pré-visualizar aparecerá em baixo.
+        </Text>
 
-		// Clear all duplicate errors when no duplicate exists and check is complete
-		if (!hasDuplicate && !isCheckingDuplicate) {
-			setCustomErrors((prev) => {
-				const newErrors = { ...prev }
-				delete newErrors.name
-				delete newErrors.nuit
-				delete newErrors.nuel
-				return newErrors
-			})
-		}
-	}, [hasDuplicate, isCheckingDuplicate, showDuplicateModal, duplicateType])
+        {SEGMENTS.map((segment) => {
+          const isComplete = completion[segment.id];
+          const isOpen = activeSegment === segment.id;
+          return (
+            <View key={segment.id} className="mb-3">
+              <TouchableOpacity
+                onPress={() => handleSegmentPress(segment.id)}
+                activeOpacity={0.7}
+                className="flex-row items-center justify-between py-4 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+              >
+                <Text
+                  className={`text-base font-medium flex-1 ${
+                    isComplete
+                      ? "text-green-700 dark:text-green-400"
+                      : "text-gray-900 dark:text-white"
+                  }`}
+                >
+                  {segment.title}
+                </Text>
+                <View className="w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-gray-700">
+                  {isComplete ? (
+                    <Fontisto name="check" size={20} color={colors.primary} />
+                  ) : isOpen ? (
+                    <Fontisto name="minus-a" size={18} color={colors.primary} />
+                  ) : (
+                    <Fontisto name="plus-a" size={18} color={colors.primary} />
+                  )}
+                </View>
+              </TouchableOpacity>
 
-	const validateCurrentScreen = () => {
-		const values = getValues()
-		const currentErrors: CustomErrorType = {}
+              {segment.id === "basicInfo" ? (
+                <GroupBasicInfoSegment
+                  visible={isOpen}
+                  onClose={handleSegmentClose}
+                  variant="inline"
+                  groupType={OrganizationTypes.COOP_UNION}
+                />
+              ) : null}
+              {segment.id === "legalStatus" ? (
+                <GroupLegalStatusSegment
+                  visible={isOpen}
+                  onClose={handleSegmentClose}
+                  variant="inline"
+                  groupType={OrganizationTypes.COOP_UNION}
+                />
+              ) : null}
+              {segment.id === "address" ? (
+                <GroupAddressSegment
+                  visible={isOpen}
+                  onClose={handleSegmentClose}
+                  variant="inline"
+                  description="Indica o endereço da união"
+                />
+              ) : null}
+            </View>
+          );
+        })}
+      </ScrollView>
 
-		switch (currentScreen) {
-			case 0: // Basic Info
-				if (!values.name) {
-					currentErrors.name = 'Indica o nome da união'
-				} else if (hasDuplicate && duplicateType === 'name') {
-					currentErrors.name = duplicateMessage
-				}
-				break
-			case 1: // Legal Status
-				if (!values.affiliationYear) {
-					currentErrors.affiliationYear = 'Indica o ano de legalização'
-				}
-				if (!values.license) {
-					currentErrors.license = 'Indica o número de licença'
-				}
-				if (!values.nuel) {
-					currentErrors.nuel = 'Indica o NUEL'
-				} else if (!/^\d{9}$/.test(values.nuel.trim())) {
-					currentErrors.nuel = 'NUEL deve ter 9 dígitos'
-				} else if (hasDuplicate && duplicateType === 'nuel') {
-					currentErrors.nuel = duplicateMessage
-				}
-				if (!values.nuit) {
-					currentErrors.nuit = 'Indica o NUIT'
-				} else if (!/^\d{9}$/.test(values.nuit.trim())) {
-					currentErrors.nuit = 'NUIT deve ter 9 dígitos'
-				} else if (hasDuplicate && duplicateType === 'nuit') {
-					currentErrors.nuit = duplicateMessage
-				}
-				break
-			case 3: // Address
-				const addressResult = validateByAddressLevel(AddressLevel.FROM_ADMIN_POSTS)
-				if (!addressResult.success) {
-					currentErrors.address = addressResult.message
-				}
-				break
-		}
+      {allComplete && (
+        <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
+          <TouchableOpacity
+            onPress={handlePreview}
+            disabled={isCheckingDuplicate}
+            activeOpacity={0.8}
+            style={{
+              backgroundColor: isCheckingDuplicate
+                ? colors.gray100
+                : colors.primary,
+              paddingVertical: 14,
+              borderRadius: 12,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{ color: colors.white, fontWeight: "600", fontSize: 16 }}
+            >
+              Pré-visualizar
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-		setCustomErrors(currentErrors)
-		return Object.keys(currentErrors).length === 0
-	}
-
-	const onSubmit = async (data: CoopUnionFormData) => {
-		// Wait for duplicate check to complete
-		if (isCheckingDuplicate) {
-			return
-		}
-
-		const isValid = validateCurrentScreen()
-
-		// Check for duplicates before proceeding
-		if (hasDuplicate) {
-			setShowDuplicateModal(true)
-			// Set errors on relevant fields
-			if (duplicateType === 'name') {
-				setCustomErrors((prev) => ({ ...prev, name: duplicateMessage }))
-			} else if (duplicateType === 'nuit') {
-				setCustomErrors((prev) => ({ ...prev, nuit: duplicateMessage }))
-			} else if (duplicateType === 'nuel') {
-				setCustomErrors((prev) => ({ ...prev, nuel: duplicateMessage }))
-			}
-			return
-		}
-
-		if (isValid) {
-			setFormData({
-				...data,
-			})
-			setPreviewData(true)
-		} else {
-			setHasError(true)
-			setErrorMessage(errorMessages.formFields)
-		}
-	}
-
-	const handleNext = () => {
-		if (currentScreen < screens.length - 1) {
-			const isValid = validateCurrentScreen()
-			if (isValid) {
-				setCurrentScreen(currentScreen + 1)
-			}
-		}
-	}
-
-	const handlePrevious = () => {
-		if (currentScreen > 0) {
-			setCurrentScreen(currentScreen - 1)
-		}
-	}
-
-	useEffect(() => {
-		resetFormData()
-	}, [])
-
-	useEffect(() => {
-		if ((errors && Object.keys(errors).length > 0) || Object.keys(customErrors).length > 0) {
-			setErrorMessage(errorMessages.formFields)
-		}
-	}, [errors, customErrors])
-
-	const screens = [
-		{
-			title: 'Informação Básica',
-			component: (
-				<BasicInfoScreen
-					control={control}
-					errors={errors}
-					customErrors={customErrors}
-					clearFieldError={clearFieldError}
-				/>
-			),
-		},
-		{
-			title: 'Estado Legal',
-			component: (
-				<LegalStatusScreen
-					control={control}
-					errors={errors}
-					customErrors={customErrors}
-					clearFieldError={clearFieldError}
-				/>
-			),
-		},
-		{
-			title: 'Endereço',
-			component: (
-				<AddressScreen
-					control={control}
-					errors={errors}
-					customErrors={customErrors}
-					clearFieldError={clearFieldError}
-					districtId={userDetails?.district_id || ''}
-				/>
-			),
-		},
-	]
-
-	return (
-		<View className="flex-1 relative">
-			<FormStepIndicator
-				barWidth={barWidth / (screens.length + 1)}
-				currentStep={currentScreen}
-				totalSteps={screens.length + 1}
-			/>
-			<KeyboardAwareScrollView
-				decelerationRate={'normal'}
-				fadingEdgeLength={2}
-				keyboardDismissMode="on-drag"
-				keyboardShouldPersistTaps="handled"
-				showsVerticalScrollIndicator={false}
-				scrollEventThrottle={16}
-				contentContainerStyle={{
-					paddingBottom: 200,
-					paddingTop: 20,
-					alignItems: 'center',
-				}}
-				className="space-y-4 flex-1 p-3"
-			>
-				{screens[currentScreen].component}
-			</KeyboardAwareScrollView>
-
-			<View className="absolute bottom-12 left-6 right-6">
-				<NextAndPreviousButtons
-					// currentStep={currentScreen}
-					handlePreviousStep={handlePrevious}
-					handleNextStep={currentScreen === screens.length - 1 ? handleSubmit(onSubmit) : handleNext}
-					previousButtonDisabled={currentScreen === 0}
-					nextButtonDisabled={currentScreen === screens.length}
-					nextButtonText={currentScreen === screens.length - 1 ? 'Avançar' : 'Avançar'}
-					previousButtonText={currentScreen === 0 ? 'Voltar' : 'Anterior'}
-					showPreviousButton={currentScreen > 0}
-				/>
-			</View>
-
-			{/* Duplicate Modal */}
-			<Modal visible={showDuplicateModal} animationType="slide" transparent={true}>
-				<View className="flex-1 bg-black/50 justify-end">
-					<View className="bg-white rounded-t-3xl max-h-[80%]">
-						<View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-							<View className="flex-row items-center space-x-2">
-								<Fontisto name="info" size={20} color={colors.red} />
-								<Text className="text-lg font-bold text-gray-800">
-									Não é possível prosseguir enquanto existirem duplicados
-								</Text>
-							</View>
-							<TouchableOpacity onPress={() => setShowDuplicateModal(false)}>
-								<Fontisto name="close" size={20} color={colors.gray600} />
-							</TouchableOpacity>
-						</View>
-						<ScrollView className="flex-1 p-4">
-							{duplicateOrganizations.length > 0 && (
-								<View className="space-y-4">
-									{duplicateOrganizations.map((org, index) => {
-										const orgTypeLabel =
-											org.organization_type === OrganizationTypes.ASSOCIATION
-												? 'Associação'
-												: org.organization_type === OrganizationTypes.COOPERATIVE
-													? 'Cooperativa'
-													: 'União de Cooperativas'
-										return (
-											<View key={org.id} className="bg-gray-50 p-4 rounded-lg space-y-2">
-												<FormFieldPreview title="Tipo" value={orgTypeLabel} />
-												<FormFieldPreview title="Nome" value={capitalize(org.group_name)} />
-												{org.nuit && org.nuit.trim() !== '0' && org.nuit.trim() !== '' && org.nuit.trim() !== 'N/A' && (
-													<FormFieldPreview title="NUIT" value={org.nuit} />
-												)}
-												{org.nuel && org.nuel.trim() !== '0' && org.nuel.trim() !== '' && org.nuel.trim() !== 'N/A' && (
-													<FormFieldPreview title="NUEL" value={org.nuel} />
-												)}
-												{index < duplicateOrganizations.length - 1 && <Divider className="my-2" />}
-											</View>
-										)
-									})}
-								</View>
-							)}
-						</ScrollView>
-					</View>
-				</View>
-			</Modal>
-		</View>
-	)
+      {/* Duplicate Modal */}
+      <Modal
+        visible={showDuplicateModal}
+        animationType="slide"
+        transparent={true}
+      >
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-3xl max-h-[80%]">
+            <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+              <View className="flex-row items-center space-x-2">
+                <Fontisto name="info" size={20} color={colors.red} />
+                <Text className="text-lg font-bold text-gray-800">
+                  Não é possível prosseguir enquanto existirem duplicados
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowDuplicateModal(false)}>
+                <Fontisto name="close" size={20} color={colors.gray600} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView className="flex-1 p-4">
+              {duplicateOrganizations.length > 0 && (
+                <View className="space-y-4">
+                  {duplicateOrganizations.map((org, index) => {
+                    const orgTypeLabel =
+                      org.organization_type === OrganizationTypes.ASSOCIATION
+                        ? "Associação"
+                        : org.organization_type ===
+                            OrganizationTypes.COOPERATIVE
+                          ? "Cooperativa"
+                          : "União de Cooperativas";
+                    return (
+                      <View
+                        key={org.id}
+                        className="bg-gray-50 p-4 rounded-lg space-y-2"
+                      >
+                        <FormFieldPreview title="Tipo" value={orgTypeLabel} />
+                        <FormFieldPreview
+                          title="Nome"
+                          value={capitalize(org.group_name)}
+                        />
+                        {org.nuit &&
+                          org.nuit.trim() !== "0" &&
+                          org.nuit.trim() !== "" &&
+                          org.nuit.trim() !== "N/A" && (
+                            <FormFieldPreview title="NUIT" value={org.nuit} />
+                          )}
+                        {org.nuel &&
+                          org.nuel.trim() !== "0" &&
+                          org.nuel.trim() !== "" &&
+                          org.nuel.trim() !== "N/A" && (
+                            <FormFieldPreview title="NUEL" value={org.nuel} />
+                          )}
+                        {index < duplicateOrganizations.length - 1 && (
+                          <Divider className="my-2" />
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
