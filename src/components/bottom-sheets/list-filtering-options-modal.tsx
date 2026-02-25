@@ -32,14 +32,14 @@ export default function ListFilteringOptionsModal({
 		>
 			<View className="flex p-3">
 				<Text className="mx-8 text-black font-bold dark:text-white">{title}</Text>
-				<View className="space-y-4 pt-8">
+				<View className="gap-y-4 pt-8">
 					{searchKeys.map((searchKey, index) => (
 						<TouchableOpacity
 							key={index}
 							onPress={() => onSelect(searchKey.value)}
 							className="mx-8"
 						>
-							<View className="flex flex-row space-x-3">
+							<View className="flex flex-row gap-x-3">
 								<View>
 									{selectedValue === searchKey.value ? (
 										<Ionicons

@@ -237,8 +237,7 @@ export default function FarmerSegmentedDataForm() {
         showsVerticalScrollIndicator={false}
       >
         <Text className="text-xs italic text-gray-600 dark:text-gray-400 mb-6">
-          Toque em cada segmento para expandir e preencher. Apenas um segmento
-          fica aberto por vez. Quando todos os dados obrigatórios forem
+          Toque num segmento para abrir e preencher. Assim que todos estiverem
           preenchidos, o botão para guardar permanentemente aparecerá em baixo.
         </Text>
 
@@ -323,7 +322,7 @@ export default function FarmerSegmentedDataForm() {
         <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
           <SubmitButton
             onPress={handleSubmit}
-            title="Guardar no Banco de Dados"
+            title="Gravar Dados"
             isSubmitting={isSaving}
             disabled={isSaving}
           />
