@@ -89,7 +89,7 @@ export function FromAdminPosts({
     districtId && typeof districtId === "string" ? districtId.trim() : "";
 
   return (
-    <View className="w-full space-y-4">
+    <View className="w-full mb-2">
       <FormItemDescription description={description} />
       <View className="gap-4">
         <View className="">
@@ -125,11 +125,7 @@ export function FromAdminPosts({
                   <Text className="text-xs text-red-500">
                     {customErrors.adminPostId}
                   </Text>
-                ) : (
-                  <Text className={`text-xs text-gray-500`}>
-                    Posto administrativo
-                  </Text>
-                )}
+                ) : null}
               </View>
             )}
           />
@@ -170,9 +166,7 @@ export function FromAdminPosts({
                   <Text className="text-xs text-red-500">
                     {customErrors.villageId}
                   </Text>
-                ) : (
-                  <Text className={`text-xs text-gray-500`}>Localidade</Text>
-                )}
+                ) : null}
               </View>
             )}
           />
@@ -282,9 +276,7 @@ export function FromProvinces({
                   <Text className="text-xs text-red-500">
                     {customErrors.provinceId}
                   </Text>
-                ) : (
-                  <Text className={`text-xs text-gray-500`}>Província</Text>
-                )}
+                ) : null}
               </View>
             )}
           />
@@ -325,9 +317,7 @@ export function FromProvinces({
                   <Text className="text-xs text-red-500">
                     {customErrors.districtId}
                   </Text>
-                ) : (
-                  <Text className={`text-xs text-gray-500`}>Distrito</Text>
-                )}
+                ) : null}
               </View>
             )}
           />
@@ -368,11 +358,7 @@ export function FromProvinces({
                   <Text className="text-xs text-red-500">
                     {customErrors.adminPostId}
                   </Text>
-                ) : (
-                  <Text className={`text-xs text-gray-500`}>
-                    Posto administrativo
-                  </Text>
-                )}
+                ) : null}
               </View>
             )}
           />
@@ -412,9 +398,7 @@ export function FromProvinces({
                   <Text className="text-xs text-red-500">
                     {customErrors.villageId}
                   </Text>
-                ) : (
-                  <Text className={`text-xs text-gray-500`}>Localidade</Text>
-                )}
+                ) : null}
               </View>
             )}
           />
@@ -427,7 +411,7 @@ export function FromProvinces({
 export function FromCountries({ control, description }: Props) {
   const { setCountryId, countryId } = useAddressStore();
   return (
-    <View className="w-full space-y-4">
+    <View className="w-full gap-y-4">
       <FormItemDescription description={description} />
       <View className="gap-4">
         <View className="">

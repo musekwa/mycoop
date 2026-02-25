@@ -94,7 +94,7 @@ export default function DocumentationSegmentModal({
     >
       <FormItemDescription description="Documento de identificação e NUIT do produtor" />
 
-      <View className="mt-4 space-y-4">
+      <View className="mt-4 gap-y-4">
         <View>
           <Label label="Tipo de Documento" />
           <Controller
