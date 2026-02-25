@@ -254,7 +254,7 @@ function CustomDrawerContent(props: any) {
           >
             <TouchableOpacity
               onPress={() => router.navigate("/(tabs)/actors")}
-              className="flex flex-row space-x-2 items-center "
+              className="flex flex-row gap-x-2 items-center "
             >
               <Ionicons name="log-out-outline" size={20} color={colors.red} />
               <Text className="text-[12px] text-red-500">Sair</Text>
@@ -341,7 +341,7 @@ export default function OrganizationLayout() {
             drawerActiveTintColor: "#008000",
             drawerIcon: ({ focused }: { focused: boolean }) => (
               <View
-                className={`flex flex-row space-x-2 items-center border rounded-md p-1 bg-gray-50 dark:bg-[#333333] ${
+                className={`flex flex-row gap-x-2 items-center border rounded-md p-1 bg-gray-50 dark:bg-[#333333] ${
                   focused ? "border-[#008000]" : "border-gray-400"
                 }`}
               >
@@ -384,7 +384,7 @@ export default function OrganizationLayout() {
             drawerActiveTintColor: "#008000",
             drawerIcon: ({ focused }: { focused: boolean }) => (
               <View
-                className={`flex flex-row space-x-2 items-center border rounded-md p-1 bg-gray-50 dark:bg-[#333333] ${
+                className={`flex flex-row gap-x-2 items-center border rounded-md p-1 bg-gray-50 dark:bg-[#333333] ${
                   focused ? "border-[#008000]" : "border-gray-400"
                 }`}
               >

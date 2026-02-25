@@ -1,32 +1,32 @@
-import React, { useActionState, useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-  ScrollView,
-    Linking,
-  useColorScheme,
-} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as ExpoMediaLibrary from "expo-media-library";
 import {
   Href,
   RelativePathString,
   useNavigation,
   useRouter,
 } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 import { useCameraPermission } from "react-native-vision-camera";
-import * as ExpoMediaLibrary from "expo-media-library";
 
-import { colors } from "@/constants/colors";
 import ConfirmDialog from "@/components/dialog-boxes/confirm-dialog";
+import { colors } from "@/constants/colors";
 // import HeroCard from "@/components/auth/hero-card";
-import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import BackButton from "@/components/buttons/back-button";
-import { useActionStore } from "@/store/actions/actions";
-import { ActionType, ResourceName } from "@/types";
+import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import { useHeaderOptions } from "@/hooks/use-navigation-search";
+import { useActionStore } from "@/store/actions/actions";
+import { ResourceName } from "@/types";
 
 type PermissionSwitchProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -111,46 +111,50 @@ export default function PermissionsScreen() {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Local state to track user's permission choices (default to false)
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+  const [mediaLibraryEnabled, setMediaLibraryEnabled] = useState(false);
+
   const handleCameraToggle = async (request: boolean) => {
+    setCameraEnabled(request);
     if (request) await requestCameraPermission();
   };
 
   const handleMediaLibraryToggle = async (request: boolean) => {
+    setMediaLibraryEnabled(request);
     if (request) await requestMediaLibraryPermission();
   };
 
   const handleBackNavigationUrl = () => {
     if (
       currentResource.id.length > 10 &&
-      currentResource.name === ResourceName.SHIPMENT
-    ) {
-      return "/(aux)/trades/transit/registration";
-    } else if (
-      currentResource.id.length > 10 &&
       currentResource.name === ResourceName.FARMER
     ) {
-      return "/(aux)/actors/farmer";
+      return "/(profiles)/farmer";
     } else if (
       currentResource.id.length > 10 &&
       currentResource.name === ResourceName.GROUP
     ) {
-      return "/(aux)/actors/organization";
-    } else if (
-      currentResource.id.length > 10 &&
-      currentResource.name === ResourceName.TRADER
-    ) {
-      return "/(aux)/actors/trader";
+      return "/(profiles)/group";
+    } else {
+      return "/(tabs)";
     }
-    return "/(tabs)";
   };
 
-  const allGranted =
-    hasCameraPermission && (mediaLibraryPermission?.granted ?? false);
+  // Check if user has enabled any permissions (not actual system permissions)
+  const anyPermissionEnabled = cameraEnabled || mediaLibraryEnabled;
 
-  useHeaderOptions({}, "Permissões");
+  // Check if all requested permissions are actually granted by the system
+  const allGranted =
+    anyPermissionEnabled &&
+    (!cameraEnabled || hasCameraPermission) &&
+    (!mediaLibraryEnabled || (mediaLibraryPermission?.granted ?? false));
+
+  useHeaderOptions();
   useEffect(() => {
     const backNavigationUrl = handleBackNavigationUrl();
     navigation.setOptions({
+      headerTitle: "Permissões",
       headerLeft: () => (
         <BackButton route={backNavigationUrl as RelativePathString} />
       ),
@@ -158,13 +162,33 @@ export default function PermissionsScreen() {
   }, [addActionType, currentResource, handleBackNavigationUrl, navigation]);
 
   const handleContinue = () => {
-    if (allGranted) {
+    // If no permissions are enabled, show dialog to prompt user
+    if (!anyPermissionEnabled) {
+      setErrorMessage(
+        "Por favor, active as permissões da Câmara e/ou Galeria para continuar. Isto permitirá que a MyCoop tire fotos e aceda à sua galeria quando necessário.",
+      );
+      setHasError(true);
+      return;
+    }
+
+    // Check if the enabled permissions are actually granted by the system
+    if (!allGranted) {
+      setErrorMessage(
+        "Por favor, conceda as permissões que activou para continuar. Toque em 'Configurações' para permitir o acesso.",
+      );
+      setHasError(true);
+      return;
+    }
+
+    // Only allow camera access if camera permission is enabled and granted
+    if (cameraEnabled && hasCameraPermission) {
       router.navigate("/(native)/camera" as Href);
       return;
     }
 
-    setErrorMessage("Pretende continuar sem permissões?");
-    setHasError(true);
+    // If only media library is enabled, go back
+    const backNavigationUrl = handleBackNavigationUrl();
+    router.navigate(backNavigationUrl as Href);
   };
 
   const handleContinueWithoutPermissions = () => {
@@ -205,7 +229,7 @@ export default function PermissionsScreen() {
                 icon="camera-outline"
                 title="Câmara"
                 description="Permitir que a MyCoop tire fotos"
-                value={hasCameraPermission}
+                value={cameraEnabled}
                 onValueChange={handleCameraToggle}
               />
 
@@ -213,7 +237,7 @@ export default function PermissionsScreen() {
                 icon="image-outline"
                 title="Galeria"
                 description="Permitir que a MyCoop aceda à galeria de fotos"
-                value={mediaLibraryPermission?.granted ?? false}
+                value={mediaLibraryEnabled}
                 onValueChange={handleMediaLibraryToggle}
               />
             </View>
@@ -223,15 +247,16 @@ export default function PermissionsScreen() {
               <TouchableOpacity
                 style={[
                   styles.continueButton,
-                  allGranted && styles.continueButtonActive,
+                  anyPermissionEnabled && styles.continueButtonActive,
                 ]}
                 onPress={handleContinue}
                 activeOpacity={0.8}
+                disabled={!anyPermissionEnabled}
               >
                 <Text
                   style={[
                     styles.continueButtonText,
-                    { color: allGranted ? "#fff" : colors.gray800 },
+                    { color: anyPermissionEnabled ? "#fff" : colors.gray800 },
                   ]}
                 >
                   Continuar
@@ -239,7 +264,7 @@ export default function PermissionsScreen() {
                 <Ionicons
                   name="arrow-forward"
                   size={20}
-                  color={allGranted ? "#fff" : colors.gray800}
+                  color={anyPermissionEnabled ? "#fff" : colors.gray800}
                 />
               </TouchableOpacity>
             </View>
@@ -252,10 +277,10 @@ export default function PermissionsScreen() {
         visible={hasError}
         setVisible={() => setHasError(false)}
         message={errorMessage}
-        yesText="Sim, continuar"
-        noText="Não"
-        yesCallback={handleContinueWithoutPermissions}
-        noCallback={handleDismissDialog}
+        yesText="OK"
+        noText=""
+        yesCallback={handleDismissDialog}
+        noCallback={() => {}}
       />
     </CustomSafeAreaView>
   );

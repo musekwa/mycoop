@@ -1,26 +1,23 @@
-import { Text } from 'react-native'
-import React from 'react'
-import { ActionType } from '@/types'
-import NoContentPlaceholder from '@/components/no-content-placeholder'
-import Animated, { SlideInDown } from 'react-native-reanimated'
+import CustomSafeAreaView from "@/components/layouts/safe-area-view";
+import NoContentPlaceholder from "@/components/no-content-placeholder";
+import React from "react";
+import Animated, { SlideInDown } from "react-native-reanimated";
 
 export default function FarmerDashboardPage() {
-	return (
-		<Animated.ScrollView
-			entering={SlideInDown.duration(500)}
-			className="flex-1 bg-white dark:bg-black"
-			contentContainerStyle={{
-				flexGrow: 1,
-				justifyContent: 'center',
-				alignItems: 'center',
-				paddingHorizontal: 16,
-			}}
-		>
-			<NoContentPlaceholder message='Nenhum conteúdo' />
-			<Text className="text-center text-sm text-gray-600 dark:text-gray-400 italic">
-				Este é o ecrã de activos e actividades do Produtor. O seu UI será desenvolvido assim que for definido as
-				actividades e os activos que podem ser associados a um Produtor.
-			</Text>
-		</Animated.ScrollView>
-	)
+  return (
+    <CustomSafeAreaView edges={["bottom"]}>
+      <Animated.ScrollView
+        entering={SlideInDown.duration(500)}
+        className="flex-1 bg-white dark:bg-black"
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 16,
+        }}
+      >
+        <NoContentPlaceholder message="Nenhum conteúdo" />
+      </Animated.ScrollView>
+    </CustomSafeAreaView>
+  );
 }

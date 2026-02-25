@@ -15,6 +15,7 @@ import CustomPopUpMenu from '@/components/custom-popup-menu'
 import { Href, useNavigation, useRouter } from 'expo-router'
 import { useActionStore } from '@/store/actions/actions'
 import { FontAwesome } from '@expo/vector-icons'
+import CustomSafeAreaView from '@/components/layouts/safe-area-view'
 
 export default function GroupsIndexScreen() {
 	const navigation = useNavigation()
@@ -49,7 +50,7 @@ export default function GroupsIndexScreen() {
 
 	const showStats = false // Set to true to show organization stats
 	return (
-		<View style={{ flex: 1 }}>
+		   <CustomSafeAreaView edges={["bottom"]}>
 			{showStats ? (
 				<ScrollView
 					className="py-4"
@@ -96,6 +97,6 @@ export default function GroupsIndexScreen() {
 						<NocontentPlaceholder message={'Nenhum conteúdo'} />
 				</View>
 			)}
-		</View>
+		</CustomSafeAreaView>
 	)
 }
