@@ -149,7 +149,8 @@ export default function FarmerSegmentedDataForm() {
     completion.birthDate &&
     completion.birthPlace &&
     completion.address &&
-    completion.documentation;
+    completion.documentation &&
+    !activeSegment;
 
   useEffect(() => {
     resetAll();

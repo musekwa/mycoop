@@ -23,61 +23,52 @@ export default function AssociationRegistrationScreen() {
 	const [activeOrg, setActiveOrg] = useState<OrganizationTypes>(OrganizationTypes.ASSOCIATION)
 	const { getAddActionType, resetAddActionType } = useActionStore()
 
-
-	const [success, setSuccess] = useState(false)
-	const [errorMessage, setErrorMessage] = useState('')
-	const [hasError, setHasError] = useState(false)
-	const [previewData, setPreviewData] = useState(false)
-	const [routeSegment, setRouteSegment] = useState('')
-
-	useHeaderOptions({}, 'Registo de Associação')
+	useHeaderOptions()
 	useEffect(() => {
 		navigation.setOptions({
 			headerLeft: () => <BackButton />,
+			headerTitle: 'Registo de Associaçãogg',
 		})
 
-		if (getAddActionType() !== ActionType.UNKNOWN) {
-			setActiveOrg(OrganizationTypes.ASSOCIATION)
-			resetAddActionType()
-		}
+		// if (getAddActionType() !== ActionType.UNKNOWN) {
+		// 	setActiveOrg(OrganizationTypes.ASSOCIATION)
+		// 	resetAddActionType()
+		// }
 	}, [])
 
 
-	const addOrganizationForm = () => (
-				<AddAssociationForm
-					setErrorMessage={setErrorMessage}
-					setPreviewData={setPreviewData}
-					setHasError={setHasError}
-				/>
-			)
+	 return <AddAssociationForm />
+	// const addOrganizationForm = () => (
+	// 			/>
+	// 		)
 		
-	const org = useAssociationStore().getFormData() as AssociationFormDataType
+	// const org = useAssociationStore().getFormData() as AssociationFormDataType
 
-	return (
-		<CustomSafeAreaView edges={['bottom']}>
+	// return (
+	// 	<CustomSafeAreaView edges={['bottom']}>
 
-			{addOrganizationForm()}
+	// 		{addOrganizationForm()}
 
-			<GroupDataPreview
-				hasError={hasError}
-				errorMessage={errorMessage}
-				previewData={previewData}
-				setPreviewData={setPreviewData}
-				org={org}
-				setErrorMessage={setErrorMessage}
-				setHasError={setHasError}
-				setSuccess={setSuccess}
-				setRouteSegment={setRouteSegment}
-				organizationType={activeOrg}
-			/>
-			<ErrorAlert
-				visible={hasError}
-				setVisible={setHasError}
-				title="Erro"
-				message={errorMessage}
-				setMessage={setErrorMessage}
-			/>
-			<SuccessAlert visible={success} setVisible={setSuccess} route={routeSegment as RelativePathString | undefined} />
-		</CustomSafeAreaView>
-	)
+	// 		<GroupDataPreview
+	// 			hasError={hasError}
+	// 			errorMessage={errorMessage}
+	// 			previewData={previewData}
+	// 			setPreviewData={setPreviewData}
+	// 			org={org}
+	// 			setErrorMessage={setErrorMessage}
+	// 			setHasError={setHasError}
+	// 			setSuccess={setSuccess}
+	// 			setRouteSegment={setRouteSegment}
+	// 			organizationType={activeOrg}
+	// 		/>
+	// 		<ErrorAlert
+	// 			visible={hasError}
+	// 			setVisible={setHasError}
+	// 			title="Erro"
+	// 			message={errorMessage}
+	// 			setMessage={setErrorMessage}
+	// 		/>
+	// 		<SuccessAlert visible={success} setVisible={setSuccess} route={routeSegment as RelativePathString | undefined} />
+	// 	</CustomSafeAreaView>
+	// )
 }
