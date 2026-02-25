@@ -1,17 +1,18 @@
-import FormFieldPreview from "@/components/form-items/form-field-preview";
 import { colors } from "@/constants/colors";
-import { capitalize } from "@/helpers/capitalize";
+import { useUserDetails } from "@/hooks/queries";
 import { useCheckOrganizationDuplicate } from "@/hooks/use-check-organization-duplicates";
 import { useAddressStore } from "@/store/address";
-import { useCoopStore } from "@/store/organizations";
-import { CoopAffiliationStatus, OrganizationTypes } from "@/types";
+import { useCoopUnionStore } from "@/store/organizations";
+import { OrganizationTypes } from "@/types";
 import { Fontisto } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { Divider } from "react-native-paper";
-import GroupAddressSegment from "./segments/GroupAddressSegment";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import GroupBasicInfoSegment from "./segments/GroupBasicInfoSegment";
 import GroupLegalStatusSegment from "./segments/GroupLegalStatusSegment";
+import GroupAddressSegment from "./segments/GroupAddressSegment";
+import SubmitButton from "@/components/buttons/submit-button";
+
 
 type SegmentId = "basicInfo" | "legalStatus" | "address";
 
@@ -22,36 +23,27 @@ const SEGMENTS: { id: SegmentId; title: string }[] = [
 ];
 
 function useSegmentCompletion() {
-  const { formData } = useCoopStore();
+  const { formData } = useCoopUnionStore();
   const { partialAddress } = useAddressStore();
 
   const isBasicInfoComplete = Boolean(
-    formData.name &&
-      formData.name.trim().length >= 2 &&
-      formData.creationYear &&
-      formData.creationYear.trim().length >= 1,
+    formData.name && formData.name.trim().length >= 2,
   );
 
-  const isLegalStatusComplete = (() => {
-    if (!formData.affiliationStatus) return false;
-    if (formData.affiliationStatus === CoopAffiliationStatus.AFFILIATED) {
-      return Boolean(
-        formData.affiliationYear &&
-          formData.license &&
-          formData.nuel &&
-          /^\d{9}$/.test((formData.nuel || "").trim()) &&
-          formData.nuit &&
-          /^\d{9}$/.test((formData.nuit || "").trim()),
-      );
-    }
-    return true;
-  })();
+  const isLegalStatusComplete = Boolean(
+    formData.affiliationYear &&
+    formData.license &&
+    formData.nuel &&
+    /^\d{9}$/.test((formData.nuel || "").trim()) &&
+    formData.nuit &&
+    /^\d{9}$/.test((formData.nuit || "").trim()),
+  );
 
   const isAddressComplete = Boolean(
     partialAddress?.adminPostId &&
-      partialAddress.adminPostId.trim() !== "" &&
-      partialAddress?.villageId &&
-      partialAddress.villageId.trim() !== "",
+    partialAddress.adminPostId.trim() !== "" &&
+    partialAddress?.villageId &&
+    partialAddress.villageId.trim() !== "",
   );
 
   return {
@@ -61,65 +53,73 @@ function useSegmentCompletion() {
   };
 }
 
-type AddCooperativeFormProps = {
-  setPreviewData: (preview: boolean) => void;
-  setErrorMessage: (message: string) => void;
-  setHasError: (error: boolean) => void;
-};
 
-export default function AddCooperativeForm({
-  setPreviewData,
-  setErrorMessage,
-  setHasError,
-}: AddCooperativeFormProps) {
-  const { resetFormData, formData } = useCoopStore();
-  const { reset: resetAddress } = useAddressStore();
-  const [activeSegment, setActiveSegment] = useState<SegmentId | null>(null);
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
-  const completion = useSegmentCompletion();
-
-  const allComplete =
-    completion.basicInfo && completion.legalStatus && completion.address;
-
-  useEffect(() => {
-    resetFormData();
-    resetAddress();
-  }, []);
-
-  const {
-    hasDuplicate,
-    duplicateType,
-    message: duplicateMessage,
-    isLoading: isCheckingDuplicate,
-    duplicateOrganizations,
-  } = useCheckOrganizationDuplicate({
-    name: formData.name || "",
-    nuit: formData.nuit || undefined,
-    nuel: formData.nuel || undefined,
-    organizationType: OrganizationTypes.COOPERATIVE,
-  });
-
-  const handleSegmentPress = (id: SegmentId) => {
-    setActiveSegment((prev) => (prev === id ? null : id));
-  };
-
-  const handleSegmentClose = () => {
-    setActiveSegment(null);
-  };
-
-  const handlePreview = () => {
-    if (isCheckingDuplicate) return;
-
-    if (hasDuplicate) {
-      setShowDuplicateModal(true);
-      return;
-    }
-
-    if (allComplete) {
-      setPreviewData(true);
-    }
-  };
-
+export default function CoopUnionSegmentedDataForm() {
+    const router = useRouter();
+    const { userDetails } = useUserDetails();
+      const { resetFormData, formData } = useCoopUnionStore();
+      const { reset: resetAddress } = useAddressStore();
+      const [activeSegment, setActiveSegment] = useState<SegmentId | null>(null);
+    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const completion = useSegmentCompletion();
+    
+      const allComplete =
+        completion.basicInfo && completion.legalStatus && completion.address && !activeSegment;
+    
+     useEffect(() => {
+        resetFormData();
+        resetAddress();
+      }, []);
+    
+      const {
+        hasDuplicate,
+        duplicateType,
+        message: duplicateMessage,
+        isLoading: isCheckingDuplicate,
+        duplicateOrganizations,
+      } = useCheckOrganizationDuplicate({
+        name: formData.name || "",
+        nuit: formData.nuit || undefined,
+        nuel: formData.nuel || undefined,
+        organizationType: OrganizationTypes.COOP_UNION,
+      });
+    
+      const handleSegmentPress = (id: SegmentId) => {
+        setActiveSegment((prev) => (prev === id ? null : id));
+      };
+    
+      const handleSegmentClose = () => {
+        setActiveSegment(null);
+      };
+    
+    const handleSubmit = useCallback(async () => {
+      if (isCheckingDuplicate) return;
+  
+      if (!userDetails?.district_id || !userDetails?.province_id) {
+        setHasError(true);
+        setErrorMessage(
+          "Por favor, selecione a província e o distrito antes de continuar.",
+        );
+        return;
+      }
+      setIsSaving(true);
+      setHasError(false);
+      setErrorMessage("");
+  
+      if (hasDuplicate) {
+        setShowDuplicateModal(true);
+        return;
+      }
+  
+      if (allComplete) {
+        //
+      }
+    }, [isCheckingDuplicate, hasDuplicate, allComplete]);
+    
+    
   return (
     <View className="flex-1">
       <ScrollView
@@ -132,7 +132,7 @@ export default function AddCooperativeForm({
       >
         <Text className="text-xs italic text-gray-600 dark:text-gray-400 mb-6">
           Toque num segmento para abrir e preencher. Assim que todos estiverem
-          preenchidos, o botão para pré-visualizar aparecerá em baixo.
+          preenchidos, o botão para gravar aparecerá em baixo.
         </Text>
 
         {SEGMENTS.map((segment) => {
@@ -170,7 +170,7 @@ export default function AddCooperativeForm({
                   visible={isOpen}
                   onClose={handleSegmentClose}
                   variant="inline"
-                  groupType={OrganizationTypes.COOPERATIVE}
+                  groupType={OrganizationTypes.COOP_UNION}
                 />
               ) : null}
               {segment.id === "legalStatus" ? (
@@ -178,7 +178,7 @@ export default function AddCooperativeForm({
                   visible={isOpen}
                   onClose={handleSegmentClose}
                   variant="inline"
-                  groupType={OrganizationTypes.COOPERATIVE}
+                  groupType={OrganizationTypes.COOP_UNION}
                 />
               ) : null}
               {segment.id === "address" ? (
@@ -186,7 +186,7 @@ export default function AddCooperativeForm({
                   visible={isOpen}
                   onClose={handleSegmentClose}
                   variant="inline"
-                  description="Indica o endereço da cooperativa"
+                  description="Indica o endereço da união"
                 />
               ) : null}
             </View>
@@ -196,31 +196,17 @@ export default function AddCooperativeForm({
 
       {allComplete && (
         <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
-          <TouchableOpacity
-            onPress={handlePreview}
-            disabled={isCheckingDuplicate}
-            activeOpacity={0.8}
-            style={{
-              backgroundColor: isCheckingDuplicate
-                ? colors.gray100
-                : colors.primary,
-              paddingVertical: 14,
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{ color: colors.white, fontWeight: "600", fontSize: 16 }}
-            >
-              Pré-visualizar
-            </Text>
-          </TouchableOpacity>
+                  <SubmitButton
+                      onPress={handleSubmit}
+                      title="Gravar Dados"
+                      isSubmitting={isSaving}
+                      disabled={isSaving}
+                  />
         </View>
       )}
 
       {/* Duplicate Modal */}
-      <Modal
+      {/* <Modal
         visible={showDuplicateModal}
         animationType="slide"
         transparent={true}
@@ -282,7 +268,7 @@ export default function AddCooperativeForm({
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </View>
   );
 }
