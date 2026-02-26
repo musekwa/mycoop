@@ -13,6 +13,7 @@ import {
   FacilityRecord,
   GenderRecord,
   GroupManagerAssignmentRecord,
+  GroupMemberRecord,
   LicenseRecord,
   NuelRecord,
   NuitRecord,
@@ -1049,4 +1050,16 @@ export const queryMany = async <T>(
       console.error(`Error querying many ${query}:`, error);
     });
   return result || [];
+};
+
+
+export const addMembersToOrganization = async (data: GroupMemberRecord[]) => {
+  data.forEach(async (member) => {
+    const { id, group_id, member_id, member_type, sync_id } = member;
+    const result = await powersync.execute(
+      `INSERT INTO ${TABLES.GROUP_MEMBERS} (id, group_id, member_id, member_type, sync_id) VALUES (?, ?, ?, ?, ?)`,
+      [id, group_id, member_id, member_type, sync_id],
+    );
+    console.log("Members added to organization", result);
+  });
 };

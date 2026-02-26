@@ -22,12 +22,12 @@ export default function ConfirmOrCancelButtons({
 	isLoading = false,
 }: ConfirmOrCancelButtonsProps) {
 	return (
-		<View className="h-16 flex flex-row justify-around items-center gap-x-4 ">
+		<View className="h-16 flex flex-row justify-around items-center gap-x-4 px-3">
 			<TouchableOpacity
 				activeOpacity={0.5}
 				onPress={onCancel}
 				disabled={onCancelDisabled || isLoading}
-				className={`flex-1 flex-row gap-x-1 items-center h-12.5 rounded-md justify-center border border-gray-600 dark:border-gray-400 ${onCancelDisabled ? 'opacity-60' : ''}`}
+				className={`flex-1 flex-row gap-x-1 items-center h-14 rounded-md justify-center border border-gray-600 dark:border-gray-400 ${onCancelDisabled ? 'opacity-60' : ''}`}
 			>
 				<Text className="text-[14px] text-black dark:text-white ">{cancelText}</Text>
 			</TouchableOpacity>

@@ -316,7 +316,7 @@ export default function MembersListScreen() {
 						{
 							label: 'Adicionar Membro',
 							icon: <Ionicons name="add-circle-outline" color={isDark ? colors.white : colors.black} size={18} />,
-							action: () => router.navigate('/(aux)/actors/org-membership/add-member' as Href),
+							action: () => router.navigate('/(aux)/add-member' as Href),
 						},
 					]}
 				/>
