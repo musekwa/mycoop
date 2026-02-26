@@ -18,10 +18,11 @@ export default function FarmerProfileScreen() {
       {
         label: "Actualizar Dados",
         icon: <FontAwesome name="edit" size={18} />,
-        action: () =>
-          router.navigate(
-            `/(actions)/edit?resourceName=${currentResource.name}&id=${currentResource.id}` as Href,
-          ),
+        action: () => {
+          // router.navigate(
+          //   `/(actions)/edit?resourceName=${currentResource.name}&id=${currentResource.id}` as Href,
+          // );
+        },
       },
     ];
     navigation.setOptions({

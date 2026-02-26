@@ -1,77 +1,80 @@
-import { FlatList, Dimensions, View } from 'react-native'
-import { ReactNode, useRef, useState, useEffect } from 'react'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Tag from '@/components/custom-tag'
-import CustomSafeAreaView from './layouts/safe-area-view'
+import Tag from "@/components/custom-tag";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { Dimensions, FlatList, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import CustomSafeAreaView from "./layouts/safe-area-view";
 
 interface AnimationTopTabProps {
-	horizontalData: { title: string; iconName: string }[]
-	verticalData: { id: number; title: string; component: ReactNode }[]
+  horizontalData: { title: string; iconName: string }[];
+  verticalData: { id: number; title: string; component: ReactNode }[];
 }
 
-export default function AnimationTopTab({ horizontalData, verticalData }: AnimationTopTabProps) {
-	const horizontalScrollRef = useRef<any>(null)
+export default function AnimationTopTab({
+  horizontalData,
+  verticalData,
+}: AnimationTopTabProps) {
+  const horizontalScrollRef = useRef<any>(null);
 
-	const verticalScrollRef = useRef<any>(null)
-	const layoutTimerRef = useRef<NodeJS.Timeout | null>(null)
-	const insets = useSafeAreaInsets()
-	const screenWindow = Dimensions.get('window')
-	const [selected, setSelected] = useState(0)
-	const [isLayoutReady, setIsLayoutReady] = useState(false)
+  const verticalScrollRef = useRef<any>(null);
+  const layoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const insets = useSafeAreaInsets();
+  const screenWindow = Dimensions.get("window");
+  const [selected, setSelected] = useState(0);
+  const [isLayoutReady, setIsLayoutReady] = useState(false);
 
-	// Cleanup timers on unmount
-	useEffect(() => {
-		return () => {
-			if (layoutTimerRef.current) {
-				clearTimeout(layoutTimerRef.current)
-				layoutTimerRef.current = null
-			}
-		}
-	}, [])
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (layoutTimerRef.current) {
+        clearTimeout(layoutTimerRef.current);
+        layoutTimerRef.current = null;
+      }
+    };
+  }, []);
 
-	// Scroll to initial index after layout is ready
-	useEffect(() => {
-		if (isLayoutReady && selected > 0 && verticalScrollRef.current) {
-			// Small delay to ensure FlatList has measured all items
-			const timer = setTimeout(() => {
-				// Use scrollToOffset for more reliable initial positioning
-				const offset = selected * screenWindow.width
-				verticalScrollRef.current?.scrollToOffset({ offset, animated: false })
-			}, 100)
-			return () => clearTimeout(timer)
-		}
-	}, [isLayoutReady, selected, screenWindow.width])
+  // Scroll to initial index after layout is ready
+  useEffect(() => {
+    if (isLayoutReady && selected > 0 && verticalScrollRef.current) {
+      // Small delay to ensure FlatList has measured all items
+      const timer = setTimeout(() => {
+        // Use scrollToOffset for more reliable initial positioning
+        const offset = selected * screenWindow.width;
+        verticalScrollRef.current?.scrollToOffset({ offset, animated: false });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLayoutReady, selected, screenWindow.width]);
 
-	const onItemPress = (index: number) => {
-		setSelected(index)
-		if (verticalScrollRef.current) {
-			try {
-				verticalScrollRef.current.scrollToIndex({
-					index,
-					animated: true,
-					viewPosition: 0,
-				})
-			} catch (error) {
-				// Fallback to scrollToOffset if scrollToIndex fails
-				const offset = index * screenWindow.width
-				verticalScrollRef.current?.scrollToOffset({ offset, animated: true })
-			}
-		}
+  const onItemPress = (index: number) => {
+    setSelected(index);
+    if (verticalScrollRef.current) {
+      try {
+        verticalScrollRef.current.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0,
+        });
+      } catch (error) {
+        // Fallback to scrollToOffset if scrollToIndex fails
+        const offset = index * screenWindow.width;
+        verticalScrollRef.current?.scrollToOffset({ offset, animated: true });
+      }
+    }
 
-		if (horizontalScrollRef.current) {
-			try {
-				horizontalScrollRef.current.scrollToIndex({
-					index,
-					animated: true,
-					viewPosition: 0.5,
-				})
-			} catch (error) {
-				// Silently fail if component is unmounting
-			}
-		}
-	}
+    if (horizontalScrollRef.current) {
+      try {
+        horizontalScrollRef.current.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      } catch (error) {
+        // Silently fail if component is unmounting
+      }
+    }
+  };
 
-	return (
+  return (
     <CustomSafeAreaView edges={["bottom"]}>
       <View style={{ flexShrink: 0 }}>
         <FlatList
@@ -84,9 +87,9 @@ export default function AnimationTopTab({ horizontalData, verticalData }: Animat
           initialNumToRender={4}
           contentContainerStyle={{
             flexGrow: 1,
-            paddingHorizontal: 15,
+            paddingHorizontal: 16,
             marginBottom: 15,
-            justifyContent: "space-around"
+            justifyContent: "flex-end",
           }}
           showsHorizontalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ marginRight: 10 }} />}

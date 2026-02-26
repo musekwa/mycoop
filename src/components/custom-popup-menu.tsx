@@ -47,7 +47,7 @@ export default function CustomPopUpMenu({ options, icon, title = 'Menu' }: Custo
 					return (
 						<View key={index} className="bg-white dark:bg-gray-700">
 							<MenuOption key={index} onSelect={() => option.action()}>
-								<View className="flex flex-row space-x-1 my-2 items-center">
+								<View className="flex flex-row gap-x-2 my-2 items-center">
 									{option.icon}
 									<Text className="text-black dark:text-white ">{option.label}</Text>
 								</View>

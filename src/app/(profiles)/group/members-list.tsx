@@ -1,185 +1,246 @@
 // React and React Native imports
-import React, { useEffect, useMemo } from 'react'
-import { View, Text, TouchableOpacity, FlatList, useColorScheme } from 'react-native'
-import { Image } from 'expo-image'
-import { useRouter, useNavigation, Href } from 'expo-router'
-import { Ionicons, Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { Href, useNavigation, useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  FlatList,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 
 // Components
-import CustomPopUpMenu from '@/components/custom-popup-menu'
+import CustomPopUpMenu from "@/components/custom-popup-menu";
 
 // Constants and Types
-import { colors } from '@/constants/colors'
-import { useActionStore } from '@/store/actions/actions'
-import { useQueryManyAndWatchChanges } from '@/hooks/queries'
-import { TABLES } from '@/library/powersync/app-schemas'
-import AnimationTopTab from '@/components/animatable-top-tab'
-import SectionList from '@/components/section-list'
-import CustomShimmerPlaceholder, {CustomShimmerPlaceholderItem} from '@/components/skeletons/custom-shimmer-placeholder'
-import { avatarPlaceholderUri } from '@/constants/image-uris'
-import Label from '@/components/form-items/custom-label'
-import { ResourceName } from '@/types'
-import { deleteOne } from '@/library/powersync/sql-statements'
+import ErrorAlert from "@/components/alerts/error-alert";
+import AnimationTopTab from "@/components/animatable-top-tab";
+import Label from "@/components/form-items/custom-label";
+import SectionList from "@/components/section-list";
+import CustomShimmerPlaceholder, {
+  CustomShimmerPlaceholderItem,
+} from "@/components/skeletons/custom-shimmer-placeholder";
+import { colors } from "@/constants/colors";
+import { avatarPlaceholderUri } from "@/constants/image-uris";
+import { userRoles } from "@/constants/roles";
+import { useQueryManyAndWatchChanges, useUserDetails } from "@/hooks/queries";
+import { TABLES } from "@/library/powersync/app-schemas";
+import { deleteOne } from "@/library/powersync/sql-statements";
+import { useActionStore } from "@/store/actions/actions";
+import { ResourceName } from "@/types";
 
-
-const IndividualItem = ({
-	id,
-	title,
-	photo,
-	phone_number,
-	groupMemberId,
-	groupId,
-	onRemove,
+const FarmerItem = ({
+  id,
+  title,
+  photo,
+  phone_number,
+  groupMemberId,
+  groupId,
+  setHasNoPermission,
+  onRemove,
 }: {
-	id: string
-	title: string
-	photo: string
-	phone_number: string
-	groupMemberId: string
-	groupId: string
-	onRemove: () => void
+  id: string;
+  title: string;
+  photo: string;
+  phone_number: string;
+  groupMemberId: string;
+  groupId: string;
+  onRemove: () => void;
+  setHasNoPermission: (value: boolean) => void;
 }) => {
-	const { setCurrentResource } = useActionStore()
-	const isDarkMode = useColorScheme()=== 'dark' 
-	const router = useRouter()
-	const photoUrl = photo && photo !== 'N/A' ? photo : avatarPlaceholderUri
+  const { userDetails } = useUserDetails();
+  const { setCurrentResource } = useActionStore();
+  const isDarkMode = useColorScheme() === "dark";
+  const router = useRouter();
+  const photoUrl = photo && photo !== "N/A" ? photo : avatarPlaceholderUri;
 
-	const handleRemove = async () => {
-		try {
-			await deleteOne(`DELETE FROM ${TABLES.GROUP_MEMBERS} WHERE id = ?`, [groupMemberId])
-			onRemove()
-		} catch (error) {
-			console.error('Error removing member:', error)
-		}
-	}
+  const handleRemove = async () => {
+    if (
+      userDetails?.user_role !== userRoles.find((role) => role === "SUPERVISOR")
+    ) {
+      setHasNoPermission(true);
+      return;
+    }
+    try {
+      await deleteOne(`DELETE FROM ${TABLES.GROUP_MEMBERS} WHERE id = ?`, [
+        groupMemberId,
+      ]);
+      onRemove();
+    } catch (error) {
+      console.error("Error removing member:", error);
+    }
+  };
 
-	return (
-		<TouchableOpacity
-			onPress={() => {
-				setCurrentResource({
-					id: id,
-					name: ResourceName.FARMER,
-				})
-				router.replace('/(aux)/custom-redirect' as Href)
-			}}
-			activeOpacity={0.7}
-			className="flex-row items-center justify-between w-full py-3 px-3 mb-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800"
-			style={{ minHeight: 70 }}
-		>
-			<View className="flex-row items-center flex-1 mr-2">
-				<Image source={{ uri: photoUrl }} style={{ width: 50, height: 50, borderRadius: 25 }} contentFit="cover" />
-				<View className="flex-1 ml-3">
-					<Label label={title} />
-					<Text className="text-[12px] text-gray-500 mt-1">{phone_number}</Text>
-				</View>
-			</View>
-			<View onStartShouldSetResponder={() => true} onTouchEnd={(e: any) => e.stopPropagation()}>
-				<CustomPopUpMenu
-					options={[
-						{
-							label: 'Remover',
-							icon: <Feather name="trash-2" size={18} color={colors.gray800} />,
-							action: handleRemove,
-						},
-					]}
-					icon={<Ionicons name="ellipsis-vertical" size={20} color={isDarkMode ? colors.white : colors.black} />}
-				/>
-			</View>
-		</TouchableOpacity>
-	)
-}
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        setCurrentResource({
+          id: id,
+          name: ResourceName.FARMER,
+        });
+        router.replace("/(aux)/custom-redirect" as Href);
+      }}
+      activeOpacity={0.7}
+      className="flex-row items-center justify-between w-full py-3 px-3 mb-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800"
+      style={{ minHeight: 70 }}
+    >
+      <View className="flex-row items-center flex-1 mr-2">
+        <Image
+          source={{ uri: photoUrl }}
+          style={{ width: 50, height: 50, borderRadius: 25 }}
+          contentFit="cover"
+        />
+        <View className="flex-1 ml-3">
+          <Label label={title} />
+          <Text className="text-[12px] text-gray-500 mt-1">{phone_number}</Text>
+        </View>
+      </View>
+      <View
+        onStartShouldSetResponder={() => true}
+        onTouchEnd={(e: any) => e.stopPropagation()}
+      >
+        <CustomPopUpMenu
+          options={[
+            {
+              label: "Remover",
+              icon: <Feather name="trash-2" size={18} color={colors.gray800} />,
+              action: handleRemove,
+            },
+          ]}
+          icon={
+            <Ionicons
+              name="ellipsis-vertical"
+              size={20}
+              color={isDarkMode ? colors.white : colors.black}
+            />
+          }
+        />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const GroupItem = ({
-	id,
-	title,
-	photo,
-	number_of_members,
-	groupMemberId,
-	groupId,
-	onRemove,
+  id,
+  title,
+  photo,
+  number_of_members,
+  groupMemberId,
+  groupId,
+  onRemove,
+  setHasNoPermission,
 }: {
-	id: string
-	title: string
-	photo: string
-	number_of_members: number
-	groupMemberId: string
-	groupId: string
-	onRemove: () => void
+  id: string;
+  title: string;
+  photo: string;
+  number_of_members: number;
+  groupMemberId: string;
+  groupId: string;
+  onRemove: () => void;
+  setHasNoPermission: (v: boolean) => void;
 }) => {
-	const router = useRouter()
-	const { setCurrentResource } = useActionStore()
-	const isDark = useColorScheme() === 'dark'
-	const photoUrl = photo && photo !== 'N/A' ? photo : avatarPlaceholderUri
+  const { userDetails } = useUserDetails();
+  const router = useRouter();
+  const { setCurrentResource } = useActionStore();
+  const isDark = useColorScheme() === "dark";
+  const photoUrl = photo && photo !== "N/A" ? photo : avatarPlaceholderUri;
 
-	const handleRemove = async () => {
-		try {
-			await deleteOne(`DELETE FROM ${TABLES.GROUP_MEMBERS} WHERE id = ?`, [groupMemberId])
-			onRemove()
-		} catch (error) {
-			console.error('Error removing member:', error)
-		}
-	}
+  const handleRemove = async () => {
+    if (
+      userDetails?.user_role !== userRoles.find((role) => role === "SUPERVISOR")
+    ) {
+      setHasNoPermission(true);
+      return;
+    }
+    try {
+      await deleteOne(`DELETE FROM ${TABLES.GROUP_MEMBERS} WHERE id = ?`, [
+        groupMemberId,
+      ]);
+      onRemove();
+    } catch (error) {
+      console.error("Error removing member:", error);
+    }
+  };
 
-	return (
-		<TouchableOpacity
-			activeOpacity={0.7}
-			onPress={() => {
-				setCurrentResource({
-					id: id,
-					name: ResourceName.GROUP,
-				})
-				router.push('/(aux)/custom-redirect' as Href)
-			}}
-			className="flex-row items-center justify-between w-full py-3 px-3 mb-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800"
-			style={{ minHeight: 70 }}
-		>
-			<View className="flex-row items-center flex-1 mr-2">
-				<Image source={{ uri: photoUrl }} style={{ width: 50, height: 50, borderRadius: 25 }} contentFit="cover" />
-				<View className="flex-1 ml-3">
-					<Label label={title} />
-					<Text className="text-[12px] text-gray-500 mt-1">{number_of_members} membros</Text>
-				</View>
-			</View>
-			<View onStartShouldSetResponder={() => true} onTouchEnd={(e: any) => e.stopPropagation()}>
-				<CustomPopUpMenu
-					options={[
-						{
-							label: 'Remover',
-							icon: <Feather name="trash-2" size={18} color={colors.gray800} />,
-							action: handleRemove,
-						},
-					]}
-					icon={<Ionicons name="ellipsis-vertical" size={20} color={isDark ? colors.white : colors.black} />}
-				/>
-			</View>
-		</TouchableOpacity>
-	)
-}
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => {
+        setCurrentResource({
+          id: id,
+          name: ResourceName.GROUP,
+        });
+        router.push("/(aux)/custom-redirect" as Href);
+      }}
+      className="flex-row items-center justify-between w-full py-3 px-3 mb-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800"
+      style={{ minHeight: 70 }}
+    >
+      <View className="flex-row items-center flex-1 mr-2">
+        <Image
+          source={{ uri: photoUrl }}
+          style={{ width: 50, height: 50, borderRadius: 25 }}
+          contentFit="cover"
+        />
+        <View className="flex-1 ml-3">
+          <Label label={title} />
+          <Text className="text-[12px] text-gray-500 mt-1">
+            {number_of_members} membros
+          </Text>
+        </View>
+      </View>
+      <View
+        onStartShouldSetResponder={() => true}
+        onTouchEnd={(e: any) => e.stopPropagation()}
+      >
+        <CustomPopUpMenu
+          options={[
+            {
+              label: "Remover",
+              icon: <Feather name="trash-2" size={18} color={colors.gray800} />,
+              action: handleRemove,
+            },
+          ]}
+          icon={
+            <Ionicons
+              name="ellipsis-vertical"
+              size={20}
+              color={isDark ? colors.white : colors.black}
+            />
+          }
+        />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export default function MembersListScreen() {
-	const isDark = useColorScheme() === 'dark'
-	const navigation = useNavigation()
-	const router = useRouter()
+  const isDark = useColorScheme() === "dark";
+  const navigation = useNavigation();
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState("");
+  const [hasNoPermission, setHasNoPermission] = useState(false);
 
-	const { getCurrentResource } = useActionStore()
+  const { getCurrentResource } = useActionStore();
 
-	const groupId = getCurrentResource().id
+  const groupId = getCurrentResource().id;
 
-	const {
-		data: farmersRaw,
-		isLoading: isFarmersLoading,
-		// error: farmersError,
-		// isError: isFarmersError,
-	} = useQueryManyAndWatchChanges<{
-		id: string
-		surname: string
-		other_names: string
-		photo: string
-		primary_phone: string
-		secondary_phone: string
-		group_member_id: string
-	}>(
-		`		SELECT 
+  const {
+    data: farmersRaw,
+    isLoading: isFarmersLoading,
+    // error: farmersError,
+    // isError: isFarmersError,
+  } = useQueryManyAndWatchChanges<{
+    id: string;
+    surname: string;
+    other_names: string;
+    photo: string;
+    primary_phone: string;
+    secondary_phone: string;
+    group_member_id: string;
+  }>(
+    `		SELECT 
 			ad.actor_id as id,
 			ad.surname,
 			ad.other_names,
@@ -191,37 +252,37 @@ export default function MembersListScreen() {
 		INNER JOIN ${TABLES.GROUP_MEMBERS} gm ON ad.actor_id = gm.member_id
 		LEFT JOIN ${TABLES.CONTACT_DETAILS} cd ON cd.owner_id = ad.actor_id AND cd.owner_type = 'FARMER'
 		WHERE gm.group_id = '${groupId}' AND gm.member_type = 'FARMER'`,
-	)
+  );
 
-	const farmers = useMemo(
-		() =>
-			farmersRaw?.map((member) => ({
-				id: member.id,
-				title: `${member.surname} ${member.other_names}`,
-				photo: member.photo,
-				phone_number:
-					member.primary_phone && member.primary_phone !== 'N/A'
-						? member.primary_phone
-						: member.secondary_phone && member.secondary_phone !== 'N/A'
-							? member.secondary_phone
-							: 'N/A',
-				group_member_id: member.group_member_id,
-			})) || [],
-		[farmersRaw],
-	)
+  const farmers = useMemo(
+    () =>
+      farmersRaw?.map((member) => ({
+        id: member.id,
+        title: `${member.surname} ${member.other_names}`,
+        photo: member.photo,
+        phone_number:
+          member.primary_phone && member.primary_phone !== "N/A"
+            ? member.primary_phone
+            : member.secondary_phone && member.secondary_phone !== "N/A"
+              ? member.secondary_phone
+              : "N/A",
+        group_member_id: member.group_member_id,
+      })) || [],
+    [farmersRaw],
+  );
 
-	const {
-		data: groupsRaw,
-		isLoading: isGroupsLoading,
-		// error: groupsError,
-		// isError: isGroupsError,
-	} = useQueryManyAndWatchChanges<{
-		id: string
-		group_name: string
-		organization_type: string
-		photo: string
-		group_member_id: string
-	}>(`SELECT 
+  const {
+    data: groupsRaw,
+    isLoading: isGroupsLoading,
+    // error: groupsError,
+    // isError: isGroupsError,
+  } = useQueryManyAndWatchChanges<{
+    id: string;
+    group_name: string;
+    organization_type: string;
+    photo: string;
+    group_member_id: string;
+  }>(`SELECT 
 			a.id, 
 			ad.other_names as group_name, 
 			ac.subcategory as organization_type, 
@@ -231,140 +292,168 @@ export default function MembersListScreen() {
 		INNER JOIN ${TABLES.ACTOR_DETAILS} ad ON ad.actor_id = a.id
 		LEFT JOIN ${TABLES.ACTOR_CATEGORIES} ac ON ac.actor_id = a.id AND ac.category = 'GROUP'
 		INNER JOIN ${TABLES.GROUP_MEMBERS} gm ON a.id = gm.member_id
-		WHERE gm.group_id = '${groupId}' AND gm.member_type = 'GROUP' AND a.category = 'GROUP'`)
+		WHERE gm.group_id = '${groupId}' AND gm.member_type = 'GROUP' AND a.category = 'GROUP'`);
 
-	const groups = useMemo(
-		() =>
-			groupsRaw?.map((member) => ({
-				id: member.id,
-				title: member.group_name,
-				photo: member.photo,
-				group_member_id: member.group_member_id,
-			})) || [],
-		[groupsRaw],
-	)
+  const groups = useMemo(
+    () =>
+      groupsRaw?.map((member) => ({
+        id: member.id,
+        title: member.group_name,
+        photo: member.photo,
+        group_member_id: member.group_member_id,
+      })) || [],
+    [groupsRaw],
+  );
 
-	const horizontalData = [
-		{
-			title: `Singulares (${farmers.length})`,
-			iconName: 'person',
-		},
-		{
-			title: `Agrupados (${groups.length})`,
-			iconName: 'people',
-		},
-	]
+  const horizontalData = [
+    {
+      title: `Produtores (${farmers.length})`,
+      iconName: "person",
+    },
+    {
+      title: `Grupos (${groups.length})`,
+      iconName: "people",
+    },
+  ];
 
-	const verticalData = [
-		{
-			id: 1,
-			title: 'Singulares',
-			component: (
-				<SectionList
-					data={farmers}
-					renderItem={(item) => {
-						const memberItem = item as typeof item & { group_member_id: string; photo?: string }
-						return (
-							<IndividualItem
-								id={memberItem.id}
-								title={memberItem.title}
-								photo={memberItem.photo ?? ''}
-								phone_number={memberItem.phone_number ?? ''}
-								groupMemberId={memberItem.group_member_id}
-								groupId={groupId}
-								onRemove={() => {
-									// The query will automatically update via useQueryManyAndWatchChanges
-								}}
-							/>
-						)
-					}}
-				/>
-			),
-		},
-		{
-			id: 2,
-			title: 'Agrupados',
-			component: (
-				<SectionList
-					data={groups}
-					renderItem={(item) => {
-						const memberItem = item as typeof item & { group_member_id: string; photo?: string }
-						return (
-							<GroupItem
-								id={memberItem.id}
-								title={memberItem.title}
-								photo={memberItem.photo ?? ''}
-								number_of_members={memberItem.number_of_members ?? 0}
-								groupMemberId={memberItem.group_member_id}
-								groupId={groupId}
-								onRemove={() => {
-									// The query will automatically update via useQueryManyAndWatchChanges
-								}}
-							/>
-						)
-					}}
-				/>
-			),
-		},
-	]
+  const verticalData = [
+    {
+      id: 1,
+      title: "Produtores",
+      component: (
+        <SectionList
+          data={farmers}
+          renderItem={(item) => {
+            const memberItem = item as typeof item & {
+              group_member_id: string;
+              photo?: string;
+            };
+            return (
+              <FarmerItem
+                id={memberItem.id}
+                title={memberItem.title}
+                photo={memberItem.photo ?? ""}
+                phone_number={memberItem.phone_number ?? ""}
+                groupMemberId={memberItem.group_member_id}
+                groupId={groupId}
+                setHasNoPermission={setHasNoPermission}
+                onRemove={() => {
+                  // The query will automatically update via useQueryManyAndWatchChanges
+                }}
+              />
+            );
+          }}
+        />
+      ),
+    },
+    {
+      id: 2,
+      title: "Grupos",
+      component: (
+        <SectionList
+          data={groups}
+          renderItem={(item) => {
+            const memberItem = item as typeof item & {
+              group_member_id: string;
+              photo?: string;
+            };
+            return (
+              <GroupItem
+                id={memberItem.id}
+                title={memberItem.title}
+                photo={memberItem.photo ?? ""}
+                number_of_members={memberItem.number_of_members ?? 0}
+                groupMemberId={memberItem.group_member_id}
+                groupId={groupId}
+                setHasNoPermission={setHasNoPermission}
+                onRemove={() => {
+                  // The query will automatically update via useQueryManyAndWatchChanges
+                }}
+              />
+            );
+          }}
+        />
+      ),
+    },
+  ];
 
-	useEffect(() => {
-		navigation.setOptions({
-			headerRight: () => (
-				<CustomPopUpMenu
-					options={[
-						{
-							label: 'Adicionar Membro',
-							icon: <Ionicons name="add-circle-outline" color={isDark ? colors.white : colors.black} size={18} />,
-							action: () => router.navigate('/(aux)/add-member' as Href),
-						},
-					]}
-				/>
-			),
-		})
-	}, [])
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <CustomPopUpMenu
+          options={[
+            {
+              label: "Adicionar Membro",
+              icon: (
+                <Ionicons
+                  name="add-outline"
+                  color={isDark ? colors.white : colors.black}
+                  size={18}
+                />
+              ),
+              action: () => router.navigate("/(aux)/add-member" as Href),
+            },
+          ]}
+        />
+      ),
+    });
+  }, []);
 
-	const isLoading = isFarmersLoading || isGroupsLoading
+  const isLoading = isFarmersLoading || isGroupsLoading;
 
-	if (isLoading) {
-		return (
-			<FlatList
-				data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-				numColumns={2}
-				keyExtractor={(item: number) => item.toString()}
-				renderItem={() => (
-					<View className="w-1/2 flex items-center space-y-1">
-						<CustomShimmerPlaceholder
-							style={{
-								width: 80,
-								height: 80,
-								margin: 20,
-								borderRadius: 120,
-							}}
-						/>
-						<CustomShimmerPlaceholderItem
-							props={{
-								style: {
-									width: 100,
-									height: 20,
-									borderRadius: 10,
-								},
-							}}
-						/>
-						<CustomShimmerPlaceholderItem
-							props={{
-								style: {
-									width: 100,
-									height: 10,
-									borderRadius: 10,
-								},
-							}}
-						/>
-					</View>
-				)}
-			/>
-		)
-	}
+  if (isLoading) {
+    return (
+      <FlatList
+        data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+        numColumns={2}
+        keyExtractor={(item: number) => item.toString()}
+        renderItem={() => (
+          <View className="w-1/2 flex items-center gap-y-2">
+            <CustomShimmerPlaceholder
+              style={{
+                width: 80,
+                height: 80,
+                margin: 20,
+                borderRadius: 120,
+              }}
+            />
+            <CustomShimmerPlaceholderItem
+              props={{
+                style: {
+                  width: 100,
+                  height: 20,
+                  borderRadius: 10,
+                },
+              }}
+            />
+            <CustomShimmerPlaceholderItem
+              props={{
+                style: {
+                  width: 100,
+                  height: 10,
+                  borderRadius: 10,
+                },
+              }}
+            />
+          </View>
+        )}
+      />
+    );
+  }
 
-	return <AnimationTopTab horizontalData={horizontalData} verticalData={verticalData} />
+  return (
+    <>
+      <AnimationTopTab
+        horizontalData={horizontalData}
+        verticalData={verticalData}
+      />
+      <ErrorAlert
+        message={errorMessage}
+        setMessage={setErrorMessage}
+        visible={hasNoPermission}
+        setVisible={setHasNoPermission}
+        title=""
+      />
+    </>
+  );
 }
