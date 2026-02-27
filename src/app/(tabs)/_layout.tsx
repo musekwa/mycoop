@@ -62,13 +62,13 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="trades"
+        name="monitoring"
         options={{
-          title: "Comercialização",
+          title: "Monitoria",
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <FontAwesome6
-              name="hand-holding-dollar"
+              name="chart-line"
               size={22}
               color={
                 focused

@@ -141,7 +141,7 @@ function RootLayoutNav() {
           options={{ presentation: "modal", headerShown: false }}
         />
         <Stack.Screen name="(native)" options={{ headerShown: false }} />
-        <Stack.Screen name="(trades)" options={{ headerShown: false }} />
+        <Stack.Screen name="(monitoring)" options={{ headerShown: false }} />
       </Stack>
     </>
   );

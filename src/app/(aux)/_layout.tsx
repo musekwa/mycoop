@@ -31,7 +31,12 @@ export default function AuxLayout() {
       <Stack.Screen
         name="add-group-manager"
         options={{
-          headerShown: false,
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTitle: "Adicionar Membros",
+          headerTitleAlign: "center",
+          headerTitleStyle: stackHeaderTitleStyle,
+          headerStyle: headerStyle,
         }}
       />
       <Stack.Screen

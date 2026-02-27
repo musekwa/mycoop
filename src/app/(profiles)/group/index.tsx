@@ -38,20 +38,6 @@ export default function GroupsIndexScreen() {
                 // );
               },
             },
-            {
-              label: "Adicionar Representante",
-              icon: (
-                <Ionicons
-                  name="person-add-outline"
-                  color={isDark ? colors.white : colors.black}
-                  size={18}
-                />
-              ),
-              action: () =>
-                router.navigate(
-                  "/(aux)/actors/employees/add-organization-manager" as Href,
-                ),
-            },
           ]}
         />
       ),

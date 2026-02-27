@@ -186,10 +186,10 @@ export default function GroupsScreen() {
 	}) => (
 		<TouchableOpacity
 			activeOpacity={0.5}
-			onPress={() => router.push(`/(trades)/transactions?groupId=${item.id}` as Href)}
+			onPress={() => router.push(`/(monitoring)/groups/transactions?groupId=${item.id}` as Href)}
 			className=""
 		>
-			<View className="flex-row space-x-2 items-center p-2 border-b border-gray-200 dark:border-gray-700">
+			<View className="flex-row gap-x-2 items-center p-2 border-b border-gray-200 dark:border-gray-700">
 				<Image source={{ uri: noImageUri }} style={{ width: 60, height: 60, borderRadius: 30 }} contentFit="cover" />
 				<View className="flex-1">
 					<Text className="text-black dark:text-white font-bold">{item.name ?? ''}</Text>
@@ -223,19 +223,18 @@ export default function GroupsScreen() {
 	}
 
 	return (
-		<CustomSafeAreaView>
-			{/* <View className=" "> */}
-
+		<CustomSafeAreaView edges={['bottom']}>
+		
 			<SectionList
 				showsVerticalScrollIndicator={false}
-				contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 0 }}
+				contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
 				sections={groupedData}
 				keyExtractor={(item) => item.id.toString()}
 				renderItem={renderItem}
 				renderSectionHeader={renderSectionHeader}
 				stickySectionHeadersEnabled={true}
 				ListEmptyComponent={
-					<View className="flex-1 items-center justify-center h-[400px]">
+					<View className="flex-1 items-center justify-center h-100">
 						<NoContentPlaceholder message='Nenhum conteúdo' />
 					</View>
 				}
@@ -247,10 +246,10 @@ export default function GroupsScreen() {
 					<Text className="mx-8 text-black dark:text-white italic text-[12px]">
 						Filtrar grupos por posto administrativo
 					</Text>
-					<View className="space-y-4 pt-8 mx-6">
+					<View className="gap-y-4 pt-8 mx-6">
 						{searchKeys.map((searchKey, index) => (
 							<TouchableOpacity onPress={() => handleSearchKey(searchKey.value)} key={index} className="mx-8">
-								<View className="flex flex-row space-x-3">
+								<View className="flex flex-row gap-x-3">
 									<View className="">
 										{newSearchKey === searchKey.value ? (
 											<Ionicons name="radio-button-on" size={24} color={isDark ? colors.white : colors.primary} />

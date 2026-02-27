@@ -393,6 +393,20 @@ export default function MembersListScreen() {
               ),
               action: () => router.navigate("/(aux)/add-member" as Href),
             },
+            {
+              label: "Adicionar Representante",
+              icon: (
+                <Ionicons
+                  name="person-add-outline"
+                  color={isDark ? colors.white : colors.black}
+                  size={18}
+                />
+              ),
+              action: () =>
+                router.navigate(
+                  "/(aux)/add-group-manager" as Href,
+                ),
+            },
           ]}
         />
       ),

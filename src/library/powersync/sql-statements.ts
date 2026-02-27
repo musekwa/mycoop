@@ -17,6 +17,8 @@ import {
   LicenseRecord,
   NuelRecord,
   NuitRecord,
+  OrganizationTransactionParticipantRecord,
+  OrganizationTransactionRecord,
   ProvinceRecord,
   TABLES,
   VillageRecord,
@@ -1052,7 +1054,6 @@ export const queryMany = async <T>(
   return result || [];
 };
 
-
 export const addMembersToOrganization = async (data: GroupMemberRecord[]) => {
   data.forEach(async (member) => {
     const { id, group_id, member_id, member_type, sync_id } = member;
@@ -1062,4 +1063,103 @@ export const addMembersToOrganization = async (data: GroupMemberRecord[]) => {
     );
     console.log("Members added to organization", result);
   });
+};
+
+export const insertOrganizationTransaction = async (
+  data: OrganizationTransactionRecord,
+) => {
+  const {
+    id,
+    created_at,
+    updated_at,
+    transaction_type,
+    quantity,
+    unit_price,
+    start_date,
+    end_date,
+    store_id,
+    confirmed,
+    info_provider_id,
+    reference_store_id,
+    created_by,
+    updated_by,
+    sync_id,
+  } = data;
+  const result = await powersync.execute(
+    `INSERT 
+			INTO ${TABLES.ORGANIZATION_TRANSACTIONS} (
+				id, 
+				created_at, 
+				updated_at, 
+				transaction_type, 
+				quantity, 
+				unit_price, 
+				start_date, 
+				end_date, 
+				store_id, 
+				confirmed, 
+				info_provider_id,
+				reference_store_id, 
+				created_by, 
+				updated_by, 
+				sync_id
+			) 
+			VALUES (
+			 	?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?, 
+				?,
+				?
+			)`,
+    [
+      id,
+      created_at,
+      updated_at,
+      transaction_type,
+      quantity,
+      unit_price,
+      start_date,
+      end_date,
+      store_id,
+      confirmed,
+      info_provider_id,
+      reference_store_id,
+      created_by,
+      updated_by,
+      sync_id,
+    ],
+  );
+  console.log("Organization transaction inserted", result);
+  return result;
+};
+
+
+
+export const insertOrganizationTransactionParticipant = async (
+  data: OrganizationTransactionParticipantRecord,
+) => {
+  const {
+    id,
+    transaction_id,
+    quantity,
+    participant_id,
+    participant_type,
+    sync_id,
+  } = data;
+  const result = await powersync.execute(
+    `INSERT INTO ${TABLES.ORGANIZATION_TRANSACTION_PARTICIPANTS} (id, transaction_id, quantity, participant_id, participant_type, sync_id) VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, transaction_id, quantity, participant_id, participant_type, sync_id],
+  );
+  console.log("Organization transaction participant inserted", result);
+  return result;
 };
