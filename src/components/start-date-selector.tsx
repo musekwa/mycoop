@@ -3,8 +3,8 @@ import { View, Text, Pressable } from 'react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
-import { colors } from 'src/constants'
-import { useDateRangeStore } from 'src/store/trades'
+import { colors } from '@/constants/colors'
+import { useDateRangeStore } from '@/store/trades'
 
 interface StartDateSelectorProps {
 	control: any
@@ -84,13 +84,12 @@ export default function StartDateSelector({
 			maximumDate: maxDate,
 			positiveButton: { label: 'OK', textColor: colors.primary },
 			negativeButton: { label: 'Cancelar', textColor: colors.primary },
-			locale: 'pt-BR',
 		})
 	}
 
 	return (
 		<View className="flex flex-row justify-between space-x-2 items-center mt-4">
-			<View className="w-[80px]">
+			<View className="w-20">
 				<Text className="text-gray-600 dark:text-gray-400 text-[14px]">De</Text>
 			</View>
 			<View className="flex-1">
@@ -101,7 +100,7 @@ export default function StartDateSelector({
 						<View className="relative">
 							{lastTransactionEndDate ? (
 								// Disabled view when lastTransactionEndDate exists
-								<View className="border border-slate-300 p-3 shadow-sm shadow-black rounded-xl bg-gray-100 dark:bg-gray-800 h-[55px] flex justify-center opacity-60">
+								<View className="border border-slate-300 p-3 shadow-sm shadow-black rounded-xl bg-gray-100 dark:bg-gray-800 h-13.75 flex justify-center opacity-60">
 									<Text className="text-gray-600 dark:text-gray-400 text-[13px]">
 										{value.toLocaleDateString('pt-BR')}
 									</Text>
@@ -117,7 +116,7 @@ export default function StartDateSelector({
 										maxDate.setDate(maxDate.getDate() - 1) // Yesterday
 										showDatePicker(value, oneMonthAgo, maxDate)
 									}}
-									className="border border-slate-300 p-3 shadow-sm shadow-black rounded-xl bg-gray-50 dark:bg-black h-[55px] flex justify-center"
+									className="border border-slate-300 p-3 shadow-sm shadow-black rounded-xl bg-gray-50 dark:bg-black h-13.75 flex justify-center"
 								>
 									<Text className="text-gray-600 dark:text-gray-400 text-[13px]">
 										{value.toLocaleDateString('pt-BR')}

@@ -6,7 +6,6 @@ import ErrorAlert from "@/components/alerts/error-alert";
 import { OrganizationTypes } from "@/types";
 
 import DateRangeSelector from "@/components/dates/date-range-selector";
-import { KeyboardAwareScrollView } from "react-native-keyboard-tools";
 import TransactionDataPreview from "@/features/monitoring/transaction-data-preview";
 import { useQueryOneAndWatchChanges } from "@/hooks/queries";
 import {
@@ -19,14 +18,18 @@ import {
   useInfoProviderStore,
   useLostInfoStore,
   useResoldInfoStore,
+  useTransactedItemStore,
   useTransferredByOrgInfoStore,
   useTransferredInfoStore,
 } from "@/store/trades";
-import AddLostInfo from "./add-lost-info";
-import AddResoldInfo from "./add-resold-info";
-import AddTransferredByOrgInfo from "./add-transferred-by-info";
+import { KeyboardAwareScrollView } from "react-native-keyboard-tools";
 import AddAggregatedInfo from "./add-aggregated-info";
 import AddInfoProviderInfo from "./add-info-provider-info";
+import AddLostInfo from "./add-lost-info";
+import AddResoldInfo from "./add-resold-info";
+import AddTransactedItem from "./add-transacted-item";
+import AddTransferredByOrgInfo from "./add-transferred-by-info";
+import { getTransactedItemPortugueseName } from "@/helpers/trades";
 
 interface AddTransactionsProps {
   setIsShowingExistingTransactions: (
@@ -56,6 +59,8 @@ export default function AddTransactions({
   setIsShowingExistingTransactions,
   setShowOverview,
 }: AddTransactionsProps) {
+  const { item } = useTransactedItemStore();
+  const itemType = getTransactedItemPortugueseName(item);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -80,6 +85,7 @@ export default function AddTransactions({
   const { assertTransferredByOrgInfo } = useTransferredByOrgInfoStore();
   const { assertDateRange, startDate, endDate } = useDateRangeStore();
   const { infoProvider } = useInfoProviderStore();
+  const { assertItem } = useTransactedItemStore();
 
   const assertAllInfo = () => {
     if (!infoProvider?.info_provider_id || !infoProvider?.info_provider_name) {
@@ -89,6 +95,17 @@ export default function AddTransactions({
       }));
       return false;
     }
+
+    // Validate transacted item
+    const { status: itemStatus, message: itemMessage } = assertItem();
+    if (!itemStatus) {
+      setCustomErrors((prev) => ({
+        ...prev,
+        item: itemMessage,
+      }));
+      return false;
+    }
+
     const { status: transferredByOrgStatus, message: transferredByOrgMessage } =
       assertTransferredByOrgInfo();
     const {
@@ -119,6 +136,11 @@ export default function AddTransactions({
     // Clear infoProvider error if it was previously set
     if (newErrors.infoProvider) {
       newErrors.infoProvider = "";
+    }
+
+    // Clear item error if it was previously set and item is valid
+    if (newErrors.item && itemStatus) {
+      newErrors.item = "";
     }
 
     if (!dateRangeStatus) {
@@ -259,12 +281,20 @@ export default function AddTransactions({
       </View>
 
       <View className="flex flex-col space-y-6">
+        <AddTransactedItem
+          customErrors={customErrors}
+          setCustomErrors={setCustomErrors}
+        />
+      </View>
+
+      <View className="flex flex-col space-y-6">
         {/* activeMember participations (quantity by member) for cooperative and association */}
         {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
           <AddAggregatedInfo
             group_id={organization.id as string}
             customErrors={customErrors}
             setCustomErrors={setCustomErrors}
+            itemType={itemType}
           />
         )}
 
@@ -272,6 +302,7 @@ export default function AddTransactions({
         <AddResoldInfo
           customErrors={customErrors}
           setCustomErrors={setCustomErrors}
+          itemType={itemType}
         />
 
         {/* Transferred transaction only for cooperative and association */}
@@ -280,6 +311,7 @@ export default function AddTransactions({
             customErrors={customErrors}
             setCustomErrors={setCustomErrors}
             organizationId={organization.id as string}
+            itemType={itemType}
           />
         )}
 
@@ -287,6 +319,7 @@ export default function AddTransactions({
         <AddLostInfo
           customErrors={customErrors}
           setCustomErrors={setCustomErrors}
+          itemType={itemType}
         />
 
         {customErrors.outgoing && (

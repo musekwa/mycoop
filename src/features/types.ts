@@ -122,3 +122,10 @@ export type StoreTransactionDetailsType = {
 	store_owner_phone: string
 	store_owner_photo: string
 }
+
+
+export enum TransactedItem {
+    CASHEWNUT = "CASHEWNUT",
+    GROUNDNUT = "GROUNDNUT",
+    BEANS = "BEANS",
+}

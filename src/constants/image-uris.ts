@@ -1,4 +1,6 @@
-import ampcmLogo from "../../assets/images/ampcm-logo.png";
+import { Image } from "react-native";
+
+// Image imports for the application
 import AvatarPlaceHolder from "../../assets/images/avatar-placeholder.jpg";
 import cashewTrees from "../../assets/images/cashew-trees.jpg";
 import cooperativeImage from "../../assets/images/cooperative.jpeg";
@@ -7,6 +9,7 @@ import femaleAccountPlaceholder from "../../assets/images/female-user-placeholde
 import institutionImage from "../../assets/images/institution.jpg";
 import logo from "../../assets/images/logo.png";
 import maleAccountPlaceholder from "../../assets/images/male-user-placeholder.jpg";
+import ampcmLogo from "../../assets/images/mycoop-logo.png";
 import noCoopImage from "../../assets/images/no-coop-image.png";
 import noImage from "../../assets/images/no-image.png";
 import NotFound from "../../assets/images/notfound.png";
@@ -18,7 +21,6 @@ import splash123 from "../../assets/images/splash123.png";
 import StatsNotAvailable from "../../assets/images/stats-not-available.png";
 import traderImage from "../../assets/images/trader.jpg";
 import warehouseImage from "../../assets/images/warehouse.png";
-import { Image } from "react-native";
 
 import mozLogoImage from "../../assets/images/moz-logo.png";
 

@@ -13,6 +13,7 @@ import {
 
 // Components
 import CustomPopUpMenu from "@/components/custom-popup-menu";
+import SearchBar from "@/components/search-bar";
 
 // Constants and Types
 import ErrorAlert from "@/components/alerts/error-alert";
@@ -73,52 +74,105 @@ const FarmerItem = ({
     }
   };
 
+  const handleCall = () => {
+    if (phone_number && phone_number !== "N/A") {
+      // Handle phone call
+      console.log("Calling:", phone_number);
+    }
+  };
+
+  const handleMessage = () => {
+    // Handle message
+    console.log("Messaging:", phone_number);
+  };
+
   return (
-    <TouchableOpacity
-      onPress={() => {
-        setCurrentResource({
-          id: id,
-          name: ResourceName.FARMER,
-        });
-        router.replace("/(aux)/custom-redirect" as Href);
-      }}
-      activeOpacity={0.7}
+    <View
       className="flex-row items-center justify-between w-full py-3 px-3 mb-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800"
       style={{ minHeight: 70 }}
     >
-      <View className="flex-row items-center flex-1 mr-2">
-        <Image
-          source={{ uri: photoUrl }}
-          style={{ width: 50, height: 50, borderRadius: 25 }}
-          contentFit="cover"
-        />
+      <TouchableOpacity
+        onPress={() => {
+          setCurrentResource({
+            id: id,
+            name: ResourceName.FARMER,
+          });
+          router.replace("/(aux)/custom-redirect" as Href);
+        }}
+        activeOpacity={0.7}
+        className="flex-row items-center flex-1 mr-2"
+      >
+        <View className="relative">
+          <Image
+            source={{ uri: photoUrl }}
+            style={{ width: 50, height: 50, borderRadius: 25 }}
+            contentFit="cover"
+          />
+          <View
+            className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+            style={{
+              backgroundColor: "#10B981",
+              borderColor: isDarkMode ? "#1F2937" : "#FFFFFF",
+            }}
+          />
+        </View>
         <View className="flex-1 ml-3">
           <Label label={title} />
           <Text className="text-[12px] text-gray-500 mt-1">{phone_number}</Text>
         </View>
+      </TouchableOpacity>
+      <View className="flex-row items-center">
+        {phone_number && phone_number !== "N/A" && (
+          <>
+            <TouchableOpacity
+              onPress={handleCall}
+              className="p-2 rounded-full mr-1"
+              style={{
+                backgroundColor: isDarkMode ? "#374151" : "#F3F4F6",
+              }}
+            >
+              <Ionicons name="call-outline" size={18} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleMessage}
+              className="p-2 rounded-full mr-1"
+              style={{
+                backgroundColor: isDarkMode ? "#374151" : "#F3F4F6",
+              }}
+            >
+              <Ionicons
+                name="chatbubble-outline"
+                size={18}
+                color={isDarkMode ? colors.lightestgray : colors.gray600}
+              />
+            </TouchableOpacity>
+          </>
+        )}
+        <View
+          onStartShouldSetResponder={() => true}
+          onTouchEnd={(e: any) => e.stopPropagation()}
+        >
+          <CustomPopUpMenu
+            options={[
+              {
+                label: "Remover",
+                icon: (
+                  <Feather name="trash-2" size={18} color={colors.gray800} />
+                ),
+                action: handleRemove,
+              },
+            ]}
+            icon={
+              <Ionicons
+                name="ellipsis-vertical"
+                size={20}
+                color={isDarkMode ? colors.white : colors.black}
+              />
+            }
+          />
+        </View>
       </View>
-      <View
-        onStartShouldSetResponder={() => true}
-        onTouchEnd={(e: any) => e.stopPropagation()}
-      >
-        <CustomPopUpMenu
-          options={[
-            {
-              label: "Remover",
-              icon: <Feather name="trash-2" size={18} color={colors.gray800} />,
-              action: handleRemove,
-            },
-          ]}
-          icon={
-            <Ionicons
-              name="ellipsis-vertical"
-              size={20}
-              color={isDarkMode ? colors.white : colors.black}
-            />
-          }
-        />
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -221,10 +275,21 @@ export default function MembersListScreen() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [hasNoPermission, setHasNoPermission] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { getCurrentResource } = useActionStore();
 
   const groupId = getCurrentResource().id;
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // Trigger a refresh by refetching queries
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   const {
     data: farmersRaw,
@@ -271,6 +336,16 @@ export default function MembersListScreen() {
     [farmersRaw],
   );
 
+  const filteredFarmers = useMemo(() => {
+    if (!searchQuery) return farmers;
+    const query = searchQuery.toLowerCase();
+    return farmers.filter(
+      (farmer) =>
+        farmer.title.toLowerCase().includes(query) ||
+        farmer.phone_number.includes(query),
+    );
+  }, [farmers, searchQuery]);
+
   const {
     data: groupsRaw,
     isLoading: isGroupsLoading,
@@ -305,13 +380,19 @@ export default function MembersListScreen() {
     [groupsRaw],
   );
 
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery) return groups;
+    const query = searchQuery.toLowerCase();
+    return groups.filter((group) => group.title.toLowerCase().includes(query));
+  }, [groups, searchQuery]);
+
   const horizontalData = [
     {
-      title: `Produtores (${farmers.length})`,
+      title: `Produtores (${filteredFarmers.length})`,
       iconName: "person",
     },
     {
-      title: `Grupos (${groups.length})`,
+      title: `Grupos (${filteredGroups.length})`,
       iconName: "people",
     },
   ];
@@ -321,58 +402,82 @@ export default function MembersListScreen() {
       id: 1,
       title: "Produtores",
       component: (
-        <SectionList
-          data={farmers}
-          renderItem={(item) => {
-            const memberItem = item as typeof item & {
-              group_member_id: string;
-              photo?: string;
-            };
-            return (
-              <FarmerItem
-                id={memberItem.id}
-                title={memberItem.title}
-                photo={memberItem.photo ?? ""}
-                phone_number={memberItem.phone_number ?? ""}
-                groupMemberId={memberItem.group_member_id}
-                groupId={groupId}
-                setHasNoPermission={setHasNoPermission}
-                onRemove={() => {
-                  // The query will automatically update via useQueryManyAndWatchChanges
-                }}
-              />
-            );
-          }}
-        />
+        <View>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Pesquisar produtores..."
+          />
+          <SectionList
+            data={filteredFarmers}
+            renderItem={(item) => {
+              const memberItem = item as typeof item & {
+                group_member_id: string;
+                photo?: string;
+              };
+              return (
+                <FarmerItem
+                  id={memberItem.id}
+                  title={memberItem.title}
+                  photo={memberItem.photo ?? ""}
+                  phone_number={memberItem.phone_number ?? ""}
+                  groupMemberId={memberItem.group_member_id}
+                  groupId={groupId}
+                  setHasNoPermission={setHasNoPermission}
+                  onRemove={() => {
+                    // The query will automatically update via useQueryManyAndWatchChanges
+                  }}
+                />
+              );
+            }}
+            emptyMessage={
+              searchQuery
+                ? "Nenhum produtor encontrado para esta pesquisa"
+                : "Nenhum produtor registado"
+            }
+          />
+        </View>
       ),
     },
     {
       id: 2,
       title: "Grupos",
       component: (
-        <SectionList
-          data={groups}
-          renderItem={(item) => {
-            const memberItem = item as typeof item & {
-              group_member_id: string;
-              photo?: string;
-            };
-            return (
-              <GroupItem
-                id={memberItem.id}
-                title={memberItem.title}
-                photo={memberItem.photo ?? ""}
-                number_of_members={memberItem.number_of_members ?? 0}
-                groupMemberId={memberItem.group_member_id}
-                groupId={groupId}
-                setHasNoPermission={setHasNoPermission}
-                onRemove={() => {
-                  // The query will automatically update via useQueryManyAndWatchChanges
-                }}
-              />
-            );
-          }}
-        />
+        <View>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Pesquisar grupos..."
+          />
+          <SectionList
+            data={filteredGroups}
+            renderItem={(item) => {
+              const memberItem = item as typeof item & {
+                group_member_id: string;
+                photo?: string;
+              };
+              return (
+                <GroupItem
+                  id={memberItem.id}
+                  title={memberItem.title}
+                  photo={memberItem.photo ?? ""}
+                  number_of_members={memberItem.number_of_members ?? 0}
+                  groupMemberId={memberItem.group_member_id}
+                  groupId={groupId}
+                  setHasNoPermission={setHasNoPermission}
+                  onRemove={() => {
+                    // The query will automatically update via useQueryManyAndWatchChanges
+                  }}
+                />
+              );
+            }}
+            emptyMessage={
+              searchQuery
+                ? "Nenhum grupo encontrado para esta pesquisa"
+                : "Nenhum grupo registado"
+            }
+          />
+        </View>
       ),
     },
   ];
@@ -402,10 +507,7 @@ export default function MembersListScreen() {
                   size={18}
                 />
               ),
-              action: () =>
-                router.navigate(
-                  "/(aux)/add-group-manager" as Href,
-                ),
+              action: () => router.navigate("/(aux)/add-group-manager" as Href),
             },
           ]}
         />

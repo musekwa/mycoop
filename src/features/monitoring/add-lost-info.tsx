@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { View, Text, ScrollView } from 'react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -32,9 +32,10 @@ type TransactionData = z.infer<typeof TransactionSchema> & {
 type LostInfoProps = {
 	customErrors: Record<string, string>
 	setCustomErrors: (customErrors: Record<string, string>) => void
+	itemType: string
 }
 
-export default function AddLostInfo({ customErrors, setCustomErrors }: LostInfoProps) {
+export default function AddLostInfo({ customErrors, setCustomErrors, itemType }: LostInfoProps) {
 	const {
 		control,
 		handleSubmit,
@@ -78,7 +79,7 @@ export default function AddLostInfo({ customErrors, setCustomErrors }: LostInfoP
 		<ScrollView className="border border-gray-300 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 my-3">
 			<View className="flex-row items-center justify-between mb-4">
 				<View className="flex-1">
-					<Text className="text-sm text-gray-600 dark:text-gray-400">Teve desperdício de castanha?</Text>
+					<Text className="text-sm text-gray-600 dark:text-gray-400">Teve desperdício de {itemType.toLowerCase()}?</Text>
 				</View>
 				<Controller
 					control={control}

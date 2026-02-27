@@ -249,7 +249,7 @@ function CustomDrawerContent(props: any) {
         </View>
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <View
-            className={`px-2 py-3 mt-2 ${isDark ? 'bg-[#333333]' : 'bg-white'}`}
+            className={`px-2 py-3 mt-2 ${isDark ? "bg-[#333333]" : "bg-white"}`}
             style={{ paddingBottom: Math.max(insets.bottom, 8) }}
           >
             <TouchableOpacity
@@ -275,7 +275,7 @@ function CustomDrawerContent(props: any) {
 }
 
 export default function OrganizationLayout() {
-  const isDark = useColorScheme()=== "dark";
+  const isDark = useColorScheme() === "dark";
   const { getDrawerStatus, getCurrentResource } = useActionStore();
 
   const { data: group } = useQueryOne<{ photo: string | null }>(
@@ -294,9 +294,7 @@ export default function OrganizationLayout() {
           drawerPosition: "left",
           drawerHideStatusBarOnOpen: false,
           drawerActiveTintColor: "#008000",
-          drawerActiveBackgroundColor: isDark
-            ? colors.white
-            : colors.gray100,
+          drawerActiveBackgroundColor: isDark ? colors.white : colors.gray100,
           drawerInactiveTintColor: isDark ? colors.white : colors.black,
           drawerLabelStyle: {
             fontSize: 14,
@@ -349,11 +347,7 @@ export default function OrganizationLayout() {
                   name="briefcase-outline"
                   size={20}
                   color={
-                    focused
-                      ? "#008000"
-                      : isDark
-                        ? colors.white
-                        : colors.black
+                    focused ? "#008000" : isDark ? colors.white : colors.black
                   }
                 />
               </View>
@@ -392,11 +386,7 @@ export default function OrganizationLayout() {
                   name="people-outline"
                   size={20}
                   color={
-                    focused
-                      ? "#008000"
-                      : isDark
-                        ? colors.white
-                        : colors.black
+                    focused ? "#008000" : isDark ? colors.white : colors.black
                   }
                 />
               </View>

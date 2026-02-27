@@ -1,70 +1,76 @@
 // React and React Native imports
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { View, Text, SectionList, useColorScheme } from 'react-native'
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { SectionList, Text, useColorScheme, View } from "react-native";
 
 // Third-party library imports
-import { Ionicons } from '@expo/vector-icons'
-import { BottomSheetModal, TouchableOpacity } from '@gorhom/bottom-sheet'
-import { useRouter, useNavigation, Href } from 'expo-router'
-import { Image } from 'expo-image'
+import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetModal, TouchableOpacity } from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
+import { Href, useNavigation, useRouter } from "expo-router";
 
 // Components
-import CustomBottomSheetModal from '@/components/bottom-sheets/custom-bottom-sheet-modal'
-import NoContentPlaceholder from '@/components/no-content-placeholder'
-import { CustomShimmerPlaceholderItemList } from '@/components/skeletons/custom-shimmer-placeholder'
+import CustomBottomSheetModal from "@/components/bottom-sheets/custom-bottom-sheet-modal";
+import NoContentPlaceholder from "@/components/no-content-placeholder";
+import { CustomShimmerPlaceholderItemList } from "@/components/skeletons/custom-shimmer-placeholder";
 
 // Constants and config
-import { colors } from '@/constants/colors'
-import { noImageUri } from '@/constants/image-uris'
+import { colors } from "@/constants/colors";
+import { noImageUri } from "@/constants/image-uris";
 
 // Hooks
-import { useNavigationSearch } from '@/hooks/use-navigation-search'
+import { useNavigationSearch } from "@/hooks/use-navigation-search";
 
 // Models and types
-import { ActionType, OrganizationTypes } from '@/types'
+import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import {
-	useQueryMany,
-	useUserDetails,
-	useLocationName,
-	useSearchOptions,
-	useGroupedOrganizations,
-	getOrganizationTypeConfig,
-} from '@/hooks/queries'
-import { TABLES } from '@/library/powersync/app-schemas'
-import CustomSafeAreaView from '@/components/layouts/safe-area-view'
+  getOrganizationTypeConfig,
+  useGroupedOrganizations,
+  useLocationName,
+  useQueryMany,
+  useSearchOptions,
+  useUserDetails,
+} from "@/hooks/queries";
+import { TABLES } from "@/library/powersync/app-schemas";
+import { OrganizationTypes } from "@/types";
 
 export default function GroupsScreen() {
-	const config = getOrganizationTypeConfig()
-	const { search, setSearch } = useNavigationSearch({
-		searchBarOptions: {
-			placeholder: config.searchPlaceholder,
-		},
-	})
-	const { userDetails } = useUserDetails()
-	const navigation = useNavigation()
-	const router = useRouter()
-	const [newSearchKey, setNewSearchKey] = useState('')
-	const [isSearchOptionsVisible, setIsSearchOptionsVisible] = useState(false)
-	const bottomSheetModalRef = useRef<BottomSheetModal>(null)
-	const isDark = useColorScheme() === 'dark'
-	const [isLoading, setIsLoading] = useState(true)
+  const config = getOrganizationTypeConfig();
+  const { search, setSearch } = useNavigationSearch({
+    searchBarOptions: {
+      placeholder: config.searchPlaceholder,
+    },
+  });
+  const { userDetails } = useUserDetails();
+  const navigation = useNavigation();
+  const router = useRouter();
+  const [newSearchKey, setNewSearchKey] = useState("");
+  const [isSearchOptionsVisible, setIsSearchOptionsVisible] = useState(false);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const isDark = useColorScheme() === "dark";
+  const [isLoading, setIsLoading] = useState(true);
 
-	const {
-		data: groups,
-		isLoading: isGroupsLoading,
-		error: groupsError,
-		isError: isGroupsError,
-	} = useQueryMany<{
-		id: string
-		name: string
-		photo: string
-		organization_type: string
-		address_id: string
-		admin_post_name: string
-		district_name: string
-		province_name: string
-		village_name: string
-	}>(`
+  const {
+    data: groups,
+    isLoading: isGroupsLoading,
+    error: groupsError,
+    isError: isGroupsError,
+  } = useQueryMany<{
+    id: string;
+    name: string;
+    photo: string;
+    organization_type: string;
+    address_id: string;
+    admin_post_name: string;
+    district_name: string;
+    province_name: string;
+    village_name: string;
+  }>(`
 		SELECT 
 			a.id,
 			ad.other_names as name,
@@ -85,187 +91,250 @@ export default function GroupsScreen() {
 		LEFT JOIN ${TABLES.VILLAGES} v ON v.id = addr.village_id
 		WHERE addr.district_id = '${userDetails?.district_id}'
 		AND a.category = 'GROUP'
-	`)
+	`);
 
-	// Use reusable hooks - declare searchKeys first
-	const { searchKeys } = useSearchOptions(userDetails?.district_id || undefined)
+  // Use reusable hooks - declare searchKeys first
+  const { searchKeys } = useSearchOptions(
+    userDetails?.district_id || undefined,
+  );
 
-	const flattenedGroups = useMemo(() => {
-		let filteredGroups = groups.flat()
+  const flattenedGroups = useMemo(() => {
+    let filteredGroups = groups.flat();
 
-		// First filter by admin_post if newSearchKey is set
-		if (newSearchKey && newSearchKey !== 'All') {
-			filteredGroups = filteredGroups.filter((group) => {
-				// Find the admin post that matches the selected search key
-				const selectedAdminPost = searchKeys.find((key) => key.value === newSearchKey)
-				return selectedAdminPost ? group.admin_post_name === selectedAdminPost.label : false
-			})
-		}
+    // First filter by admin_post if newSearchKey is set
+    if (newSearchKey && newSearchKey !== "All") {
+      filteredGroups = filteredGroups.filter((group) => {
+        // Find the admin post that matches the selected search key
+        const selectedAdminPost = searchKeys.find(
+          (key) => key.value === newSearchKey,
+        );
+        return selectedAdminPost
+          ? group.admin_post_name === selectedAdminPost.label
+          : false;
+      });
+    }
 
-		// Then filter by search term if search is set
-		if (search) {
-			filteredGroups = filteredGroups.filter((group) => group.name?.toLowerCase().includes(search.toLowerCase()))
-		}
+    // Then filter by search term if search is set
+    if (search) {
+      filteredGroups = filteredGroups.filter((group) =>
+        group.name?.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
 
-		return filteredGroups
-	}, [groups, newSearchKey, search, searchKeys])
+    return filteredGroups;
+  }, [groups, newSearchKey, search, searchKeys]);
 
-	const handleModalPress = useCallback(() => {
-		if (!isSearchOptionsVisible) {
-			bottomSheetModalRef.current?.present()
-			setIsSearchOptionsVisible(true)
-		} else {
-			bottomSheetModalRef.current?.dismiss()
-			setIsSearchOptionsVisible(false)
-		}
-	}, [isSearchOptionsVisible])
+  const handleModalPress = useCallback(() => {
+    if (!isSearchOptionsVisible) {
+      bottomSheetModalRef.current?.present();
+      setIsSearchOptionsVisible(true);
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+      setIsSearchOptionsVisible(false);
+    }
+  }, [isSearchOptionsVisible]);
 
-	const handleModalDismissPress = useCallback(() => {
-		bottomSheetModalRef.current?.dismiss()
-	}, [])
+  const handleModalDismissPress = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
 
-	// Use reusable hooks
-	const locationName = useLocationName(newSearchKey, userDetails?.district_id || undefined)
-	const groupedData = useGroupedOrganizations(flattenedGroups.filter((group) => group.organization_type))
+  // Use reusable hooks
+  const locationName = useLocationName(
+    newSearchKey,
+    userDetails?.district_id || undefined,
+  );
+  const groupedData = useGroupedOrganizations(
+    flattenedGroups.filter((group) => group.organization_type),
+  );
 
-	useEffect(() => {
-		if (isLoading) {
-			setTimeout(() => {
-				setIsLoading(false)
-			}, 500)
-		}
-	}, [isLoading])
+  useEffect(() => {
+    if (isLoading) {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    }
+  }, [isLoading]);
 
-	const handleSearchKey = (key: string) => {
-		handleModalDismissPress()
-		setIsLoading(true)
-		if (key === 'All') {
-			setNewSearchKey('')
-			setSearch('')
-			setIsSearchOptionsVisible(false)
-			return
-		}
-		setNewSearchKey(key)
-	}
+  const handleSearchKey = (key: string) => {
+    handleModalDismissPress();
+    setIsLoading(true);
+    if (key === "All") {
+      setNewSearchKey("");
+      setSearch("");
+      setIsSearchOptionsVisible(false);
+      return;
+    }
+    setNewSearchKey(key);
+  };
 
-	useEffect(() => {
-		navigation.setOptions({
-			headerTitle: () => (
-				<View className="items-center">
-					<Text className="text-black dark:text-white font-bold">{config.title}</Text>
-					<Text className="text-gray-600 dark:text-gray-400 text-[12px]">{locationName}</Text>
-				</View>
-			),
-			headerRight: () => (
-				<View className="mx-2">
-					<Ionicons
-						onPress={handleModalPress}
-						name={isSearchOptionsVisible ? 'options' : 'options-outline'}
-						size={24}
-						color={isSearchOptionsVisible ? colors.primary : colors.gray600}
-					/>
-				</View>
-			),
-		})
-	}, [isSearchOptionsVisible, newSearchKey, userDetails?.district_id, config, navigation, locationName, handleModalPress])
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: () => (
+        <View className="items-center">
+          <Text className="text-black dark:text-white font-bold">
+            {config.title}
+          </Text>
+          <Text className="text-gray-600 dark:text-gray-400 text-[12px]">
+            {locationName}
+          </Text>
+        </View>
+      ),
+      headerRight: () => (
+        <View className="mx-2">
+          <Ionicons
+            onPress={handleModalPress}
+            name={isSearchOptionsVisible ? "options" : "options-outline"}
+            size={24}
+            color={isSearchOptionsVisible ? colors.primary : colors.gray600}
+          />
+        </View>
+      ),
+    });
+  }, [
+    isSearchOptionsVisible,
+    newSearchKey,
+    userDetails?.district_id,
+    config,
+    navigation,
+    locationName,
+    handleModalPress,
+  ]);
 
-	const renderItem = ({
-		item,
-	}: {
-		item: {
-			id: string
-			name: string
-			photo: string
-			organization_type: string
-			address_id: string
-			admin_post_name: string
-			district_name: string
-			province_name: string
-			village_name: string
-		}
-	}) => (
-		<TouchableOpacity
-			activeOpacity={0.5}
-			onPress={() => router.push(`/(monitoring)/groups/transactions?groupId=${item.id}` as Href)}
-			className=""
-		>
-			<View className="flex-row gap-x-2 items-center p-2 border-b border-gray-200 dark:border-gray-700">
-				<Image source={{ uri: noImageUri }} style={{ width: 60, height: 60, borderRadius: 30 }} contentFit="cover" />
-				<View className="flex-1">
-					<Text className="text-black dark:text-white font-bold">{item.name ?? ''}</Text>
-					<View className="flex-row items-center">
-						<Ionicons name="location-outline" size={16} color={isDark ? colors.gray600 : colors.gray600} />
-						<Text className="text-gray-600 dark:text-gray-400 ml-1 text-[12px]">{item.admin_post_name}</Text>
-					</View>
-				</View>
-				<Ionicons name="chevron-forward" size={24} color={colors.primary} />
-			</View>
-		</TouchableOpacity>
-	)
+  const renderItem = ({
+    item,
+  }: {
+    item: {
+      id: string;
+      name: string;
+      photo: string;
+      organization_type: string;
+      address_id: string;
+      admin_post_name: string;
+      district_name: string;
+      province_name: string;
+      village_name: string;
+    };
+  }) => (
+    <TouchableOpacity
+      activeOpacity={0.5}
+      onPress={() =>
+        router.push(
+          `/(monitoring)/groups/transactions?groupId=${item.id}` as Href,
+        )
+      }
+      className=""
+    >
+      <View className="flex-row gap-x-2 items-center p-2 border-b border-gray-200 dark:border-gray-700">
+        <Image
+          source={{ uri: noImageUri }}
+          style={{ width: 60, height: 60, borderRadius: 30 }}
+          contentFit="cover"
+        />
+        <View className="flex-1">
+          <Text className="text-black dark:text-white font-bold">
+            {item.name ?? ""}
+          </Text>
+          <View className="flex-row items-center">
+            <Ionicons
+              name="location-outline"
+              size={16}
+              color={isDark ? colors.gray600 : colors.gray600}
+            />
+            <Text className="text-gray-600 dark:text-gray-400 ml-1 text-[12px]">
+              {item.admin_post_name}
+            </Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+      </View>
+    </TouchableOpacity>
+  );
 
-	const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => {
-		const translatedTitle =
-			title === OrganizationTypes.COOPERATIVE
-				? 'Cooperativas'
-				: title === OrganizationTypes.ASSOCIATION
-					? 'Associações'
-					: 'Uniões Cooperativas'
+  const renderSectionHeader = ({
+    section: { title },
+  }: {
+    section: { title: string };
+  }) => {
+    const translatedTitle =
+      title === OrganizationTypes.COOPERATIVE
+        ? "Cooperativas"
+        : title === OrganizationTypes.ASSOCIATION
+          ? "Associações"
+          : "Uniões Cooperativas";
 
-		return (
-			<View className="bg-gray-100 dark:bg-gray-800 p-2">
-				<Text className="text-black dark:text-white font-bold">{translatedTitle}</Text>
-			</View>
-		)
-	}
+    return (
+      <View className="bg-gray-100 dark:bg-gray-800 p-2">
+        <Text className="text-black dark:text-white font-bold">
+          {translatedTitle}
+        </Text>
+      </View>
+    );
+  };
 
-	if (isLoading) {
-		return <CustomShimmerPlaceholderItemList count={14} />
-	}
+  if (isLoading) {
+    return <CustomShimmerPlaceholderItemList count={14} />;
+  }
 
-	return (
-		<CustomSafeAreaView edges={['bottom']}>
-		
-			<SectionList
-				showsVerticalScrollIndicator={false}
-				contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
-				sections={groupedData}
-				keyExtractor={(item) => item.id.toString()}
-				renderItem={renderItem}
-				renderSectionHeader={renderSectionHeader}
-				stickySectionHeadersEnabled={true}
-				ListEmptyComponent={
-					<View className="flex-1 items-center justify-center h-100">
-						<NoContentPlaceholder message='Nenhum conteúdo' />
-					</View>
-				}
-			/>
-			{/* </View> */}
-			{/* Bottom Sheet Modal */}
-			<CustomBottomSheetModal handleDismissModalPress={handleModalPress} bottomSheetModalRef={bottomSheetModalRef}>
-				<View className="flex p-3">
-					<Text className="mx-8 text-black dark:text-white italic text-[12px]">
-						Filtrar grupos por posto administrativo
-					</Text>
-					<View className="gap-y-4 pt-8 mx-6">
-						{searchKeys.map((searchKey, index) => (
-							<TouchableOpacity onPress={() => handleSearchKey(searchKey.value)} key={index} className="mx-8">
-								<View className="flex flex-row gap-x-3">
-									<View className="">
-										{newSearchKey === searchKey.value ? (
-											<Ionicons name="radio-button-on" size={24} color={isDark ? colors.white : colors.primary} />
-										) : (
-											<Ionicons name="radio-button-off" size={24} color={isDark ? colors.white : colors.black} />
-										)}
-									</View>
-									<View>
-										<Text className="text-black dark:text-white text-[14px]">{searchKey.label}</Text>
-									</View>
-								</View>
-							</TouchableOpacity>
-						))}
-					</View>
-				</View>
-			</CustomBottomSheetModal>
-		</CustomSafeAreaView>
-	)
+  return (
+    <CustomSafeAreaView edges={["bottom"]}>
+      <SectionList
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
+        sections={groupedData}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={true}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center h-100">
+            <NoContentPlaceholder message="Nenhum conteúdo" />
+          </View>
+        }
+      />
+      {/* </View> */}
+      {/* Bottom Sheet Modal */}
+      <CustomBottomSheetModal
+        handleDismissModalPress={handleModalPress}
+        bottomSheetModalRef={bottomSheetModalRef}
+      >
+        <View className="flex p-3">
+          <Text className="mx-8 text-black dark:text-white italic text-[12px]">
+            Filtrar grupos por posto administrativo
+          </Text>
+          <View className="gap-y-4 pt-8 mx-6">
+            {searchKeys.map((searchKey, index) => (
+              <TouchableOpacity
+                onPress={() => handleSearchKey(searchKey.value)}
+                key={index}
+                className="mx-8"
+              >
+                <View className="flex flex-row gap-x-3">
+                  <View className="">
+                    {newSearchKey === searchKey.value ? (
+                      <Ionicons
+                        name="radio-button-on"
+                        size={24}
+                        color={isDark ? colors.white : colors.primary}
+                      />
+                    ) : (
+                      <Ionicons
+                        name="radio-button-off"
+                        size={24}
+                        color={isDark ? colors.white : colors.black}
+                      />
+                    )}
+                  </View>
+                  <View>
+                    <Text className="text-black dark:text-white text-[14px]">
+                      {searchKey.label}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </CustomBottomSheetModal>
+    </CustomSafeAreaView>
+  );
 }

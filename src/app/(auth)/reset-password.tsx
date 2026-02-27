@@ -67,11 +67,11 @@ export default function PasswordReset() {
         // showSuccess('Sua senha foi redefinida com sucesso. Você pode fazer login agora.')
         reset();
         await userSignOut();
-		  setHasSuccess(true);
-		  setTimeout(() => {
-			setHasSuccess(false);
-			router.push("/(auth)/login" as Href);
-		  }, 1000);
+        setHasSuccess(true);
+        setTimeout(() => {
+          setHasSuccess(false);
+          router.push("/(auth)/login" as Href);
+        }, 1000);
       } else {
         setHasAlert(true);
         setErrorMessage(message);

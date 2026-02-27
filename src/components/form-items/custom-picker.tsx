@@ -104,7 +104,7 @@ export const CustomPicker = ({
       return (
         <TouchableOpacity
           onPress={() => onSelect(item.value)}
-          className="my-2 min-h-[52px] items-center flex flex-row justify-between border border-slate-100 dark:border-slate-700 px-3 shadow-xs shadow-black rounded-xl"
+          className="my-2 min-h-13 items-center flex flex-row justify-between border border-slate-100 dark:border-slate-700 px-3 shadow-xs shadow-black rounded-xl"
           style={{ backgroundColor: isDarkMode ? colors.black : colors.gray50 }}
         >
           <Text

@@ -15,7 +15,7 @@ import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import { colors } from "@/constants/colors";
 import { useActionStore } from "@/store/actions/actions";
 import { FontAwesome } from "@expo/vector-icons";
-import { Href, useNavigation, useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 
 export default function GroupsIndexScreen() {
   const navigation = useNavigation();

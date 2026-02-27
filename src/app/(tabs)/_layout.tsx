@@ -1,11 +1,15 @@
-import { colors } from '@/constants/colors';
-import { FontAwesome, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { useColorScheme, View } from 'react-native';
+import { colors } from "@/constants/colors";
+import {
+  FontAwesome,
+  FontAwesome6,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import React from "react";
+import { useColorScheme, View } from "react-native";
 
 export default function TabLayout() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
 
   return (
     <Tabs

@@ -54,14 +54,14 @@ export default function SegmentModalLayout({
             borderBottomColor: isDark ? "#374151" : "#e5e7eb",
           }}
         > */}
-          {/* <TouchableOpacity
+        {/* <TouchableOpacity
             onPress={onClose}
             style={{ padding: 8 }}
             activeOpacity={0.7}
           >
             <Fontisto name="close" size={22} color={colors.gray600} />
           </TouchableOpacity> */}
-          {/* <Text
+        {/* <Text
             style={{
               fontSize: 16,
               fontWeight: "600",
@@ -72,7 +72,7 @@ export default function SegmentModalLayout({
           >
             {title}
           </Text> */}
-          {/* <View style={{ width: 38 }} /> */}
+        {/* <View style={{ width: 38 }} /> */}
         {/* </View> */}
 
         {children}

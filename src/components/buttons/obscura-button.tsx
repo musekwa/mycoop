@@ -1,11 +1,7 @@
-import { ComponentProps } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from "react-native";
 import { colors } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
+import { ComponentProps } from "react";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 interface ObscuraButtonProps {
   onPress: () => void;

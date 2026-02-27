@@ -1,41 +1,37 @@
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import * as ImageManipulator from "expo-image-manipulator";
+import { Href, Redirect, useRouter } from "expo-router";
 import * as React from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   Platform,
   StatusBar,
+  StyleSheet,
+  Text,
   TouchableHighlight,
   TouchableOpacity,
+  View,
 } from "react-native";
-import { Href, Redirect, useRouter } from "expo-router";
-import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import {
   Camera,
   useCameraDevice,
   useCameraPermission,
 } from "react-native-vision-camera";
-import * as ImageManipulator from "expo-image-manipulator";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
-import { useActionStore } from "@/store/actions/actions";
 import { pickImage } from "@/helpers/pick-image";
+import { useActionStore } from "@/store/actions/actions";
 
+import CustomProgressAlert from "@/components/alerts/custom-progress-alert";
+import ErrorAlert from "@/components/alerts/error-alert";
 import ObscuraButton from "@/components/buttons/obscura-button";
 import CameraZoomControls from "@/components/camera-zoom-controls";
-import ErrorAlert from "@/components/alerts/error-alert";
-import CustomProgressAlert from "@/components/alerts/custom-progress-alert";
-import {  ResourceName } from "@/types";
+import { ResourceName } from "@/types";
 
 export default function Page() {
-  const {
-    setBase64,
-    setReloading,
-    reloading,
-    currentResource,
-  } = useActionStore();
+  const { setBase64, setReloading, reloading, currentResource } =
+    useActionStore();
   const { hasPermission } = useCameraPermission();
   // const microphonePermission = Camera.getMicrophonePermissionStatus()
   const directToPermission = !hasPermission;
@@ -62,7 +58,7 @@ export default function Page() {
   const handleBack = () => {
     console.log("currentResource", currentResource);
     // console.log('addActionType', addActionType)
-     if (
+    if (
       currentResource.id.length > 10 &&
       currentResource.name === ResourceName.FARMER
     ) {
@@ -85,7 +81,7 @@ export default function Page() {
         router.navigate("/(native)/media-preview" as Href);
       }
     } catch (error) {
-        console.log("Error uploading image", error)
+      console.log("Error uploading image", error);
       setHasError(true);
       setErrorMessage("Erro ao carregar a foto, tente mais tarde.");
     }

@@ -1,4 +1,5 @@
 import Tag from "@/components/custom-tag";
+import GroupManagersList from "@/features/groups/group-managers-list";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Dimensions, FlatList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -108,6 +109,10 @@ export default function AnimationTopTab({
           removeClippedSubviews={true}
         />
       </View>
+      <View>
+        <GroupManagersList />
+      </View>
+
       <View
         style={{ flex: 1 }}
         onLayout={() => {

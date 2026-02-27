@@ -469,6 +469,7 @@ create table public.nuits (
 -- Organization transactions table
 create table public.organization_transactions (
   id uuid not null default gen_random_uuid (),
+  item text not null,
   transaction_type text not null,
   quantity integer not null,
   unit_price double precision not null,

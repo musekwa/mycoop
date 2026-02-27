@@ -8,7 +8,7 @@ type CustomSelectItemTriggerProps = {
 	selectedItem: string
 }
 
-export default function CustomSelectItemTrigger({
+export default function CustomSingleSelectorTrigger({
 	resetItem,
 	hasSelectedItem,
 	setShowItems,
@@ -16,7 +16,7 @@ export default function CustomSelectItemTrigger({
 }: CustomSelectItemTriggerProps) {
 	return (
 		<TouchableOpacity activeOpacity={0.5} onPress={() => setShowItems(true)}>
-			<View className="relative border border-slate-300 p-3 text-[14px] shadow-sm shadow-black rounded-xl bg-gray-50 dark:bg-black h-[50px]">
+			<View className="relative border border-slate-300 p-3 text-[14px] shadow-sm shadow-black rounded-xl bg-gray-50 dark:bg-black h-12.5">
 				<Text className="text-[#808080]">{selectedItem}</Text>
 				{hasSelectedItem ? (
 					<TouchableOpacity 

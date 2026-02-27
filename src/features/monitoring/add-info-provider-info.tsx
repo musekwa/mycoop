@@ -1,85 +1,78 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { View, Text } from 'react-native'
-import CustomSelectItem from '@/components/custom-select-item'
-import { useInfoProviderStore } from '@/store/trades'
-import { z } from 'zod'
-import CustomSelectItemTrigger from '@/components/custom-select-item-trigger'
-import { queryMany } from '@/library/powersync/sql-statements'
-import { TABLES } from '@/library/powersync/app-schemas'
-import { capitalize } from '@/helpers/capitalize'
-import { positionLabelInPortuguese } from '@/helpers/translate'
-import Label from '@/components/form-items/custom-label'
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { z } from "zod";
+
+import Label from "@/components/form-items/custom-label";
+import { CustomPicker } from "@/components/form-items/custom-picker";
+import FormItemDescription from "@/components/form-items/form-item-description";
+import { colors } from "@/constants/colors";
+import { positionLabelInPortuguese } from "@/helpers/translate";
+import { TABLES } from "@/library/powersync/app-schemas";
+import { queryMany } from "@/library/powersync/sql-statements";
+import { useInfoProviderStore } from "@/store/trades";
 
 // Types
-type StoreType = 'WAREHOUSE' | 'GROUP'
+type StoreType = "WAREHOUSE" | "GROUP";
 
 interface InfoProvider {
-	id: string
-	full_name: string
-	position: string
-	store_id: string
-	store_type: StoreType
+  id: string;
+  full_name: string;
+  position: string;
+  store_id: string;
+  store_type: StoreType;
 }
 
 const InfoProviderSchema = z.object({
-	info_provider_id: z.string(),
-	info_provider_name: z.string(),
-})
+  info_provider_id: z.string(),
+  info_provider_name: z.string(),
+});
 
-type InfoProviderData = z.infer<typeof InfoProviderSchema>
+type InfoProviderData = z.infer<typeof InfoProviderSchema>;
 
 interface AddInfoProviderInfoProps {
-	customErrors: Record<string, string>
-	setCustomErrors: (customErrors: Record<string, string>) => void
-	setShowInfoProviderModal: (showInfoProviderModal: boolean) => void
-	showInfoProviderModal: boolean
-	ownerId: string
-	storeId: string
-	storeType: StoreType
+  customErrors: Record<string, string>;
+  setCustomErrors: (customErrors: Record<string, string>) => void;
+  setShowInfoProviderModal: (showInfoProviderModal: boolean) => void;
+  showInfoProviderModal: boolean;
+  ownerId: string;
+  storeId: string;
+  storeType: StoreType;
 }
 
 export default function AddInfoProviderInfo({
-	customErrors,
-	setCustomErrors,
-	setShowInfoProviderModal,
-	showInfoProviderModal,
-	ownerId,
-	storeId,
-	storeType,
+  customErrors,
+  setCustomErrors,
+  setShowInfoProviderModal,
+  showInfoProviderModal,
+  ownerId,
+  storeId,
+  storeType,
 }: AddInfoProviderInfoProps) {
-	const { hasSelectedInfoProvider, infoProvider, setHasSelectedInfoProvider, setInfoProvider } = useInfoProviderStore()
-	const [infoProviders, setInfoProviders] = useState<InfoProvider[]>([])
+  const isDarkMode = useColorScheme() === "dark";
+  const {
+    hasSelectedInfoProvider,
+    infoProvider,
+    setHasSelectedInfoProvider,
+    setInfoProvider,
+  } = useInfoProviderStore();
+  const [infoProviders, setInfoProviders] = useState<InfoProvider[]>([]);
+  const bottomSheetModalRef = useRef<any>(null);
 
-	const {
-		control,
-		handleSubmit,
-		formState: { errors },
-		setValue,
-		watch,
-	} = useForm<InfoProviderData>({
-		defaultValues: {
-			info_provider_id: '',
-			info_provider_name: '',
-		},
-		resolver: zodResolver(InfoProviderSchema),
-	})
+  // Fetch info providers based on store type
+  useEffect(() => {
+    const fetchInfoProviders = async () => {
+      try {
+        let providers: InfoProvider[] = [];
 
-	// Fetch info providers based on store type
-	useEffect(() => {
-		const fetchInfoProviders = async () => {
-			try {
-				let providers: InfoProvider[] = []
-
-				if (storeType === 'WAREHOUSE') {
-					const employees = await queryMany<{
-						id: string
-						full_name: string
-						position: string
-						facility_id: string
-						facility_type: string
-					}>(`
+        if (storeType === "WAREHOUSE") {
+          const employees = await queryMany<{
+            id: string;
+            full_name: string;
+            position: string;
+            facility_id: string;
+            facility_type: string;
+          }>(`
 						SELECT DISTINCT
 							wa.worker_id as id,
 							COALESCE(ad.other_names || ' ' || ad.surname, ad.other_names, ad.surname, 'N/A') as full_name,
@@ -89,23 +82,23 @@ export default function AddInfoProviderInfo({
 						FROM ${TABLES.WORKER_ASSIGNMENTS} wa
 						LEFT JOIN ${TABLES.ACTOR_DETAILS} ad ON ad.actor_id = wa.worker_id
 						WHERE wa.facility_id = '${storeId}' AND wa.is_active = 'true'
-					`)
+					`);
 
-					providers = employees.map((e) => ({
-						id: e.id,
-						full_name: e.full_name,
-						position: e.position,
-						store_id: e.facility_id,
-						store_type: 'WAREHOUSE',
-					}))
-				} else {
-					const groupManagers = await queryMany<{
-						id: string
-						surname: string
-						other_names: string
-						position: string
-						group_id: string
-					}>(`
+          providers = employees.map((e) => ({
+            id: e.id,
+            full_name: e.full_name,
+            position: e.position,
+            store_id: e.facility_id,
+            store_type: "WAREHOUSE",
+          }));
+        } else {
+          const groupManagers = await queryMany<{
+            id: string;
+            surname: string;
+            other_names: string;
+            position: string;
+            group_id: string;
+          }>(`
 						SELECT DISTINCT
 							gma.group_manager_id as id,
 							ad.surname,
@@ -116,106 +109,123 @@ export default function AddInfoProviderInfo({
 						INNER JOIN ${TABLES.ACTOR_DETAILS} ad ON ad.actor_id = gma.group_manager_id
 						WHERE gma.group_id = '${storeId}'
 							AND gma.is_active = 'true'
-					`)
+					`);
 
-					providers = groupManagers.map((g) => ({
-						id: g.id,
-						full_name: `${g.other_names} ${g.surname}`.trim(),
-						position: positionLabelInPortuguese(g.position),
-						store_id: g.group_id,
-						store_type: 'GROUP',
-					}))
-				}
+          providers = groupManagers.map((g) => ({
+            id: g.id,
+            full_name: `${g.other_names} ${g.surname}`.trim(),
+            position: positionLabelInPortuguese(g.position),
+            store_id: g.group_id,
+            store_type: "GROUP",
+          }));
+        }
 
-				setInfoProviders(providers)
-			} catch (error) {
-				console.error('Error fetching info providers:', error)
-				setInfoProviders([])
-			}
-		}
+        setInfoProviders(providers);
+      } catch (error) {
+        console.error("Error fetching info providers:", error);
+        setInfoProviders([]);
+      }
+    };
 
-		fetchInfoProviders()
-	}, [storeId, storeType, ownerId])
+    fetchInfoProviders();
+  }, [storeId, storeType, ownerId]);
 
-	const handleInfoProviderSelect = (providerValue: string) => {
-		const selectedProvider = infoProviders.find((p) => p.id === providerValue)
-		if (selectedProvider) {
-			const providerName = selectedProvider.full_name || 'Nome do fornecedor de informações'
+  useEffect(() => {
+    // Clear any existing error for this field when provider is selected
+    if (hasSelectedInfoProvider && customErrors.infoProvider) {
+      const newErrors = { ...customErrors };
+      delete newErrors.infoProvider;
+      setCustomErrors(newErrors);
+    }
+  }, [hasSelectedInfoProvider, customErrors.infoProvider, setCustomErrors]);
 
-			setValue('info_provider_id', selectedProvider.id)
-			setValue('info_provider_name', providerName)
-			setInfoProvider({
-				info_provider_id: selectedProvider.id,
-				info_provider_name: providerName,
-			})
-			setCustomErrors({ ...customErrors, infoProvider: '' })
-			setHasSelectedInfoProvider(true)
-			setShowInfoProviderModal(false)
-		}
-	}
+  const handleInfoProviderSelect = (providerValue: string) => {
+    const selectedProvider = infoProviders.find((p) => p.id === providerValue);
+    if (selectedProvider) {
+      const providerName =
+        selectedProvider.full_name || "Nome do fornecedor de informações";
 
-	const handleResetInfoProvider = () => {
-		setValue('info_provider_id', '')
-		setValue('info_provider_name', '')
-		setInfoProvider({
-			info_provider_id: '',
-			info_provider_name: '',
-		})
-		setHasSelectedInfoProvider(false)
-		setCustomErrors({ ...customErrors, infoProvider: '' })
-	}
+      setInfoProvider({
+        info_provider_id: selectedProvider.id,
+        info_provider_name: providerName,
+      });
+      setCustomErrors({ ...customErrors, infoProvider: "" });
+      setHasSelectedInfoProvider(true);
+      bottomSheetModalRef.current?.dismiss();
+    }
+  };
 
-	// Auto-select provider if available
-	useEffect(() => {
-		if (infoProviders.length === 0) {
-			handleResetInfoProvider()
-			return
-		}
+  const handleResetInfoProvider = () => {
+    setInfoProvider({
+      info_provider_id: "",
+      info_provider_name: "",
+    });
+    setHasSelectedInfoProvider(false);
+    setCustomErrors({ ...customErrors, infoProvider: "" });
+  };
 
-		let matchingProvider: InfoProvider | undefined
+  // Auto-select provider if available
+  useEffect(() => {
+    if (infoProviders.length === 0) {
+      handleResetInfoProvider();
+      return;
+    }
 
-		if (storeType === 'GROUP') {
-			// For GROUP type, find the provider with position 'promotor'
-			matchingProvider = infoProviders.find(
-				(p) => p.store_id === storeId && p.store_type === 'GROUP' && p.position.toLowerCase().includes('promotor'),
-			)
-		} else {
-			// For WAREHOUSE type, find any matching provider
-			matchingProvider = infoProviders.find((p) => p.store_id === storeId && p.store_type === 'WAREHOUSE')
-		}
+    let matchingProvider: InfoProvider | undefined;
 
-		if (matchingProvider) {
-			handleInfoProviderSelect(matchingProvider.id)
-		}
-	}, [infoProviders, storeId, storeType])
+    if (storeType === "GROUP") {
+      // For GROUP type, find the provider with position 'promotor'
+      matchingProvider = infoProviders.find(
+        (p) =>
+          p.store_id === storeId &&
+          p.store_type === "GROUP" &&
+          p.position.toLowerCase().includes("promotor"),
+      );
+    } else {
+      // For WAREHOUSE type, find any matching provider
+      matchingProvider = infoProviders.find(
+        (p) => p.store_id === storeId && p.store_type === "WAREHOUSE",
+      );
+    }
 
-	return (
-		<View className="mb-3">
-			<Label label="" />
-			<CustomSelectItemTrigger
-				selectedItem={infoProvider?.info_provider_name || 'Seleccione'}
-				setShowItems={setShowInfoProviderModal}
-				resetItem={handleResetInfoProvider}
-				hasSelectedItem={hasSelectedInfoProvider}
-			/>
-			<CustomSelectItem
-				label="Seleccione o fornecedor de informações"
-				searchPlaceholder="Pesquise por nome"
-				emptyMessage="Nenhum fornecedor de informações encontrado"
-				showModal={showInfoProviderModal}
-				setShowModal={setShowInfoProviderModal}
-				itemsList={infoProviders.map((p) => ({
-					label: p.full_name || 'Nome do fornecedor de informações',
-					value: p.id,
-					description: capitalize(p.position || 'Trabalhador'),
-				}))}
-				setValue={handleInfoProviderSelect}
-			/>
-			{customErrors?.infoProvider ? (
-				<Text className="text-[12px] text-red-500 mt-1">{customErrors.infoProvider}</Text>
-			) : (
-				<Text className="text-[12px] italic text-gray-500 mt-1">Fornecedor de informações</Text>
-			)}
-		</View>
-	)
+    if (matchingProvider) {
+      handleInfoProviderSelect(matchingProvider.id);
+    }
+  }, [infoProviders, storeId, storeType]);
+
+  const openPicker = () => {
+    bottomSheetModalRef.current?.present();
+  };
+
+  const getProviderLabel = (providerId: string) => {
+    const provider = infoProviders.find((p) => p.id === providerId);
+    return provider
+      ? provider.full_name
+      : "Seleccione o fornecedor de informações...";
+  };
+
+  return (
+    <View className="mb-4">
+      <Label label="Fornecedor de Informações" />
+
+      {customErrors.infoProvider && (
+        <Text className="text-xs text-red-500 mt-1">
+          {customErrors.infoProvider}
+        </Text>
+      )}
+
+      <CustomPicker
+        items={infoProviders.map((provider) => ({
+          label: provider.full_name || "Nome do fornecedor de informações",
+          value: provider.id,
+        }))}
+        setValue={handleInfoProviderSelect}
+        placeholder={{
+          label: "Seleccione o fornecedor de informações...",
+          value: null,
+        }}
+        value={infoProvider?.info_provider_id || ""}
+      />
+    </View>
+  );
 }

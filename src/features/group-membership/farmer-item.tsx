@@ -2,13 +2,10 @@ import { colors } from "@/constants/colors";
 import { avatarPlaceholderUri } from "@/constants/image-uris";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Text, View } from "react-native";
-import { TouchableOpacity } from "react-native";
-import { useColorScheme } from "react-native";
-
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 // Farmer Card Component
-export default function FarmerMembershipItem ({
+export default function FarmerMembershipItem({
   farmer,
   selected,
   onToggle,
@@ -109,4 +106,4 @@ export default function FarmerMembershipItem ({
       </View>
     </TouchableOpacity>
   );
-};
+}

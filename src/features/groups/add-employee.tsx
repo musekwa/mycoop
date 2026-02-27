@@ -485,7 +485,7 @@ const Header = ({
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   return (
-    <View className="h-[55px] mt-6 flex flex-row justify-between items-center p-3">
+    <View className="h-13.75 mt-6 flex flex-row justify-between items-center p-3">
       <BackButton />
       <View>
         <Text className="text-black dark:text-white font-bold">

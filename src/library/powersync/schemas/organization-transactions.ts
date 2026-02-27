@@ -1,6 +1,7 @@
 import { Table, column } from '@powersync/react-native'
 import { v4 as uuidv4 } from 'uuid'
 export interface OrganizationTransactionType {
+	item: string
 	transaction_type: string
 	quantity: number
 	unit_price: number
@@ -18,6 +19,7 @@ export interface OrganizationTransactionType {
 export default new Table(
 	{
 		id: column.text,
+		item: column.text,
 		transaction_type: column.text,
 		quantity: column.integer,
 		unit_price: column.integer,
@@ -35,13 +37,14 @@ export default new Table(
 	},
 	{
 		indexes: {
-			OrganizationTransaction: ['store_id'],
+			OrganizationTransaction: ['store_id', 'item'],
 		},
 	},
 )
 
 export const buildOrganizationTransaction = (data: OrganizationTransactionType) => {
 	const {
+		item,
 		transaction_type,
 		quantity,
 		unit_price,
@@ -60,6 +63,7 @@ export const buildOrganizationTransaction = (data: OrganizationTransactionType) 
     const updated_at = new Date().toISOString()
 	return {
 		id,
+		item,
 		transaction_type,
 		quantity,
 		unit_price,

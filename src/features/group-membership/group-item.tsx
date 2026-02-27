@@ -1,11 +1,9 @@
 import { colors } from "@/constants/colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
-import { TouchableOpacity, useColorScheme } from "react-native";
-
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 // Group Card Component
-export default function GroupMemberShipItem ({
+export default function GroupMemberShipItem({
   group,
   selected,
   onToggle,
@@ -101,4 +99,4 @@ export default function GroupMemberShipItem ({
       </View>
     </TouchableOpacity>
   );
-};
+}

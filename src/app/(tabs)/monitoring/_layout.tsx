@@ -1,12 +1,12 @@
-import React from 'react'
-import { useColorScheme } from 'react-native'
-import { Stack } from 'expo-router'
-import { colors } from '@/constants/colors'
-import { StatusBar } from 'expo-status-bar'
+import { colors } from "@/constants/colors";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { useColorScheme } from "react-native";
 
 export default function TradesLayout() {
-	const isDark = useColorScheme() === 'dark'
-	return (
+  const isDark = useColorScheme() === "dark";
+  return (
     <>
       <Stack
         screenOptions={{

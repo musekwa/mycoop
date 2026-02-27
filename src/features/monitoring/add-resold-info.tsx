@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import CustomTextInput from '@/components/form-items/custom-text-input'
 import { Switch } from 'react-native'
-import { useResoldInfoStore } from '@/store/trades'
+import { useResoldInfoStore, useTransactedItemStore } from '@/store/trades'
+import { getTransactedItemPortugueseName } from '@/helpers/trades'
 
 const TransactionSchema = z
 	.object({
@@ -33,9 +34,10 @@ type TransactionData = z.infer<typeof TransactionSchema> & {
 type ResoldInfoProps = {
 	customErrors: Record<string, string>
 	setCustomErrors: (customErrors: Record<string, string>) => void
+	itemType: string
 }
 
-export default function AddResoldInfo({ customErrors, setCustomErrors }: ResoldInfoProps) {
+export default function AddResoldInfo({ customErrors, setCustomErrors, itemType }: ResoldInfoProps) {
 	const {
 		control,
 		handleSubmit,
@@ -89,7 +91,7 @@ export default function AddResoldInfo({ customErrors, setCustomErrors }: ResoldI
 		<ScrollView className="border border-gray-300 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 my-3">
 			<View className="flex-row items-center justify-between mb-4">
 				<View className="flex-1">
-					<Text className="text-sm text-gray-600 dark:text-gray-400">Revendeu castanha?</Text>
+					<Text className="text-sm text-gray-600 dark:text-gray-400">Revendeu {itemType.toLowerCase()}?</Text>
 				</View>
 				<Controller
 					control={control}

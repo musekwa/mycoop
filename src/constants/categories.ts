@@ -1,96 +1,94 @@
-import { ActorCategory, CategoryCardType, OrganizationTypes } from '@/types'
 import {
-	associationCategoryImageUri,
-	cooperativeCategoryImageUri,
-	farmerCategoryImageUri,
-	unionCategoryImageUri,
-} from '@/constants/image-uris'
+  associationCategoryImageUri,
+  cooperativeCategoryImageUri,
+  farmerCategoryImageUri,
+  unionCategoryImageUri,
+} from "@/constants/image-uris";
+import { ActorCategory, CategoryCardType, OrganizationTypes } from "@/types";
 
-export const multicategory = [
-	'WORKER',
-]
+export const multicategory = ["WORKER"];
 
 export const organizationTypes = [
-	{
-		title: 'Cooperativas',
-		count: 0,
-		routeSegment: 'cooperatives',
-		description: '',
-		imageUri: cooperativeCategoryImageUri,
-		orgType: OrganizationTypes.COOPERATIVE,
-	},
-	{
-		title: 'Associações',
-		count: 0,
-		routeSegment: 'associations',
-		description: '',
-		imageUri: associationCategoryImageUri,
-		orgType: OrganizationTypes.ASSOCIATION,
-	},
-	{
-		title: 'Uniões de Cooperativas',
-		count: 0,
-		routeSegment: 'coop-unions',
-		description: '.',
-		imageUri: unionCategoryImageUri,
-		orgType: OrganizationTypes.COOP_UNION,
-	},
-]
+  {
+    title: "Cooperativas",
+    count: 0,
+    routeSegment: "cooperatives",
+    description: "",
+    imageUri: cooperativeCategoryImageUri,
+    orgType: OrganizationTypes.COOPERATIVE,
+  },
+  {
+    title: "Associações",
+    count: 0,
+    routeSegment: "associations",
+    description: "",
+    imageUri: associationCategoryImageUri,
+    orgType: OrganizationTypes.ASSOCIATION,
+  },
+  {
+    title: "Uniões de Cooperativas",
+    count: 0,
+    routeSegment: "coop-unions",
+    description: ".",
+    imageUri: unionCategoryImageUri,
+    orgType: OrganizationTypes.COOP_UNION,
+  },
+];
 
 export const categoryOptions = [
-	{
-		actorCategory: ActorCategory.FARMER,
-		title: 'Produtor',
-		icon: 'person',
-		description: '',
-		imageUri: farmerCategoryImageUri,
-	},
-	{
-		actorCategory: ActorCategory.COOPERATIVE,
-		title: 'Cooperativa',
-		icon: 'hand-holding-dollar',
-		description: '',
-		imageUri: cooperativeCategoryImageUri,
-	},
-	{
-		actorCategory: ActorCategory.ASSOCIATION,
-		title: 'Associação',
-		icon: 'people-group',
-		description: '',
-		imageUri: associationCategoryImageUri,
-	},
-	{
-		actorCategory: ActorCategory.COOP_UNION,
-		title: 'União de Cooperativas',
-		icon: 'people-group',
-		description: '',
-		imageUri: unionCategoryImageUri,
-	},
-]
+  {
+    actorCategory: ActorCategory.FARMER,
+    title: "Produtor",
+    icon: "person",
+    description: "",
+    imageUri: farmerCategoryImageUri,
+  },
+  {
+    actorCategory: ActorCategory.COOPERATIVE,
+    title: "Cooperativa",
+    icon: "hand-holding-dollar",
+    description: "",
+    imageUri: cooperativeCategoryImageUri,
+  },
+  {
+    actorCategory: ActorCategory.ASSOCIATION,
+    title: "Associação",
+    icon: "people-group",
+    description: "",
+    imageUri: associationCategoryImageUri,
+  },
+  {
+    actorCategory: ActorCategory.COOP_UNION,
+    title: "União de Cooperativas",
+    icon: "people-group",
+    description: "",
+    imageUri: unionCategoryImageUri,
+  },
+];
 
 export const categoriesCardDetails: CategoryCardType[] = [
-	{
-		actorCategory: ActorCategory.FARMER,
-		description: 'Familiares e Comerciais.',
-		title: 'Produtores',
-		bannerImage: farmerCategoryImageUri,
-	},
-	{
-		actorCategory: ActorCategory.COOPERATIVE,
-		description: 'Cooperativas de produtores.',
-		title: 'Cooperativas',
-		bannerImage: cooperativeCategoryImageUri,
-	},
-	{
-		actorCategory: ActorCategory.ASSOCIATION,
-		description: 'Associações de produtores.',
-		title: 'Associações',
-		bannerImage: associationCategoryImageUri,
-	},
-	{
-		actorCategory: ActorCategory.COOP_UNION,
-		description: 'Uniões de cooperativas.',
-		title: 'Uniões',
-		bannerImage: unionCategoryImageUri,
-	},
-]
+  {
+    actorCategory: ActorCategory.FARMER,
+    description: "Familiares e Comerciais.",
+    title: "Produtores",
+    bannerImage: farmerCategoryImageUri,
+  },
+  {
+    actorCategory: ActorCategory.COOPERATIVE,
+    description: "Cooperativas de produtores.",
+    title: "Cooperativas",
+    bannerImage: cooperativeCategoryImageUri,
+  },
+  {
+    actorCategory: ActorCategory.ASSOCIATION,
+    description: "Associações de produtores.",
+    title: "Associações",
+    bannerImage: associationCategoryImageUri,
+  },
+  {
+    actorCategory: ActorCategory.COOP_UNION,
+    description: "Uniões de cooperativas.",
+    title: "Uniões",
+    bannerImage: unionCategoryImageUri,
+  },
+];

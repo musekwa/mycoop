@@ -106,7 +106,7 @@ export default function CustomImageViewer({
           ],
         );
         resetBase64();
-		const urlSegment = currentResource.name.toLowerCase()
+        const urlSegment = currentResource.name.toLowerCase();
         setTimeout(() => {
           router.navigate(`/(profiles)/${urlSegment}` as Href);
         }, 2000);
@@ -114,8 +114,8 @@ export default function CustomImageViewer({
         router.back();
       }
       setVisible(false);
-	} catch (error) {
-		console.log("Error adding image", error)
+    } catch (error) {
+      console.log("Error adding image", error);
       setHasError(true);
       setMessage("Erro ao adicionar a foto");
     } finally {

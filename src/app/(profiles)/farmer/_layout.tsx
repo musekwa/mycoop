@@ -1,22 +1,28 @@
-import { View, Text, TouchableOpacity, ScrollView, useColorScheme } from "react-native";
-import React, { useEffect, useState } from "react";
-import { Drawer } from "expo-router/drawer";
-import { colors } from "@/constants/colors";
-import { Image } from "expo-image";
-import { avatarPlaceholderUri } from "@/constants/image-uris";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
-import UploadPhoto from "@/components/form-items/upload-photo";
-import { useDrawerStatus } from "@react-navigation/drawer";
-import { commercializationCampainsdateRange } from "@/helpers/dates";
-import SingleFloatingButton from "@/components/buttons/single-floating-button";
-import { useActionStore } from "@/store/actions/actions";
 import ActorContactInfo from "@/components/actor-contact-info";
-import { TABLES } from "@/library/powersync/app-schemas";
-import { useQueryOne, useQueryOneAndWatchChanges } from "@/hooks/queries";
-import { StatusBar } from "expo-status-bar";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HeaderAvatar from "@/components/actor-profile-header-avatar";
+import SingleFloatingButton from "@/components/buttons/single-floating-button";
+import UploadPhoto from "@/components/form-items/upload-photo";
+import { colors } from "@/constants/colors";
+import { avatarPlaceholderUri } from "@/constants/image-uris";
+import { commercializationCampainsdateRange } from "@/helpers/dates";
+import { useQueryOne, useQueryOneAndWatchChanges } from "@/hooks/queries";
+import { TABLES } from "@/library/powersync/app-schemas";
+import { useActionStore } from "@/store/actions/actions";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useDrawerStatus } from "@react-navigation/drawer";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { Drawer } from "expo-router/drawer";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
+import {
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function CustomDrawerContent(props: any) {
   const { setDrawerStatus, getCurrentResource } = useActionStore();
@@ -70,9 +76,7 @@ function CustomDrawerContent(props: any) {
   const drawerRoutes = state?.routes || [];
 
   return (
-    <View
-      style={{ flex: 1, backgroundColor: isDark ? "#333333" : "#ffffff" }}
-    >
+    <View style={{ flex: 1, backgroundColor: isDark ? "#333333" : "#ffffff" }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}

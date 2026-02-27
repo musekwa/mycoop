@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import "react-native-get-random-values";
 import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { z } from "zod";
@@ -13,7 +13,11 @@ import CustomTextInput from "@/components/form-items/custom-text-input";
 
 import ErrorAlert from "@/components/alerts/error-alert";
 import SuccessAlert from "@/components/alerts/success-alert";
-import { useQueryMany, useQueryOne, useUserDetails } from "@/hooks/queries";
+import {
+  useQueryManyAndWatchChanges,
+  useQueryOne,
+  useUserDetails,
+} from "@/hooks/queries";
 import { TABLES } from "@/library/powersync/app-schemas";
 import {
   insertActor,
@@ -24,8 +28,8 @@ import {
 } from "@/library/powersync/sql-statements";
 import { useActionStore } from "@/store/actions/actions";
 
-import CustomSelectItem from "@/components/custom-select-item";
-import CustomSelectItemTrigger from "@/components/custom-select-item-trigger";
+import Label from "@/components/form-items/custom-label";
+import { CustomPicker } from "@/components/form-items/custom-picker";
 import FormItemDescription from "@/components/form-items/form-item-description";
 import { groupManagerPositions } from "@/constants/roles";
 import { buildActorDetails } from "@/library/powersync/schemas/actor-details";
@@ -33,8 +37,6 @@ import { buildActor } from "@/library/powersync/schemas/actors";
 import { buildAddressDetail } from "@/library/powersync/schemas/address-details";
 import { buildContactDetail } from "@/library/powersync/schemas/contact-details";
 import { buildGroupManagerAssignment } from "@/library/powersync/schemas/group-manager-assignments";
-import Label from "@/components/form-items/custom-label";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
 
 // Define the schema for worker form data validation
 const GroupManagerSchema = z.object({
@@ -63,6 +65,27 @@ export default function AddGroupManager() {
   const { getCurrentResource } = useActionStore();
   const { userDetails } = useUserDetails();
   const userDistrictId = userDetails?.district_id;
+  const { data: existingPositions } = useQueryManyAndWatchChanges<{
+    position: string;
+  }>(
+    `SELECT DISTINCT position
+    FROM ${TABLES.GROUP_MANAGER_ASSIGNMENTS}
+    WHERE group_id = '${getCurrentResource().id}' AND is_active = 'true'`,
+  );
+
+  const availablePositions = useMemo(() => {
+    if (!existingPositions || existingPositions.length === 0) {
+      return groupManagerPositions;
+    }
+
+    const takenPositions = existingPositions.map(
+      (ep: { position: string }) => ep.position,
+    );
+    return groupManagerPositions.filter(
+      (item) => !takenPositions.includes(item.value),
+    );
+  }, [existingPositions, groupManagerPositions]);
+
   const {
     data: organization,
     // isLoading,
@@ -120,8 +143,6 @@ export default function AddGroupManager() {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [success, setSuccess] = useState(false);
-
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (organization?.id) {
@@ -232,9 +253,9 @@ export default function AddGroupManager() {
           }}
         >
           <FormItemDescription description="Registo do Representante do Grupo" />
-          <View className="flex-1 py-6 gap-y-4">
+          <View className="flex-1 py-6 gap-y-2">
             {/* Name input field */}
-            <View>
+            <View className="pt-4">
               <Controller
                 control={control}
                 name="name"
@@ -264,7 +285,7 @@ export default function AddGroupManager() {
             </View>
 
             {/* Position input field */}
-            <View className="gap-y-0">
+            <View className="pt-4">
               <Label label="Função" />
               <Controller
                 control={control}
@@ -275,22 +296,34 @@ export default function AddGroupManager() {
                   field: { onChange, value, onBlur },
                   fieldState: { error },
                 }) => (
-                  <SelectGroupmanagerPosition
-                    clearError={() => setError("position", { message: "" })}
-                    setValue={(val) => setValue("position", val)}
-                    resetField={() => resetField("position")}
-                    showModal={showModal}
-                    setShowModal={setShowModal}
-                    positionValue={value}
-                    organizationId={organization?.id || ""}
-                    error={error?.message}
-                  />
+                  <View>
+                    <CustomPicker
+                      items={availablePositions.map((item) => ({
+                        label: item.label,
+                        value: item.value,
+                      }))}
+                      setValue={onChange}
+                      placeholder={{
+                        label:
+                          availablePositions.length === 0
+                            ? "Sem funções disponíveis"
+                            : "Seleccionar função",
+                        value: null,
+                      }}
+                      value={value}
+                    />
+                    {error ? (
+                      <Text className="text-xs text-red-500">
+                        {error.message}
+                      </Text>
+                    ) : null}
+                  </View>
                 )}
               />
             </View>
 
             {/* Phone input field */}
-            <View>
+            <View className="pt-4">
               <Controller
                 control={control}
                 name="phone"
@@ -320,7 +353,7 @@ export default function AddGroupManager() {
             </View>
 
             {/* Submit button */}
-            <View className="">
+            <View className="pt-4">
               <SubmitButton
                 title="Gravar"
                 disabled={
@@ -343,144 +376,10 @@ export default function AddGroupManager() {
           <SuccessAlert
             visible={success}
             setVisible={setSuccess}
-            route="/(profiles)/group"
+            route="/(profiles)/group/members-list"
           />
-          <BottomSheetModal
-            ref={bottomSheetModalRef}
-            snapPoints={snapPoints}
-            index={1}
-            backdropComponent={renderBackdrop}
-            enablePanDownToClose={true}
-            keyboardBehavior="interactive"
-            backgroundStyle={{
-              backgroundColor: isDarkMode ? colors.black : colors.white,
-            }}
-            handleIndicatorStyle={{
-              backgroundColor: isDarkMode ? colors.gray600 : colors.slate300,
-            }}
-          >
-            <BottomSheetView style={{ paddingHorizontal: 12, paddingTop: 10 }}>
-              <View className="pb-3">
-                <TextInput
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Procurar..."
-                  placeholderTextColor={colors.gray600}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: isDarkMode ? colors.gray600 : colors.slate300,
-                    borderRadius: 10,
-                    paddingHorizontal: 10,
-                    height: 44,
-                    color: isDarkMode ? colors.white : colors.black,
-                    backgroundColor: isDarkMode ? colors.black : colors.gray50,
-                  }}
-                />
-              </View>
-
-              <FlatList
-                data={filteredItems}
-                keyExtractor={(item, idx) => `${item.value}-${idx}`}
-                renderItem={renderItem}
-                keyboardShouldPersistTaps="always"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 40 }}
-              />
-            </BottomSheetView>
-          </BottomSheetModal>
         </ScrollView>
       </Animated.ScrollView>
     </>
   );
 }
-
-const SelectGroupmanagerPosition = ({
-  setValue,
-  resetField,
-  showModal,
-  setShowModal,
-  positionValue,
-  organizationId,
-  error,
-  clearError,
-}: {
-  setValue: (value: string) => void;
-  resetField: () => void;
-  showModal: boolean;
-  setShowModal: (value: boolean) => void;
-  positionValue: string;
-  organizationId: string;
-  error?: string;
-  clearError: () => void;
-}) => {
-  const {
-    data: existingPositions,
-    // isLoading: isExistingPositionsLoading,
-    // error: existingPositionsError,
-    // isError: isExistingPositionsError,
-  } = useQueryMany<{
-    position: string;
-  }>(`
-		SELECT 
-			gma.position
-		FROM ${TABLES.GROUP_MANAGER_ASSIGNMENTS} gma
-		WHERE gma.group_id = '${organizationId}'
-			AND gma.is_active = 'true'
-	`);
-
-  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
-  const [availablePositions, setAvailablePositions] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  useEffect(() => {
-    if (positionValue) {
-      setSelectedPosition(positionValue);
-    }
-  }, [positionValue]);
-
-  const getPositionLabel = (position: string) => {
-    return (
-      groupManagerPositions.find((p) => p.value === position)?.label ||
-      "Seleccione uma função"
-    );
-  };
-
-  useEffect(() => {
-    const remainingPositions = groupManagerPositions.filter(
-      (p) => !existingPositions.some((ep) => ep.position === p.value),
-    );
-    setAvailablePositions(remainingPositions);
-  }, [existingPositions]);
-
-  return (
-    <View>
-      <CustomSelectItemTrigger
-        resetItem={() => {
-          setSelectedPosition(null);
-          resetField();
-          clearError();
-        }}
-        hasSelectedItem={!!selectedPosition}
-        setShowItems={() => {
-          setShowModal(true);
-          clearError();
-        }}
-        selectedItem={getPositionLabel(selectedPosition || "")}
-      />
-      <CustomSelectItem
-        emptyMessage="Todas as funções já existem para este grupo"
-        label="Função que desempenha"
-        showModal={showModal}
-        setShowModal={setShowModal}
-        setValue={setValue}
-        itemsList={availablePositions}
-      />
-      {error ? (
-        <Text className="text-xs text-red-500">{error}</Text>
-      ) : (
-        <Text className="text-xs text-gray-500 ">Função que desempenha</Text>
-      )}
-    </View>
-  );
-};

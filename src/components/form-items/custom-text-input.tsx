@@ -10,7 +10,13 @@ type CustomTextInputProps = {
   editable?: boolean;
   label: string;
   secureTextEntry?: boolean;
-  keyboardType?: "default" | "numeric" | "email-address" | "phone-pad" | "decimal-pad" | "number-pad";
+  keyboardType?:
+    | "default"
+    | "numeric"
+    | "email-address"
+    | "phone-pad"
+    | "decimal-pad"
+    | "number-pad";
   multiline?: boolean;
   numberOfLines?: number;
   autoCapitalize?: "none" | "sentences" | "words" | "characters" | undefined;
@@ -40,28 +46,33 @@ export default function CustomTextInput({
 }: CustomTextInputProps) {
   const [isFocused, setIsFocused] = useState(false);
 
-  const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === "dark";
   return (
     <View className="flex flex-col space-y-3">
-{label &&      <Text className="text-[14px] font-normal text-black dark:text-white">
-        {label}
-      </Text>}
+      {label && (
+        <Text className="text-[14px] font-normal text-black dark:text-white">
+          {label}
+        </Text>
+      )}
       <TextInput
         editable={editable}
         keyboardType={keyboardType}
         secureTextEntry={secureTextEntry}
         multiline={multiline}
         numberOfLines={numberOfLines}
-        style={[style, {
-          color: isDarkMode ? colors.white : colors.black,
-        }]}
-        placeholderTextColor="#808080" 
+        style={[
+          style,
+          {
+            color: isDarkMode ? colors.white : colors.black,
+          },
+        ]}
+        placeholderTextColor="#808080"
         placeholder={placeholder}
         autoComplete={autoComplete ?? autoCompleteType ?? "off"}
         value={value != null ? String(value) : undefined}
         onBlur={onBlur}
         onChangeText={onChangeText}
-        onFocus={()=>{
+        onFocus={() => {
           // the text input must be visible when it is focused and the keyboard is open
         }}
         autoCapitalize={autoCapitalize}

@@ -1,129 +1,139 @@
 // React and React Native imports
-import React, { useCallback, useEffect, useState } from 'react'
-import { RefreshControl, ScrollView, Text, View, useColorScheme } from 'react-native'
-import Animated, { FadeIn } from 'react-native-reanimated'
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+  useColorScheme,
+} from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 // Third party imports
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Components
 
 // Constants and Types
-import { colors } from '@/constants/colors'
-import {  TransactionFlowType } from '@/types'
+import { colors } from "@/constants/colors";
+import { TransactionFlowType } from "@/types";
 
-import { ActorDetailRecord, TABLES, WarehouseDetailRecord } from '@/library/powersync/app-schemas'
-import { useQueryManyAndWatchChanges, useUserDetails } from '@/hooks/queries'
-import { CustomShimmerPlaceholderItemList } from '@/components/skeletons/custom-shimmer-placeholder'
-import CustomPopUpMenu from '@/components/custom-popup-menu'
-import SingleTradeStats from '@/components/single-trade-stats'
+import CustomPopUpMenu from "@/components/custom-popup-menu";
+import SingleTradeStats from "@/components/single-trade-stats";
+import { CustomShimmerPlaceholderItemList } from "@/components/skeletons/custom-shimmer-placeholder";
+import { useQueryManyAndWatchChanges, useUserDetails } from "@/hooks/queries";
+import {
+  ActorDetailRecord,
+  TABLES,
+  WarehouseDetailRecord,
+} from "@/library/powersync/app-schemas";
 
 interface Address {
-	province: string
-	district: string
-	admin_post: string
-	village: string
+  province: string;
+  district: string;
+  admin_post: string;
+  village: string;
 }
 
 type DistrictOverviewProps = {
-	handleSnapPress: (index: number) => void
-	reportHint: string
-	setReportHint: (hint: string) => void
-	setWarehousesByType: (warehouses: {
-		buyingPoints: (WarehouseDetailRecord & Address)[]
-		aggregationPoints: (WarehouseDetailRecord & Address)[]
-		destinationPoints: (WarehouseDetailRecord & Address)[]
-	}) => void
-	warehousesByType: {
-		buyingPoints: (WarehouseDetailRecord & Address)[]
-		aggregationPoints: (WarehouseDetailRecord & Address)[]
-		destinationPoints: (WarehouseDetailRecord & Address)[]
-	} | null
+  handleSnapPress: (index: number) => void;
+  reportHint: string;
+  setReportHint: (hint: string) => void;
+  setWarehousesByType: (warehouses: {
+    buyingPoints: (WarehouseDetailRecord & Address)[];
+    aggregationPoints: (WarehouseDetailRecord & Address)[];
+    destinationPoints: (WarehouseDetailRecord & Address)[];
+  }) => void;
+  warehousesByType: {
+    buyingPoints: (WarehouseDetailRecord & Address)[];
+    aggregationPoints: (WarehouseDetailRecord & Address)[];
+    destinationPoints: (WarehouseDetailRecord & Address)[];
+  } | null;
 
-	setOrgsByType: (orgsByType: {
-		associations: (ActorDetailRecord & Address)[]
-		cooperatives: (ActorDetailRecord & Address)[]
-		coop_unions: (ActorDetailRecord & Address)[]
-	}) => void
-	setTradersByType: (tradersByType: {
-		primaries: (ActorDetailRecord & Address)[]
-		secondaries: (ActorDetailRecord & Address)[]
-		finals: (ActorDetailRecord & Address)[]
-	}) => void
-	tradersByType: {
-		primaries: (ActorDetailRecord & Address)[]
-		secondaries: (ActorDetailRecord & Address)[]
-		finals: (ActorDetailRecord & Address)[]
-	} | null
-}
+  setOrgsByType: (orgsByType: {
+    associations: (ActorDetailRecord & Address)[];
+    cooperatives: (ActorDetailRecord & Address)[];
+    coop_unions: (ActorDetailRecord & Address)[];
+  }) => void;
+  setTradersByType: (tradersByType: {
+    primaries: (ActorDetailRecord & Address)[];
+    secondaries: (ActorDetailRecord & Address)[];
+    finals: (ActorDetailRecord & Address)[];
+  }) => void;
+  tradersByType: {
+    primaries: (ActorDetailRecord & Address)[];
+    secondaries: (ActorDetailRecord & Address)[];
+    finals: (ActorDetailRecord & Address)[];
+  } | null;
+};
 
 interface TransactionStats {
-	quantityProduced: number
-	quantityTransferredOut: number
-	quantityTransferredIn: number
-	quantityExported: number
-	quantityProcessed: number
-	quantityLost: number
-	currentStock: number
+  quantityProduced: number;
+  quantityTransferredOut: number;
+  quantityTransferredIn: number;
+  quantityExported: number;
+  quantityProcessed: number;
+  quantityLost: number;
+  currentStock: number;
 }
 
 interface TraderCounts {
-	primary: number
-	secondary: number
-	final: number
-	informal: number
-	total: number
+  primary: number;
+  secondary: number;
+  final: number;
+  informal: number;
+  total: number;
 }
 
 interface GroupsSummary {
-	groupsCount: number
-	aggregated: number
-	sold: number
-	available: number
+  groupsCount: number;
+  aggregated: number;
+  sold: number;
+  available: number;
 }
 
 interface AdminPostStats {
-	adminPost: string
-	produced: number
-	available: number
+  adminPost: string;
+  produced: number;
+  available: number;
 }
 
 const useTransactionStats = (): {
-	stats: TransactionStats
-	isLoading: boolean
-	refreshing: boolean
-	onRefresh: () => void
+  stats: TransactionStats;
+  isLoading: boolean;
+  refreshing: boolean;
+  onRefresh: () => void;
 } => {
-	const { userDetails } = useUserDetails()
-	const [isLoading, setIsLoading] = useState(true)
-	const [refreshing, setRefreshing] = useState(false)
-	const [refreshTrigger, setRefreshTrigger] = useState(0)
-	const [stats, setStats] = useState<TransactionStats>({
-		quantityProduced: 0,
-		quantityTransferredOut: 0,
-		quantityTransferredIn: 0,
-		quantityExported: 0,
-		quantityProcessed: 0,
-		quantityLost: 0,
-		currentStock: 0,
-	})
+  const { userDetails } = useUserDetails();
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [stats, setStats] = useState<TransactionStats>({
+    quantityProduced: 0,
+    quantityTransferredOut: 0,
+    quantityTransferredIn: 0,
+    quantityExported: 0,
+    quantityProcessed: 0,
+    quantityLost: 0,
+    currentStock: 0,
+  });
 
-	const {
-		data: districtOrganizationTransactions,
-		isLoading: isDistrictOrganizationTransactionsLoading,
-		error: districtOrganizationTransactionsError,
-		isError: isDistrictOrganizationTransactionsError,
-	} = useQueryManyAndWatchChanges<{
-		id: string
-		store_id: string
-		reference_store_id: string
-		quantity: number
-		unit_price: number
-		transaction_type: string
-		reference_store_district?: string
-		store_district?: string
-	}>(
-		`SELECT 
+  const {
+    data: districtOrganizationTransactions,
+    isLoading: isDistrictOrganizationTransactionsLoading,
+    error: districtOrganizationTransactionsError,
+    isError: isDistrictOrganizationTransactionsError,
+  } = useQueryManyAndWatchChanges<{
+    id: string;
+    store_id: string;
+    reference_store_id: string;
+    quantity: number;
+    unit_price: number;
+    transaction_type: string;
+    reference_store_district?: string;
+    store_district?: string;
+  }>(
+    `SELECT 
 			t.id as id,
 			t.store_id,
 			t.reference_store_id,
@@ -152,24 +162,24 @@ const useTransactionStats = (): {
 		)
 		AND ${refreshTrigger} = ${refreshTrigger}
 	`,
-	)
+  );
 
-	const {
-		data: districtWarehouseTransactions,
-		isLoading: isDistrictWarehouseTransactionsLoading,
-		error: districtWarehouseTransactionsError,
-		isError: isDistrictWarehouseTransactionsError,
-	} = useQueryManyAndWatchChanges<{
-		id: string
-		store_id: string
-		reference_store_id: string
-		quantity: number
-		unit_price: number
-		transaction_type: string
-		reference_store_district?: string
-		store_district?: string
-	}>(
-		`SELECT 
+  const {
+    data: districtWarehouseTransactions,
+    isLoading: isDistrictWarehouseTransactionsLoading,
+    error: districtWarehouseTransactionsError,
+    isError: isDistrictWarehouseTransactionsError,
+  } = useQueryManyAndWatchChanges<{
+    id: string;
+    store_id: string;
+    reference_store_id: string;
+    quantity: number;
+    unit_price: number;
+    transaction_type: string;
+    reference_store_district?: string;
+    store_district?: string;
+  }>(
+    `SELECT 
 			t.id as id,
 			t.store_id,
 			t.reference_store_id,
@@ -198,181 +208,235 @@ const useTransactionStats = (): {
 		)
 		AND ${refreshTrigger} = ${refreshTrigger}
 		`,
-	)
+  );
 
-	const onRefresh = useCallback(() => {
-		setRefreshing(true)
-		setIsLoading(true)
-		setStats({
-			quantityProduced: 0,
-			quantityTransferredOut: 0,
-			quantityTransferredIn: 0,
-			quantityExported: 0,
-			quantityProcessed: 0,
-			quantityLost: 0,
-			currentStock: 0,
-		})
-		setRefreshTrigger((prev) => prev + 1)
-		setTimeout(() => {
-			setRefreshing(false)
-		}, 1000)
-	}, [])
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setIsLoading(true);
+    setStats({
+      quantityProduced: 0,
+      quantityTransferredOut: 0,
+      quantityTransferredIn: 0,
+      quantityExported: 0,
+      quantityProcessed: 0,
+      quantityLost: 0,
+      currentStock: 0,
+    });
+    setRefreshTrigger((prev) => prev + 1);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
-	useEffect(() => {
-		const processData = async () => {
-			if (!districtOrganizationTransactions || !districtWarehouseTransactions) {
-				return
-			}
+  useEffect(() => {
+    const processData = async () => {
+      if (!districtOrganizationTransactions || !districtWarehouseTransactions) {
+        return;
+      }
 
-			try {
-				const mergedTransactions = [...districtOrganizationTransactions, ...districtWarehouseTransactions]
+      try {
+        const mergedTransactions = [
+          ...districtOrganizationTransactions,
+          ...districtWarehouseTransactions,
+        ];
 
-				const produced = mergedTransactions.filter(
-					(transaction) =>
-						transaction.transaction_type === TransactionFlowType.BOUGHT ||
-						transaction.transaction_type === TransactionFlowType.AGGREGATED,
-				)
-				const quantityProduced = produced.reduce((acc, transaction) => acc + transaction.quantity, 0)
+        const produced = mergedTransactions.filter(
+          (transaction) =>
+            transaction.transaction_type === TransactionFlowType.BOUGHT ||
+            transaction.transaction_type === TransactionFlowType.AGGREGATED,
+        );
+        const quantityProduced = produced.reduce(
+          (acc, transaction) => acc + transaction.quantity,
+          0,
+        );
 
-				const transferred = mergedTransactions.filter(
-					(transaction) =>
-						transaction.transaction_type === TransactionFlowType.TRANSFERRED_OUT &&
-						transaction.reference_store_district !== userDetails?.district_id,
-				)
-				const quantityTransferredOut = transferred.reduce((acc, transaction) => acc + transaction.quantity, 0)
+        const transferred = mergedTransactions.filter(
+          (transaction) =>
+            transaction.transaction_type ===
+              TransactionFlowType.TRANSFERRED_OUT &&
+            transaction.reference_store_district !== userDetails?.district_id,
+        );
+        const quantityTransferredOut = transferred.reduce(
+          (acc, transaction) => acc + transaction.quantity,
+          0,
+        );
 
-				const received = mergedTransactions.filter(
-					(transaction) =>
-						transaction.transaction_type === TransactionFlowType.TRANSFERRED_IN &&
-						transaction.store_district !== userDetails?.district_id,
-				)
-				const quantityTransferredIn = received.reduce((acc, transaction) => acc + transaction.quantity, 0)
+        const received = mergedTransactions.filter(
+          (transaction) =>
+            transaction.transaction_type ===
+              TransactionFlowType.TRANSFERRED_IN &&
+            transaction.store_district !== userDetails?.district_id,
+        );
+        const quantityTransferredIn = received.reduce(
+          (acc, transaction) => acc + transaction.quantity,
+          0,
+        );
 
-				const exported = mergedTransactions.filter(
-					(transaction) => transaction.transaction_type === TransactionFlowType.EXPORTED,
-				)
-				const quantityExported = exported.reduce((acc, transaction) => acc + transaction.quantity, 0)
+        const exported = mergedTransactions.filter(
+          (transaction) =>
+            transaction.transaction_type === TransactionFlowType.EXPORTED,
+        );
+        const quantityExported = exported.reduce(
+          (acc, transaction) => acc + transaction.quantity,
+          0,
+        );
 
-				const processed = mergedTransactions.filter(
-					(transaction) => transaction.transaction_type === TransactionFlowType.PROCESSED,
-				)
-				const quantityProcessed = processed.reduce((acc, transaction) => acc + transaction.quantity, 0)
+        const processed = mergedTransactions.filter(
+          (transaction) =>
+            transaction.transaction_type === TransactionFlowType.PROCESSED,
+        );
+        const quantityProcessed = processed.reduce(
+          (acc, transaction) => acc + transaction.quantity,
+          0,
+        );
 
-				const lost = mergedTransactions.filter(
-					(transaction) => transaction.transaction_type === TransactionFlowType.LOST,
-				)
-				const quantityLost = lost.reduce((acc, transaction) => acc + transaction.quantity, 0)
+        const lost = mergedTransactions.filter(
+          (transaction) =>
+            transaction.transaction_type === TransactionFlowType.LOST,
+        );
+        const quantityLost = lost.reduce(
+          (acc, transaction) => acc + transaction.quantity,
+          0,
+        );
 
-				const currentStock =
-					quantityProduced +
-					quantityTransferredIn -
-					(quantityTransferredOut + quantityExported + quantityProcessed + quantityLost)
+        const currentStock =
+          quantityProduced +
+          quantityTransferredIn -
+          (quantityTransferredOut +
+            quantityExported +
+            quantityProcessed +
+            quantityLost);
 
-				setStats({
-					quantityProduced,
-					quantityTransferredOut,
-					quantityTransferredIn,
-					quantityExported,
-					quantityProcessed,
-					quantityLost,
-					currentStock,
-				})
-			} catch (error) {
-				console.error('Error processing transaction data:', error)
-			} finally {
-				setIsLoading(false)
-			}
-		}
+        setStats({
+          quantityProduced,
+          quantityTransferredOut,
+          quantityTransferredIn,
+          quantityExported,
+          quantityProcessed,
+          quantityLost,
+          currentStock,
+        });
+      } catch (error) {
+        console.error("Error processing transaction data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-		processData()
-	}, [districtOrganizationTransactions, districtWarehouseTransactions, userDetails?.district_id])
+    processData();
+  }, [
+    districtOrganizationTransactions,
+    districtWarehouseTransactions,
+    userDetails?.district_id,
+  ]);
 
-	return { stats, isLoading, refreshing, onRefresh }
-}
+  return { stats, isLoading, refreshing, onRefresh };
+};
 
 const CampaignSelector = () => {
-	const [selectedCampaign, setSelectedCampaign] = useState('2024-2025')
-	const isDark = useColorScheme() === 'dark'
+  const [selectedCampaign, setSelectedCampaign] = useState("2024-2025");
+  const isDark = useColorScheme() === "dark";
 
-	return (
-		<View className="flex-col justify-between items-center py-4">
-			<CustomPopUpMenu
-				icon={<Ionicons name="chevron-down" size={24} color={colors.primary} />}
-				options={[
-					{
-						label: '2024-2025',
-						action: () => setSelectedCampaign('2024-2025'),
-						icon: <Ionicons name="calendar-outline" size={18} color={isDark ? colors.white : colors.black} />,
-					},
-				]}
-			/>
-			<Text className="text-[10px] text-gray-500 dark:text-gray-400 italic -mt-1">Campanha</Text>
-		</View>
-	)
-}
+  return (
+    <View className="flex-col justify-between items-center py-4">
+      <CustomPopUpMenu
+        icon={<Ionicons name="chevron-down" size={24} color={colors.primary} />}
+        options={[
+          {
+            label: "2024-2025",
+            action: () => setSelectedCampaign("2024-2025"),
+            icon: (
+              <Ionicons
+                name="calendar-outline"
+                size={18}
+                color={isDark ? colors.white : colors.black}
+              />
+            ),
+          },
+        ]}
+      />
+      <Text className="text-[10px] text-gray-500 dark:text-gray-400 italic -mt-1">
+        Campanha
+      </Text>
+    </View>
+  );
+};
 
 const CashewTradesStats = ({ stats }: { stats: TransactionStats }) => {
-	return (
-		<View className="flex-row justify-between space-x-2 w-full rounded-md border-gray-300">
-			<SingleTradeStats
-				label="Disponível (kg)"
-				value={Intl.NumberFormat('pt-BR').format(stats.currentStock)}
-				containerClassName="rounded-md border-gray-300 px-1 px-2"
-				labelClassName="text-gray-500 text-[10px] italic"
-				valueClassName="text-[14px] font-normal text-black dark:text-white"
-				icon={<MaterialCommunityIcons name="point-of-sale" size={18} color={colors.gray600} />}
-			/>
-			<SingleTradeStats
-				label="Transferido (kg)"
-				value={Intl.NumberFormat('pt-BR').format(stats.quantityTransferredOut)}
-				containerClassName="rounded-md border-gray-300 px-1 px-2"
-				labelClassName="text-gray-500 text-[10px] italic"
-				valueClassName="text-[14px] font-normal text-black dark:text-white"
-				icon={<MaterialCommunityIcons name="arrow-u-up-right" size={24} color={colors.gray600} />}
-			/>
-			<SingleTradeStats
-				label="Recebido (kg)"
-				value={Intl.NumberFormat('pt-BR').format(stats.quantityTransferredIn)}
-				containerClassName="rounded-md border-gray-300 px-1 px-2"
-				labelClassName="text-gray-500 text-[10px] italic"
-				valueClassName="text-[14px] font-normal text-black dark:text-white"
-				icon={<MaterialCommunityIcons name="arrow-u-down-left" size={24} color={colors.gray600} />}
-			/>
-		</View>
-	)
-}
-
+  return (
+    <View className="flex-row justify-between space-x-2 w-full rounded-md border-gray-300">
+      <SingleTradeStats
+        label="Disponível (kg)"
+        value={Intl.NumberFormat("pt-BR").format(stats.currentStock)}
+        containerClassName="rounded-md border-gray-300 px-1 px-2"
+        labelClassName="text-gray-500 text-[10px] italic"
+        valueClassName="text-[14px] font-normal text-black dark:text-white"
+        icon={
+          <MaterialCommunityIcons
+            name="point-of-sale"
+            size={18}
+            color={colors.gray600}
+          />
+        }
+      />
+      <SingleTradeStats
+        label="Transferido (kg)"
+        value={Intl.NumberFormat("pt-BR").format(stats.quantityTransferredOut)}
+        containerClassName="rounded-md border-gray-300 px-1 px-2"
+        labelClassName="text-gray-500 text-[10px] italic"
+        valueClassName="text-[14px] font-normal text-black dark:text-white"
+        icon={
+          <MaterialCommunityIcons
+            name="arrow-u-up-right"
+            size={24}
+            color={colors.gray600}
+          />
+        }
+      />
+      <SingleTradeStats
+        label="Recebido (kg)"
+        value={Intl.NumberFormat("pt-BR").format(stats.quantityTransferredIn)}
+        containerClassName="rounded-md border-gray-300 px-1 px-2"
+        labelClassName="text-gray-500 text-[10px] italic"
+        valueClassName="text-[14px] font-normal text-black dark:text-white"
+        icon={
+          <MaterialCommunityIcons
+            name="arrow-u-down-left"
+            size={24}
+            color={colors.gray600}
+          />
+        }
+      />
+    </View>
+  );
+};
 
 const ActiveTradersCounts = () => {
-	
-
-	return (
-		<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-
-		</View>
-	)
-}
+  return (
+    <View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300"></View>
+  );
+};
 
 const useGroupsSummary = (): GroupsSummary => {
-	const { userDetails } = useUserDetails()
-	const [summary, setSummary] = useState<GroupsSummary>({
-		groupsCount: 0,
-		aggregated: 0,
-		sold: 0,
-		available: 0,
-	})
+  const { userDetails } = useUserDetails();
+  const [summary, setSummary] = useState<GroupsSummary>({
+    groupsCount: 0,
+    aggregated: 0,
+    sold: 0,
+    available: 0,
+  });
 
-	const {
-		data: districtGroups,
-		isLoading: isDistrictGroupsLoading,
-		error: districtGroupsError,
-		isError: isDistrictGroupsError,
-	} = useQueryManyAndWatchChanges<{
-		id: string
-		quantity: number
-		transaction_type: string
-	}>(
-		`SELECT 
+  const {
+    data: districtGroups,
+    isLoading: isDistrictGroupsLoading,
+    error: districtGroupsError,
+    isError: isDistrictGroupsError,
+  } = useQueryManyAndWatchChanges<{
+    id: string;
+    quantity: number;
+    transaction_type: string;
+  }>(
+    `SELECT 
 			a.id,
 			t.quantity,
 			t.transaction_type
@@ -382,102 +446,109 @@ const useGroupsSummary = (): GroupsSummary => {
 		LEFT JOIN ${TABLES.ORGANIZATION_TRANSACTIONS} t ON t.store_id = a.id
 		WHERE addr.district_id = '${userDetails?.district_id}'
 		AND a.category = 'GROUP'`,
-	)
+  );
 
-	useEffect(() => {
-		if (districtGroups) {
-			const uniqueGroups = new Set(districtGroups.map((g) => g.id))
-			const aggregated = districtGroups
-				.filter((t) => t.transaction_type === TransactionFlowType.AGGREGATED)
-				.reduce((sum, t) => sum + (t.quantity || 0), 0)
-			const sold = districtGroups
-				.filter((t) => t.transaction_type === TransactionFlowType.SOLD)
-				.reduce((sum, t) => sum + (t.quantity || 0), 0)
-			const transferredIn = districtGroups
-				.filter((t) => t.transaction_type === TransactionFlowType.TRANSFERRED_IN)
-				.reduce((sum, t) => sum + (t.quantity || 0), 0)
-			const transferredOut = districtGroups
-				.filter((t) => t.transaction_type === TransactionFlowType.TRANSFERRED_OUT)
-				.reduce((sum, t) => sum + (t.quantity || 0), 0)
-			const lost = districtGroups
-				.filter((t) => t.transaction_type === TransactionFlowType.LOST)
-				.reduce((sum, t) => sum + (t.quantity || 0), 0)
+  useEffect(() => {
+    if (districtGroups) {
+      const uniqueGroups = new Set(districtGroups.map((g) => g.id));
+      const aggregated = districtGroups
+        .filter((t) => t.transaction_type === TransactionFlowType.AGGREGATED)
+        .reduce((sum, t) => sum + (t.quantity || 0), 0);
+      const sold = districtGroups
+        .filter((t) => t.transaction_type === TransactionFlowType.SOLD)
+        .reduce((sum, t) => sum + (t.quantity || 0), 0);
+      const transferredIn = districtGroups
+        .filter(
+          (t) => t.transaction_type === TransactionFlowType.TRANSFERRED_IN,
+        )
+        .reduce((sum, t) => sum + (t.quantity || 0), 0);
+      const transferredOut = districtGroups
+        .filter(
+          (t) => t.transaction_type === TransactionFlowType.TRANSFERRED_OUT,
+        )
+        .reduce((sum, t) => sum + (t.quantity || 0), 0);
+      const lost = districtGroups
+        .filter((t) => t.transaction_type === TransactionFlowType.LOST)
+        .reduce((sum, t) => sum + (t.quantity || 0), 0);
 
-			const available = aggregated + transferredIn - (transferredOut + sold + lost)
+      const available =
+        aggregated + transferredIn - (transferredOut + sold + lost);
 
-			setSummary({
-				groupsCount: uniqueGroups.size,
-				aggregated,
-				sold,
-				available,
-			})
-		}
-	}, [districtGroups])
+      setSummary({
+        groupsCount: uniqueGroups.size,
+        aggregated,
+        sold,
+        available,
+      });
+    }
+  }, [districtGroups]);
 
-	return summary
-}
+  return summary;
+};
 
 const GroupsSummaryTable = () => {
-	const summary = useGroupsSummary()
+  const summary = useGroupsSummary();
 
-	return (
-		<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-			<View className="flex-row justify-between space-x-3 w-full">
-				<View className="flex-row justify-between space-x-2">
-					<Ionicons name="business-outline" size={20} color={colors.primary} />
-					<Text className="text-[#008000] text-[14px] font-semibold">Grupos activos</Text>
-				</View>
-				<View className="flex-row justify-between space-x-2 bg-green-100 rounded-md px-2 py-1">
-					<Text className="text-green-600 font-semibold text-[10px] italic">
-						Total: {Intl.NumberFormat('pt-BR').format(summary.groupsCount)}
-					</Text>
-				</View>
-			</View>
-			<View className="flex-row justify-between space-x-3 w-full">
-				<SingleTradeStats
-					label="Agregado"
-					value={Intl.NumberFormat('pt-BR').format(summary.aggregated)}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-				<SingleTradeStats
-					label="Vendido"
-					value={Intl.NumberFormat('pt-BR').format(summary.sold)}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-				<SingleTradeStats
-					label="Disponível"
-					value={Intl.NumberFormat('pt-BR').format(summary.available)}
-					containerClassName="rounded-md border-gray-300 px-1 px-2"
-					labelClassName="text-gray-500 text-[10px] italic"
-					valueClassName="text-[14px] font-normal text-black dark:text-white"
-				/>
-			</View>
-		</View>
-	)
-}
+  return (
+    <View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
+      <View className="flex-row justify-between space-x-3 w-full">
+        <View className="flex-row justify-between space-x-2">
+          <Ionicons name="business-outline" size={20} color={colors.primary} />
+          <Text className="text-[#008000] text-[14px] font-semibold">
+            Grupos activos
+          </Text>
+        </View>
+        <View className="flex-row justify-between space-x-2 bg-green-100 rounded-md px-2 py-1">
+          <Text className="text-green-600 font-semibold text-[10px] italic">
+            Total: {Intl.NumberFormat("pt-BR").format(summary.groupsCount)}
+          </Text>
+        </View>
+      </View>
+      <View className="flex-row justify-between space-x-3 w-full">
+        <SingleTradeStats
+          label="Agregado"
+          value={Intl.NumberFormat("pt-BR").format(summary.aggregated)}
+          containerClassName="rounded-md border-gray-300 px-1 px-2"
+          labelClassName="text-gray-500 text-[10px] italic"
+          valueClassName="text-[14px] font-normal text-black dark:text-white"
+        />
+        <SingleTradeStats
+          label="Vendido"
+          value={Intl.NumberFormat("pt-BR").format(summary.sold)}
+          containerClassName="rounded-md border-gray-300 px-1 px-2"
+          labelClassName="text-gray-500 text-[10px] italic"
+          valueClassName="text-[14px] font-normal text-black dark:text-white"
+        />
+        <SingleTradeStats
+          label="Disponível"
+          value={Intl.NumberFormat("pt-BR").format(summary.available)}
+          containerClassName="rounded-md border-gray-300 px-1 px-2"
+          labelClassName="text-gray-500 text-[10px] italic"
+          valueClassName="text-[14px] font-normal text-black dark:text-white"
+        />
+      </View>
+    </View>
+  );
+};
 
 const useAdminPostStats = (): AdminPostStats[] => {
-	const { userDetails } = useUserDetails()
-	const [stats, setStats] = useState<AdminPostStats[]>([])
+  const { userDetails } = useUserDetails();
+  const [stats, setStats] = useState<AdminPostStats[]>([]);
 
-	const {
-		data: adminPostTransactions,
-		isLoading: isAdminPostTransactionsLoading,
-		error: adminPostTransactionsError,
-		isError: isAdminPostTransactionsError,
-	} = useQueryManyAndWatchChanges<{
-		admin_post_id: string
-		admin_post_name: string
-		quantity: number
-		transaction_type: string
-		store_type: 'WAREHOUSE' | 'ORGANIZATION'
-		reference_store_admin_post_id?: string
-	}>(
-		`SELECT 
+  const {
+    data: adminPostTransactions,
+    isLoading: isAdminPostTransactionsLoading,
+    error: adminPostTransactionsError,
+    isError: isAdminPostTransactionsError,
+  } = useQueryManyAndWatchChanges<{
+    admin_post_id: string;
+    admin_post_name: string;
+    quantity: number;
+    transaction_type: string;
+    store_type: "WAREHOUSE" | "ORGANIZATION";
+    reference_store_admin_post_id?: string;
+  }>(
+    `SELECT 
 			ap.id as admin_post_id,
 			ap.name as admin_post_name,
 			t.quantity,
@@ -514,251 +585,287 @@ const useAdminPostStats = (): AdminPostStats[] => {
 		)
 		LEFT JOIN ${TABLES.ADMIN_POSTS} ap ON ap.id = ad.admin_post_id
 		WHERE ad.district_id = '${userDetails?.district_id}'`,
-	)
+  );
 
-	useEffect(() => {
-		if (adminPostTransactions) {
-			const adminPosts = new Set(adminPostTransactions.map((t) => t.admin_post_id))
-			const stats = Array.from(adminPosts).map((adminPostId) => {
-				const adminPostName = adminPostTransactions.find((t) => t.admin_post_id === adminPostId)?.admin_post_name || ''
-				const transactions = adminPostTransactions.filter((t) => t.admin_post_id === adminPostId)
+  useEffect(() => {
+    if (adminPostTransactions) {
+      const adminPosts = new Set(
+        adminPostTransactions.map((t) => t.admin_post_id),
+      );
+      const stats = Array.from(adminPosts).map((adminPostId) => {
+        const adminPostName =
+          adminPostTransactions.find((t) => t.admin_post_id === adminPostId)
+            ?.admin_post_name || "";
+        const transactions = adminPostTransactions.filter(
+          (t) => t.admin_post_id === adminPostId,
+        );
 
-				// Calculate bought cashew (BOUGHT for warehouses + AGGREGATED for organizations)
-				const bought = transactions
-					.filter(
-						(t) =>
-							(t.transaction_type === TransactionFlowType.BOUGHT && t.store_type === 'WAREHOUSE') ||
-							(t.transaction_type === TransactionFlowType.AGGREGATED && t.store_type === 'ORGANIZATION'),
-					)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
+        // Calculate bought cashew (BOUGHT for warehouses + AGGREGATED for organizations)
+        const bought = transactions
+          .filter(
+            (t) =>
+              (t.transaction_type === TransactionFlowType.BOUGHT &&
+                t.store_type === "WAREHOUSE") ||
+              (t.transaction_type === TransactionFlowType.AGGREGATED &&
+                t.store_type === "ORGANIZATION"),
+          )
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
 
-				// Calculate available stock
-				const aggregated = transactions
-					.filter((t) => t.transaction_type === TransactionFlowType.AGGREGATED)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const boughtWarehouse = transactions
-					.filter((t) => t.transaction_type === TransactionFlowType.BOUGHT)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const transferredIn = transactions
-					.filter(
-						(t) =>
-							t.transaction_type === TransactionFlowType.TRANSFERRED_IN &&
-							t.reference_store_admin_post_id !== adminPostId,
-					)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const transferredOut = transactions
-					.filter(
-						(t) =>
-							t.transaction_type === TransactionFlowType.TRANSFERRED_OUT &&
-							t.reference_store_admin_post_id !== adminPostId,
-					)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const lost = transactions
-					.filter((t) => t.transaction_type === TransactionFlowType.LOST)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const exported = transactions
-					.filter((t) => t.transaction_type === TransactionFlowType.EXPORTED)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const processed = transactions
-					.filter((t) => t.transaction_type === TransactionFlowType.PROCESSED)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
-				const sold = transactions
-					.filter((t) => t.transaction_type === TransactionFlowType.SOLD)
-					.reduce((sum, t) => sum + (t.quantity || 0), 0)
+        // Calculate available stock
+        const aggregated = transactions
+          .filter((t) => t.transaction_type === TransactionFlowType.AGGREGATED)
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const boughtWarehouse = transactions
+          .filter((t) => t.transaction_type === TransactionFlowType.BOUGHT)
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const transferredIn = transactions
+          .filter(
+            (t) =>
+              t.transaction_type === TransactionFlowType.TRANSFERRED_IN &&
+              t.reference_store_admin_post_id !== adminPostId,
+          )
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const transferredOut = transactions
+          .filter(
+            (t) =>
+              t.transaction_type === TransactionFlowType.TRANSFERRED_OUT &&
+              t.reference_store_admin_post_id !== adminPostId,
+          )
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const lost = transactions
+          .filter((t) => t.transaction_type === TransactionFlowType.LOST)
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const exported = transactions
+          .filter((t) => t.transaction_type === TransactionFlowType.EXPORTED)
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const processed = transactions
+          .filter((t) => t.transaction_type === TransactionFlowType.PROCESSED)
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
+        const sold = transactions
+          .filter((t) => t.transaction_type === TransactionFlowType.SOLD)
+          .reduce((sum, t) => sum + (t.quantity || 0), 0);
 
-				const available =
-					aggregated + boughtWarehouse + transferredIn - (transferredOut + lost + exported + processed + sold)
+        const available =
+          aggregated +
+          boughtWarehouse +
+          transferredIn -
+          (transferredOut + lost + exported + processed + sold);
 
-				return {
-					adminPost: adminPostName,
-					produced: bought,
-					available,
-				}
-			})
+        return {
+          adminPost: adminPostName,
+          produced: bought,
+          available,
+        };
+      });
 
-			setStats(stats)
-		}
-	}, [adminPostTransactions])
+      setStats(stats);
+    }
+  }, [adminPostTransactions]);
 
-	return stats
-}
+  return stats;
+};
 
 const AdminPostTransactionsTable = () => {
-	const stats = useAdminPostStats()
+  const stats = useAdminPostStats();
 
-	return (
-		<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-			<View className="flex-row justify-between space-x-3 w-full mb-2">
-				<View className="flex-row justify-between space-x-2">
-					<Ionicons name="location-outline" size={20} color={colors.primary} />
-					<Text className="text-[#008000] text-[14px] font-semibold">Postos administrativos</Text>
-				</View>
-				<View className="flex-row justify-between space-x-2 bg-green-100 rounded-md px-2 py-1">
-					<Text className="text-green-600 font-semibold text-[10px] italic">
-						Total: {Intl.NumberFormat('pt-BR').format(stats.length)}
-					</Text>
-				</View>
-			</View>
+  return (
+    <View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
+      <View className="flex-row justify-between space-x-3 w-full mb-2">
+        <View className="flex-row justify-between space-x-2">
+          <Ionicons name="location-outline" size={20} color={colors.primary} />
+          <Text className="text-[#008000] text-[14px] font-semibold">
+            Postos administrativos
+          </Text>
+        </View>
+        <View className="flex-row justify-between space-x-2 bg-green-100 rounded-md px-2 py-1">
+          <Text className="text-green-600 font-semibold text-[10px] italic">
+            Total: {Intl.NumberFormat("pt-BR").format(stats.length)}
+          </Text>
+        </View>
+      </View>
 
-			{/* Table Header */}
-			<View className="flex-row w-full border-b border-gray-200 pb-2">
-				<Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400">Posto administrativo</Text>
-				<Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">Comprado (kg)</Text>
-				<Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">Disponível (kg)</Text>
-			</View>
+      {/* Table Header */}
+      <View className="flex-row w-full border-b border-gray-200 pb-2">
+        <Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400">
+          Posto administrativo
+        </Text>
+        <Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">
+          Comprado (kg)
+        </Text>
+        <Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">
+          Disponível (kg)
+        </Text>
+      </View>
 
-			{/* Table Body */}
-			<View className="flex-col space-y-1">
-				{stats.map((stat) => (
-					<View key={stat.adminPost} className="flex-row w-full py-2 border-b border-gray-100">
-						<Text className="w-1/3 text-[12px] text-gray-800 dark:text-gray-400">{stat.adminPost}</Text>
-						<Text className="w-1/3 text-[12px] text-gray-800 dark:text-gray-400 text-center">
-							{Intl.NumberFormat('pt-BR').format(stat.produced)}
-						</Text>
-						<Text className="w-1/3 text-[12px] text-gray-800 dark:text-gray-400 text-center">
-							{Intl.NumberFormat('pt-BR').format(stat.available)}
-						</Text>
-					</View>
-				))}
-			</View>
+      {/* Table Body */}
+      <View className="flex-col space-y-1">
+        {stats.map((stat) => (
+          <View
+            key={stat.adminPost}
+            className="flex-row w-full py-2 border-b border-gray-100"
+          >
+            <Text className="w-1/3 text-[12px] text-gray-800 dark:text-gray-400">
+              {stat.adminPost}
+            </Text>
+            <Text className="w-1/3 text-[12px] text-gray-800 dark:text-gray-400 text-center">
+              {Intl.NumberFormat("pt-BR").format(stat.produced)}
+            </Text>
+            <Text className="w-1/3 text-[12px] text-gray-800 dark:text-gray-400 text-center">
+              {Intl.NumberFormat("pt-BR").format(stat.available)}
+            </Text>
+          </View>
+        ))}
+      </View>
 
-			{/* Table Footer */}
-			<View className="flex-row w-full pt-4">
-				<Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400">Total</Text>
-				<Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">
-					{Intl.NumberFormat('pt-BR').format(stats.reduce((sum, stat) => sum + stat.produced, 0))}
-				</Text>
-				<Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">
-					{Intl.NumberFormat('pt-BR').format(stats.reduce((sum, stat) => sum + stat.available, 0))}
-				</Text>
-			</View>
-		</View>
-	)
-}
+      {/* Table Footer */}
+      <View className="flex-row w-full pt-4">
+        <Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400">
+          Total
+        </Text>
+        <Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">
+          {Intl.NumberFormat("pt-BR").format(
+            stats.reduce((sum, stat) => sum + stat.produced, 0),
+          )}
+        </Text>
+        <Text className="w-1/3 text-[12px] font-semibold text-gray-600 dark:text-gray-400 text-center">
+          {Intl.NumberFormat("pt-BR").format(
+            stats.reduce((sum, stat) => sum + stat.available, 0),
+          )}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 const DistrictOverviewSkeleton = () => {
-	return (
-		<View className="flex-1 bg-white dark:bg-black justify-center px-3">
-			<View className="w-full space-y-3">
-				{/* Volume Produzido and Campaign Selector */}
-				<View className="flex-row justify-between space-x-3 w-full">
-					<View className="flex-col justify-between py-4">
-						<CustomShimmerPlaceholderItemList count={1} height={40} />
-					</View>
-					<View className="flex-row space-x-3">
-						<CustomShimmerPlaceholderItemList count={1} height={40} />
-					</View>
-				</View>
+  return (
+    <View className="flex-1 bg-white dark:bg-black justify-center px-3">
+      <View className="w-full space-y-3">
+        {/* Volume Produzido and Campaign Selector */}
+        <View className="flex-row justify-between space-x-3 w-full">
+          <View className="flex-col justify-between py-4">
+            <CustomShimmerPlaceholderItemList count={1} height={40} />
+          </View>
+          <View className="flex-row space-x-3">
+            <CustomShimmerPlaceholderItemList count={1} height={40} />
+          </View>
+        </View>
 
-				{/* Cashew Trades Stats */}
-				<View className="flex-row justify-between space-x-2 w-full">
-					<CustomShimmerPlaceholderItemList count={3} height={60} />
-				</View>
+        {/* Cashew Trades Stats */}
+        <View className="flex-row justify-between space-x-2 w-full">
+          <CustomShimmerPlaceholderItemList count={3} height={60} />
+        </View>
 
-				{/* Active Traders */}
-				<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-					<View className="flex-row justify-between space-x-3 w-full">
-						<CustomShimmerPlaceholderItemList count={1} height={20} />
-					</View>
-					<View className="flex-row justify-between space-x-3 w-full">
-						<CustomShimmerPlaceholderItemList count={4} height={40} />
-					</View>
-				</View>
+        {/* Active Traders */}
+        <View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
+          <View className="flex-row justify-between space-x-3 w-full">
+            <CustomShimmerPlaceholderItemList count={1} height={20} />
+          </View>
+          <View className="flex-row justify-between space-x-3 w-full">
+            <CustomShimmerPlaceholderItemList count={4} height={40} />
+          </View>
+        </View>
 
-				{/* Groups Summary */}
-				<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-					<View className="flex-row justify-between space-x-3 w-full">
-						<CustomShimmerPlaceholderItemList count={1} height={20} />
-					</View>
-					<View className="flex-row justify-between space-x-3 w-full">
-						<CustomShimmerPlaceholderItemList count={3} height={40} />
-					</View>
-				</View>
+        {/* Groups Summary */}
+        <View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
+          <View className="flex-row justify-between space-x-3 w-full">
+            <CustomShimmerPlaceholderItemList count={1} height={20} />
+          </View>
+          <View className="flex-row justify-between space-x-3 w-full">
+            <CustomShimmerPlaceholderItemList count={3} height={40} />
+          </View>
+        </View>
 
-				{/* Admin Post Transactions */}
-				<View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
-					<View className="flex-row justify-between space-x-3 w-full mb-2">
-						<CustomShimmerPlaceholderItemList count={1} height={20} />
-					</View>
-					{/* Table Header */}
-					<View className="flex-row w-full border-b border-gray-200 pb-2">
-						<CustomShimmerPlaceholderItemList count={3} height={20} />
-					</View>
-					{/* Table Body */}
-					<View className="flex-col space-y-1">
-						{[1, 2, 3].map((_, index) => (
-							<View key={index} className="flex-row w-full py-2 border-b border-gray-100">
-								<CustomShimmerPlaceholderItemList count={3} height={20} />
-							</View>
-						))}
-					</View>
-					{/* Table Footer */}
-					<View className="flex-row w-full pt-2 border-t border-gray-200">
-						<CustomShimmerPlaceholderItemList count={3} height={20} />
-					</View>
-				</View>
-			</View>
-		</View>
-	)
-}
+        {/* Admin Post Transactions */}
+        <View className="flex-col justify-between w-full py-2 mt-3 space-y-2 border p-1 rounded-md border-gray-300">
+          <View className="flex-row justify-between space-x-3 w-full mb-2">
+            <CustomShimmerPlaceholderItemList count={1} height={20} />
+          </View>
+          {/* Table Header */}
+          <View className="flex-row w-full border-b border-gray-200 pb-2">
+            <CustomShimmerPlaceholderItemList count={3} height={20} />
+          </View>
+          {/* Table Body */}
+          <View className="flex-col space-y-1">
+            {[1, 2, 3].map((_, index) => (
+              <View
+                key={index}
+                className="flex-row w-full py-2 border-b border-gray-100"
+              >
+                <CustomShimmerPlaceholderItemList count={3} height={20} />
+              </View>
+            ))}
+          </View>
+          {/* Table Footer */}
+          <View className="flex-row w-full pt-2 border-t border-gray-200">
+            <CustomShimmerPlaceholderItemList count={3} height={20} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const VolumeProduced = ({ quantity }: { quantity: number }) => (
-	<View className="flex-col justify-between py-4">
-		<SingleTradeStats label="Volume produzido" value={`${Intl.NumberFormat('pt-BR').format(quantity)} kg`} />
-	</View>
-)
+  <View className="flex-col justify-between py-4">
+    <SingleTradeStats
+      label="Volume produzido"
+      value={`${Intl.NumberFormat("pt-BR").format(quantity)} kg`}
+    />
+  </View>
+);
 
 export default function DistrictOverview({
-	handleSnapPress,
-	reportHint,
-	setReportHint,
-	setWarehousesByType,
-	warehousesByType,
-	setOrgsByType,
-	setTradersByType,
-	tradersByType,
+  handleSnapPress,
+  reportHint,
+  setReportHint,
+  setWarehousesByType,
+  warehousesByType,
+  setOrgsByType,
+  setTradersByType,
+  tradersByType,
 }: DistrictOverviewProps) {
-	const { stats, isLoading, refreshing, onRefresh } = useTransactionStats()
-	const isDark = useColorScheme() === 'dark'
+  const { stats, isLoading, refreshing, onRefresh } = useTransactionStats();
+  const isDark = useColorScheme() === "dark";
 
-	return (
-		<>
-			<Animated.View
-				entering={FadeIn.duration(500).delay(100)}
-				className="flex-1 bg-white dark:bg-black justify-center px-3"
-			>
-			{isLoading ? (
-				<DistrictOverviewSkeleton />
-			) : (
-				<ScrollView
-					contentContainerStyle={{
-						flexGrow: 1,
-						paddingBottom: 50,
-					}}
-					showsVerticalScrollIndicator={false}
-					refreshControl={
-						<RefreshControl
-							refreshing={refreshing}
-							onRefresh={onRefresh}
-							tintColor={isDark ? colors.white : colors.black}
-						/>
-					}
-				>
-					<View className="w-full">
-						<View className="flex-row justify-between space-x-3 w-full">
-							<VolumeProduced quantity={stats.quantityProduced} />
-							<View className="flex-row space-x-3">
-								<CampaignSelector />
-							</View>
-						</View>
-						<CashewTradesStats stats={stats} />
-						<ActiveTradersCounts />
-						<GroupsSummaryTable />
-						<AdminPostTransactionsTable />
-					</View>
-				</ScrollView>
-			)}
-		</Animated.View>
-		</>
-	)
+  return (
+    <>
+      <Animated.View
+        entering={FadeIn.duration(500).delay(100)}
+        className="flex-1 bg-white dark:bg-black justify-center px-3"
+      >
+        {isLoading ? (
+          <DistrictOverviewSkeleton />
+        ) : (
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: 50,
+            }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={isDark ? colors.white : colors.black}
+              />
+            }
+          >
+            <View className="w-full">
+              <View className="flex-row justify-between space-x-3 w-full">
+                <VolumeProduced quantity={stats.quantityProduced} />
+                <View className="flex-row space-x-3">
+                  <CampaignSelector />
+                </View>
+              </View>
+              <CashewTradesStats stats={stats} />
+              <ActiveTradersCounts />
+              <GroupsSummaryTable />
+              <AdminPostTransactionsTable />
+            </View>
+          </ScrollView>
+        )}
+      </Animated.View>
+    </>
+  );
 }

@@ -3,48 +3,39 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View, useColorScheme } from "react-native";
 
 // Third-party libraries
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 
 // Components
-import AddTransactions from "@/features/monitoring/add-transactions";
-import BackButton from "@/components/buttons/back-button";
 import CustomBottomSheetModal from "@/components/bottom-sheets/custom-bottom-sheet-modal";
+import BackButton from "@/components/buttons/back-button";
 import CustomPopUpMenu from "@/components/custom-popup-menu";
 import PDFDisplayer from "@/components/pdf-displayer";
 import { CustomShimmerPlaceholderItemList } from "@/components/skeletons/custom-shimmer-placeholder";
+import AddTransactions from "@/features/monitoring/add-transactions";
+import ReportFiltering from "@/features/monitoring/report-filtering";
 import TransactionActionButtons from "@/features/monitoring/transaction-action-buttons";
 import TransactionsOverview from "@/features/monitoring/transactions-overview";
-import ReportFiltering from "@/features/monitoring/report-filtering";
 
 // Models
 
 // Types
-import {
-  CashewWarehouseType,
-  StockDetailsType,
-  TransactionDetailsType,
-  TransactionFlowType,
-  WarehouseDetailsType,
-} from "@/types";
+import { CashewWarehouseType, TransactionFlowType } from "@/types";
 
 // Hooks and Store
 import { useActionStore } from "@/store/actions/actions";
 
 // Helpers and Constants
-import { getCurrentStock, getStockDetails } from "@/helpers/trades";
 import { colors } from "@/constants/colors";
-import {
-  ActorDetailRecord,
-  TABLES,
-} from "@/library/powersync/app-schemas";
+import ReceivedAndTransferredTransactions from "@/features/monitoring/received-and-transferred-transactions";
+import TransactionList from "@/features/monitoring/transaction-list";
+import { getCurrentStock, getStockDetails } from "@/helpers/trades";
 import {
   useOrganizationTransactions,
   useQueryOneAndWatchChanges,
 } from "@/hooks/queries";
-import TransactionList from "@/features/monitoring/transaction-list";
-import ReceivedAndTransferredTransactions from "@/features/monitoring/received-and-transferred-transactions";
+import { TABLES } from "@/library/powersync/app-schemas";
 type TransactionScreenState = {
   isLoading: boolean;
   hasError: boolean;
@@ -191,10 +182,10 @@ export default function TransactionsScreen() {
           </Text>
         </View>
       ),
-      headerRight: () =>
-        state.isShowingExistingTransactions ? (
-          <CustomPopUpMenu options={[]} />
-        ) : undefined,
+      // headerRight: () =>
+      //   state.isShowingExistingTransactions ? (
+      //     <CustomPopUpMenu options={[]} />
+      //   ) : undefined,
       headerBackVisible: false, // This hides the native back arrow
     });
   }, [state.isShowingExistingTransactions, currentOrganization, transactions]);
