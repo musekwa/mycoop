@@ -1070,6 +1070,7 @@ export const insertOrganizationTransaction = async (
 ) => {
   const {
     id,
+    item,
     created_at,
     updated_at,
     transaction_type,
@@ -1088,7 +1089,8 @@ export const insertOrganizationTransaction = async (
   const result = await powersync.execute(
     `INSERT 
 			INTO ${TABLES.ORGANIZATION_TRANSACTIONS} (
-				id, 
+				id,
+        item, 
 				created_at, 
 				updated_at, 
 				transaction_type, 
@@ -1106,6 +1108,7 @@ export const insertOrganizationTransaction = async (
 			) 
 			VALUES (
 			 	?, 
+        ?,
 				?, 
 				?, 
 				?, 
@@ -1123,6 +1126,7 @@ export const insertOrganizationTransaction = async (
 			)`,
     [
       id,
+      item,
       created_at,
       updated_at,
       transaction_type,

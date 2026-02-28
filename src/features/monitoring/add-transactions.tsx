@@ -7,6 +7,7 @@ import { OrganizationTypes } from "@/types";
 
 import DateRangeSelector from "@/components/dates/date-range-selector";
 import TransactionDataPreview from "@/features/monitoring/transaction-data-preview";
+import { getTransactedItemPortugueseName } from "@/helpers/trades";
 import { useQueryOneAndWatchChanges } from "@/hooks/queries";
 import {
   OrganizationTransactionRecord,
@@ -29,7 +30,6 @@ import AddLostInfo from "./add-lost-info";
 import AddResoldInfo from "./add-resold-info";
 import AddTransactedItem from "./add-transacted-item";
 import AddTransferredByOrgInfo from "./add-transferred-by-info";
-import { getTransactedItemPortugueseName } from "@/helpers/trades";
 
 interface AddTransactionsProps {
   setIsShowingExistingTransactions: (
@@ -256,6 +256,7 @@ export default function AddTransactions({
         </Text>
       </View>
 
+
       <View className="flex flex-col space-y-6">
         <DateRangeSelector
           customErrors={customErrors}
@@ -269,6 +270,13 @@ export default function AddTransactions({
       </View>
 
       <View className="flex flex-col space-y-6">
+        <AddTransactedItem
+          customErrors={customErrors}
+          setCustomErrors={setCustomErrors}
+        />
+      </View>
+      
+      <View className="flex flex-col space-y-6">
         <AddInfoProviderInfo
           customErrors={customErrors}
           setCustomErrors={setCustomErrors}
@@ -280,60 +288,55 @@ export default function AddTransactions({
         />
       </View>
 
-      <View className="flex flex-col space-y-6">
-        <AddTransactedItem
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-        />
-      </View>
+      {itemType && infoProvider && (
+        <View className="flex flex-col space-y-6">
+          {/* activeMember participations (quantity by member) for cooperative and association */}
+          {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
+            <AddAggregatedInfo
+              group_id={organization.id as string}
+              customErrors={customErrors}
+              setCustomErrors={setCustomErrors}
+              itemType={itemType}
+            />
+          )}
 
-      <View className="flex flex-col space-y-6">
-        {/* activeMember participations (quantity by member) for cooperative and association */}
-        {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
-          <AddAggregatedInfo
-            group_id={organization.id as string}
+          {/* Resold Info */}
+          <AddResoldInfo
             customErrors={customErrors}
             setCustomErrors={setCustomErrors}
             itemType={itemType}
           />
-        )}
 
-        {/* Resold Info */}
-        <AddResoldInfo
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-          itemType={itemType}
-        />
+          {/* Transferred transaction only for cooperative and association */}
+          {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
+            <AddTransferredByOrgInfo
+              customErrors={customErrors}
+              setCustomErrors={setCustomErrors}
+              organizationId={organization.id as string}
+              itemType={itemType}
+            />
+          )}
 
-        {/* Transferred transaction only for cooperative and association */}
-        {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
-          <AddTransferredByOrgInfo
+          {/* Lost Info */}
+          <AddLostInfo
             customErrors={customErrors}
             setCustomErrors={setCustomErrors}
-            organizationId={organization.id as string}
             itemType={itemType}
           />
-        )}
 
-        {/* Lost Info */}
-        <AddLostInfo
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-          itemType={itemType}
-        />
+          {customErrors.outgoing && (
+            <View className="flex-row justify-center items-center mt-4 bg-red-100 p-2 rounded-md">
+              <Text className="text-red-500 text-[12px]">
+                {customErrors.outgoing}
+              </Text>
+            </View>
+          )}
 
-        {customErrors.outgoing && (
-          <View className="flex-row justify-center items-center mt-4 bg-red-100 p-2 rounded-md">
-            <Text className="text-red-500 text-[12px]">
-              {customErrors.outgoing}
-            </Text>
+          <View className="flex-row justify-center items-center mt-4">
+            <SubmitButton title="Pré-visualizar" onPress={onSubmit} />
           </View>
-        )}
-
-        <View className="flex-row justify-center items-center mt-4">
-          <SubmitButton title="Pré-visualizar" onPress={onSubmit} />
         </View>
-      </View>
+      )}
 
       <ErrorAlert
         visible={hasError}
