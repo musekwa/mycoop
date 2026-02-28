@@ -1,19 +1,18 @@
 import { useNavigation, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import {
-  FlatList,
-  View,
-} from "react-native";
+import { FlatList, View } from "react-native";
 import { v4 as uuidv4 } from "uuid";
 
+import SubmitButton from "@/components/buttons/submit-button";
 import NoContentPlaceholder from "@/components/no-content-placeholder";
+import FarmerMembershipItem from "@/features/group-membership/farmer-item";
+import GroupMemberShipItem from "@/features/group-membership/group-item";
 import {
   useQueryMany,
   useQueryOne,
   useSearchOptions,
   useUserDetails,
 } from "@/hooks/queries";
-import { useLocationName } from "@/hooks/use-location-name";
 import { useNavigationSearch } from "@/hooks/use-navigation-search";
 import { GroupMemberRecord, TABLES } from "@/library/powersync/app-schemas";
 import { buildMember } from "@/library/powersync/schemas/group-members";
@@ -21,11 +20,7 @@ import { addMembersToOrganization } from "@/library/powersync/sql-statements";
 import { useActionStore } from "@/store/actions/actions";
 import { useOrganizationStore } from "@/store/organization";
 import { OrganizationTypes } from "@/types";
-import SubmitButton from "@/components/buttons/submit-button";
-import AnimationTopTab from "@/components/animatable-top-tab";
-import GroupMemberShipItem from "@/features/group-membership/group-item";
-import FarmerMembershipItem from "@/features/group-membership/farmer-item";
-
+import AddGroupMembers from "@/components/add-group-members";
 
 export default function AddMemberToGroupScreen() {
   const { userDetails } = useUserDetails();
@@ -288,8 +283,7 @@ export default function AddMemberToGroupScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View className="h-100 flex justify-center items-center">
-
-                <NoContentPlaceholder message="Nenhuma cooperativa encontrada" />
+                  <NoContentPlaceholder message="Nenhuma cooperativa encontrada" />
                 </View>
               )}
               renderItem={({ item }: { item: (typeof cooperatives)[0] }) => (
@@ -332,7 +326,7 @@ export default function AddMemberToGroupScreen() {
           id: 1,
           title: "Produtores",
           component: (
-            <FlatList 
+            <FlatList
               data={farmers}
               keyExtractor={(item: (typeof farmers)[0]) => item.id}
               contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
@@ -380,19 +374,20 @@ export default function AddMemberToGroupScreen() {
 
   const totalSelected = individualMembers.length + groupMembers.length;
 
-  
-
-  	return (
-		<>
-			<AnimationTopTab horizontalData={horizontalData} verticalData={verticalData} />
-			{totalSelected > 0 && (
-				<View className="absolute bottom-10 left-0 right-0 px-3">
-					<SubmitButton
-						title={`Confirmar (${totalSelected} ${totalSelected === 1 ? 'selecionado' : 'selecionados'})`}
-						onPress={onConfirm}
-					/>
-				</View>
-			)}
-		</>
-	)
+  return (
+    <>
+      <AddGroupMembers
+        horizontalData={horizontalData}
+        verticalData={verticalData}
+      />
+      {totalSelected > 0 && (
+        <View className="absolute bottom-10 left-0 right-0 px-3">
+          <SubmitButton
+            title={`Confirmar (${totalSelected} ${totalSelected === 1 ? "selecionado" : "selecionados"})`}
+            onPress={onConfirm}
+          />
+        </View>
+      )}
+    </>
+  );
 }

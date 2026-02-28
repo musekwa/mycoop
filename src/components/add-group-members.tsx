@@ -5,15 +5,15 @@ import { Dimensions, FlatList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomSafeAreaView from "./layouts/safe-area-view";
 
-interface AnimationTopTabProps {
+interface AddGroupMembers {
   horizontalData: { title: string; iconName: string }[];
   verticalData: { id: number; title: string; component: ReactNode }[];
 }
 
-export default function AnimationTopTab({
+export default function AddGroupMembers({
   horizontalData,
   verticalData,
-}: AnimationTopTabProps) {
+}: AddGroupMembers) {
   const horizontalScrollRef = useRef<any>(null);
 
   const verticalScrollRef = useRef<any>(null);
@@ -108,9 +108,6 @@ export default function AnimationTopTab({
           snapToAlignment="center"
           removeClippedSubviews={true}
         />
-      </View>
-      <View>
-        <GroupManagersList />
       </View>
 
       <View

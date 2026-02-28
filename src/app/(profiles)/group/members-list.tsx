@@ -17,7 +17,6 @@ import SearchBar from "@/components/search-bar";
 
 // Constants and Types
 import ErrorAlert from "@/components/alerts/error-alert";
-import AnimationTopTab from "@/components/animatable-top-tab";
 import Label from "@/components/form-items/custom-label";
 import SectionList from "@/components/section-list";
 import CustomShimmerPlaceholder, {
@@ -31,6 +30,7 @@ import { TABLES } from "@/library/powersync/app-schemas";
 import { deleteOne } from "@/library/powersync/sql-statements";
 import { useActionStore } from "@/store/actions/actions";
 import { ResourceName } from "@/types";
+import GroupMembersAndManagers from "@/components/group-members-and-managers";
 
 const FarmerItem = ({
   id,
@@ -559,7 +559,7 @@ export default function MembersListScreen() {
 
   return (
     <>
-      <AnimationTopTab
+      <GroupMembersAndManagers
         horizontalData={horizontalData}
         verticalData={verticalData}
       />
