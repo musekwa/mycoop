@@ -76,7 +76,7 @@ export default function OrganizationTransactionDataPreview({
   } = useTransferredByOrgInfoStore();
   const { hasLost, quantityLost, resetLostInfo } = useLostInfoStore();
   const { infoProvider, resetInfoProvider } = useInfoProviderStore();
-  const { item } = useTransactedItemStore();
+  const { item, resetItem } = useTransactedItemStore();
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const { userDetails } = useUserDetails();
   const [hasError, setHasError] = useState(false);
@@ -216,6 +216,7 @@ export default function OrganizationTransactionDataPreview({
       resetTransferredByOrgInfo();
       resetLostInfo();
       resetInfoProvider();
+      resetItem();
     } catch (error) {
       console.log("Error inserting organization transaction", error);
       setHasError(true);
@@ -240,6 +241,7 @@ export default function OrganizationTransactionDataPreview({
     resetTransferredByOrgInfo,
     resetLostInfo,
     resetInfoProvider,
+    resetItem,
   ]);
 
 

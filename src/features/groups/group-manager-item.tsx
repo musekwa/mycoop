@@ -1,31 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import {
-  Linking,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import React from "react";
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 import { avatarPlaceholderUri } from "@/constants/image-uris";
+import { groupManagerPositions } from "@/constants/roles";
 import { useQueryManyAndWatchChanges } from "@/hooks/queries";
 import { TABLES } from "@/library/powersync/app-schemas";
-import { groupManagerPositions } from "@/constants/roles";
-import CustomConfirmDialog from "@/components/dialog-boxes/confirm-dialog";
 
 interface GroupManagerItemProps {
   groupManagerId: string;
+  onPhoneCall: (fullName: string, phoneNumber: string) => void;
 }
 
 const GroupManagerItem = ({
   groupManagerId,
+  onPhoneCall,
 }: GroupManagerItemProps) => {
   const isDarkMode = useColorScheme() === "dark";
-  const [showDialog, setShowDialog] = useState(false)
 
   const { data: managerData } = useQueryManyAndWatchChanges<{
     id: string;
@@ -75,22 +68,18 @@ const GroupManagerItem = ({
 
   const handlePhoneCall = () => {
     if (phoneNumber === "N/A") return;
-    setShowDialog(true);
+    onPhoneCall(fullName, phoneNumber);
   };
 
-  const handleConfirmCall = () => {
-    setShowDialog(false);
-    Linking.openURL(`tel:+258 ${phoneNumber}`);
-  };
-
-  const handleCancelCall = () => {
-    setShowDialog(false);
+  const handleCardPress = () => {
+    // Handle card press if needed (e.g., navigation to details)
+    // Currently empty since we only want phone icon to trigger dialog
   };
 
   return (
     <View>
       <TouchableOpacity
-        onPress={handlePhoneCall}
+        onPress={handleCardPress}
         activeOpacity={0.8}
         className="items-center mr-4"
         style={{ width: 80 }}
@@ -99,9 +88,9 @@ const GroupManagerItem = ({
           <Image
             source={{ uri: photoUrl }}
             style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
+              width: 45,
+              height: 45,
+              borderRadius: 22.5,
               borderWidth: 2,
               borderColor: isDarkMode ? "#374151" : "#E5E7EB",
               backgroundColor: isDarkMode ? "#1F2937" : "#F9FAFB",
@@ -119,11 +108,12 @@ const GroupManagerItem = ({
         </View>
         <Text
           className="text-xs font-medium mt-2 text-center"
-          numberOfLines={2}
+          numberOfLines={1}
+          ellipsizeMode="tail"
           style={{
             color: isDarkMode ? "#F3F4F6" : "#111827",
             lineHeight: 14,
-            maxHeight: 28,
+            maxHeight: 14,
           }}
         >
           {fullName}
@@ -137,6 +127,7 @@ const GroupManagerItem = ({
           <Text
             className="text-xs ml-1"
             numberOfLines={1}
+            ellipsizeMode="tail"
             style={{
               color: isDarkMode ? colors.lightestgray : colors.gray600,
               maxWidth: 60,
@@ -160,16 +151,6 @@ const GroupManagerItem = ({
           </TouchableOpacity>
         )}
       </TouchableOpacity>
-      <CustomConfirmDialog 
-        yesCallback={handleConfirmCall}
-        noCallback={handleCancelCall}
-        message={`Deseja ligar para ${fullName} por telefone (${phoneNumber})?`}
-        visible={showDialog}
-        setVisible={setShowDialog}
-        yesText="Sim"
-        noText="Não"
-        title="Confirmar"
-      />
     </View>
   );
 };

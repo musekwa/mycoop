@@ -17,7 +17,7 @@ type DateRangeData = {
   endDate: Date;
 };
 
-interface TransactionEndDateProps {
+interface EndDateSelectorProps {
   control: Control<DateRangeData>;
   lastTransactionEndDate: Date | null;
   startDate: Date;
@@ -28,7 +28,7 @@ interface TransactionEndDateProps {
   clearErrors: UseFormClearErrors<DateRangeData>;
 }
 
-export default function TransactionEndDate({
+export default function EndDateSelector({
   control,
   lastTransactionEndDate,
   startDate,
@@ -37,7 +37,7 @@ export default function TransactionEndDate({
   setCustomErrors,
   customErrors,
   clearErrors,
-}: TransactionEndDateProps) {
+}: EndDateSelectorProps) {
   const { setEndDate } = useDateRangeStore();
   const lastStoreUpdateRef = useRef<Date | null>(null);
 
@@ -109,9 +109,18 @@ export default function TransactionEndDate({
   ]);
 
   const showDatePicker = (currentValue: Date, minDate: Date, maxDate: Date) => {
+    console.log("TransactionEndDate showDatePicker called with:", {
+      currentValue,
+      minDate,
+      maxDate,
+    });
     DateTimePickerAndroid.open({
       value: currentValue,
       onChange: (event: any, selectedDate?: Date) => {
+        console.log("TransactionEndDate DateTimePickerAndroid onChange:", {
+          event,
+          selectedDate,
+        });
         if (selectedDate) {
           let constrainedDate = selectedDate;
           if (selectedDate < minDate) {
@@ -162,6 +171,7 @@ export default function TransactionEndDate({
               <View className="relative">
                 <Pressable
                   onPress={() => {
+                    console.log("TransactionEndDate onPress called");
                     showDatePicker(value, minDate, maxDate);
                   }}
                   className="border border-slate-300 p-3 shadow-sm shadow-black rounded-xl bg-gray-50 dark:bg-black h-13.75 flex justify-center"

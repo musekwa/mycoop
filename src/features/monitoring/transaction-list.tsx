@@ -72,7 +72,7 @@ export default function TransactionList({
               className="flex-row items-center justify-between px-4 py-3"
             >
               <View className="flex-1">
-                <View className="flex-row items-center space-x-2 mb-1">
+                <View className="flex-row items-center gap-x-2 mb-1">
                   <Ionicons name="calendar-outline" size={16} color="#6B7280" />
                   <Text className="font-bold text-[14px] text-gray-800 dark:text-white">
                     {dateKey}
@@ -104,6 +104,11 @@ export default function TransactionList({
               >
                 {/* Table Header */}
                 <View className="flex-row border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 mb-1">
+                  <View className="flex-1 p-2 border-r border-gray-200 dark:border-gray-700">
+                    <Text className="text-[10px] font-bold text-gray-700 dark:text-gray-300">
+                      Produto
+                    </Text>
+                  </View>
                   <View className="flex-1 p-2 border-r border-gray-200 dark:border-gray-700">
                     <Text className="text-[10px] font-bold text-gray-700 dark:text-gray-300">
                       Transacção

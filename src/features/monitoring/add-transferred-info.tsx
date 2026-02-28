@@ -3,17 +3,17 @@ import { View, Text, ScrollView } from 'react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import CustomTextInput from 'src/components/custom-text-input/CustomTextInput'
-import { CashewWarehouseType } from 'src/types'
+import CustomTextInput from '@/components/form-items/custom-text-input'
+import { CashewWarehouseType } from '@/types'
 import { Switch, TouchableOpacity } from 'react-native'
-import { useQueryMany } from 'src/hooks/queries'
-import { TABLES } from 'src/library/powersync/schemas/AppSchema'
+import { useQueryMany } from '@/hooks/queries'
+import { TABLES } from '@/library/powersync/app-schemas'
 import { Ionicons } from '@expo/vector-icons'
-import { useTransferredInfoStore } from 'src/store/trades'
-import CustomSelectItem from 'src/components/ui/custom-select-item'
-import CustomSelectItemTrigger from 'src/components/ui/custom-select-item-trigger'
-import { translateWarehouseTypeToPortuguese } from 'src/helpers/helpersToTrades'
-import Label from '../Label'
+import { useTransferredInfoStore } from '@/store/trades'
+import CustomSelectItem from '@/components/modals/custom-single-selector'
+import CustomSelectItemTrigger from '@/components/modals/custom-single-selector-trigger'
+import { translateWarehouseTypeToPortuguese } from '@/helpers/trades'
+import Label from '@/components/form-items/custom-label'
 
 type WarehouseData = {
 	id: string
@@ -195,7 +195,7 @@ export default function AddTransferredInfo({
 								</TouchableOpacity>
 							</View>
 							<View className="flex flex-row justify-between space-x-2 items-center mt-2">
-								<View className="w-[80px]">
+								<View className="w-20">
 									<Text className="text-gray-600 dark:text-gray-400 text-[12px]">Quantidade</Text>
 								</View>
 								<View className="flex-1">

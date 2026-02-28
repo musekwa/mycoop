@@ -10,7 +10,6 @@ import { useLocalSearchParams, useNavigation } from "expo-router";
 // Components
 import CustomBottomSheetModal from "@/components/bottom-sheets/custom-bottom-sheet-modal";
 import BackButton from "@/components/buttons/back-button";
-import CustomPopUpMenu from "@/components/custom-popup-menu";
 import PDFDisplayer from "@/components/pdf-displayer";
 import { CustomShimmerPlaceholderItemList } from "@/components/skeletons/custom-shimmer-placeholder";
 import AddTransactions from "@/features/monitoring/add-transactions";
@@ -30,6 +29,7 @@ import { useActionStore } from "@/store/actions/actions";
 import { colors } from "@/constants/colors";
 import ReceivedAndTransferredTransactions from "@/features/monitoring/received-and-transferred-transactions";
 import TransactionList from "@/features/monitoring/transaction-list";
+import { TransactedItem } from "@/features/types";
 import { getCurrentStock, getStockDetails } from "@/helpers/trades";
 import {
   useOrganizationTransactions,
@@ -194,6 +194,8 @@ export default function TransactionsScreen() {
     return <PDFDisplayer />;
   }
 
+  console.log("transactions", JSON.stringify(transactions, null, 2));
+
   return (
     <View className="flex-1 bg-white dark:bg-black space-y-2">
       {(state.isShowingExistingTransactions ||
@@ -234,11 +236,19 @@ export default function TransactionsScreen() {
                 quantity: transaction.quantity || 0,
                 transaction_type:
                   transaction.transaction_type as TransactionFlowType,
+                item: transaction.item as TransactedItem,
+                confirmed: transaction.confirmed || false,
               })),
             )}
             warehouseType={
               currentOrganization?.organization_type as CashewWarehouseType
             }
+            transactions={transactions.map((transaction) => ({
+              quantity: transaction.quantity || 0,
+              transaction_type: transaction.transaction_type || "",
+              item: transaction.item as TransactedItem,
+              confirmed: transaction.confirmed === "true" ? true : false,
+            }))}
           />
         )}
 

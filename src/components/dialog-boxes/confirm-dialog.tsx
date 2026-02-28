@@ -25,6 +25,14 @@ export default function CustomConfirmDialog({
   title,
 }: ConfirmDialogProps) {
   const isDarkMode = useColorScheme() === "dark";
+
+  // Add debug logging
+  React.useEffect(() => {
+    console.log("CustomConfirmDialog: visible prop changed to:", visible);
+  }, [visible]);
+
+  console.log("CustomConfirmDialog rendering with visible:", visible);
+
   return (
     <ConfirmDialog
       contentInsetAdjustmentBehavior={"always"}

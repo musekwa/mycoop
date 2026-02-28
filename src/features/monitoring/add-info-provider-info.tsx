@@ -206,7 +206,7 @@ export default function AddInfoProviderInfo({
 
   return (
     <View className="mb-4">
-      <Label label="Fornecedor de Informações" />
+      <Label label="Provedor de Informações" />
 
       {customErrors.infoProvider && (
         <Text className="text-xs text-red-500 mt-1">

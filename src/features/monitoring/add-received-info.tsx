@@ -17,7 +17,7 @@ import ErrorAlert from '@/components/alerts/error-alert'
 import { insertOrganizationTransaction, updateOne } from '@/library/powersync/sql-statements'
 import { buildOrganizationTransaction } from '@/library/powersync/schemas/organization-transactions'
 import NoContentPlaceholder from '@/components/no-content-placeholder'
-import { useInfoProviderStore } from '@/store/trades'
+import { useInfoProviderStore, useTransactedItemStore } from '@/store/trades'
 import TransactionCard from '@/features/monitoring/transaction-card'
 import TransactionShimmer from '@/components/skeletons/transaction-shimmer'
 import { getWarehouseTypeLabel } from '@/helpers/transaction-helpers'
@@ -52,7 +52,7 @@ const ConfirmationButtons = ({
 	<Controller
 		control={control}
 		name={`confirmations.${itemId}`}
-		rules={{ required: 'Por favor, confirme esta transação' }}
+		rules={{ required: 'Por favor, confirme esta transacção' }}
 		render={({ field: { onChange, value }, fieldState: { error } }) => (
 			<View>
 				<View className="flex flex-row space-x-4">
@@ -154,6 +154,8 @@ export default function AddReceivedInfo({
 	organizationId,
 	transactions,
 }: AddReceivedInfoProps) {
+	const { item } =
+    useTransactedItemStore();
 	const { control } = useForm<TransactionData>({
 		defaultValues: {
 			hasReceived: false,
@@ -175,6 +177,12 @@ export default function AddReceivedInfo({
 			return
 		}
 
+		if (!item) {
+			setHasError(true)
+			setErrorMessage('Por favor, seleccione um produto')
+			return
+		}
+
 		if (!infoProvider?.info_provider_id || infoProvider.info_provider_id === 'N/A') {
 			setHasError(true)
 			setErrorMessage('Por favor, seleccione o fornecedor de informações')
@@ -187,6 +195,7 @@ export default function AddReceivedInfo({
 			await Promise.all(
 				confirmedTransactions.map(async (transaction) => {
 					const transaction_row = buildOrganizationTransaction({
+						item: item,
 						transaction_type: TransactionFlowType.TRANSFERRED_IN,
 						quantity: transaction.quantity || 0,
 						unit_price: 0,

@@ -256,27 +256,7 @@ export default function AddTransactions({
         </Text>
       </View>
 
-
-      <View className="flex flex-col space-y-6">
-        <DateRangeSelector
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-          lastTransactionEndDate={
-            lastTransaction?.end_date
-              ? new Date(lastTransaction.end_date)
-              : null
-          }
-        />
-      </View>
-
-      <View className="flex flex-col space-y-6">
-        <AddTransactedItem
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-        />
-      </View>
-      
-      <View className="flex flex-col space-y-6">
+      <View className="flex flex-col pb-2">
         <AddInfoProviderInfo
           customErrors={customErrors}
           setCustomErrors={setCustomErrors}
@@ -288,8 +268,29 @@ export default function AddTransactions({
         />
       </View>
 
-      {itemType && infoProvider && (
-        <View className="flex flex-col space-y-6">
+      <View className="flex flex-col pb-2">
+        <AddTransactedItem
+          customErrors={customErrors}
+          setCustomErrors={setCustomErrors}
+        />
+      </View>
+
+      <View className="flex flex-col pb-2">
+        <DateRangeSelector
+          customErrors={customErrors}
+          setCustomErrors={setCustomErrors}
+          lastTransactionEndDate={
+            lastTransaction?.end_date
+              ? new Date(lastTransaction.end_date)
+              : null
+          }
+        />
+      </View>
+
+      
+
+      {itemType && infoProvider.info_provider_id && (
+        <View className="flex flex-col pb-2">
           {/* activeMember participations (quantity by member) for cooperative and association */}
           {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
             <AddAggregatedInfo
