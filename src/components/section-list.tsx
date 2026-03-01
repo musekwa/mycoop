@@ -25,12 +25,14 @@ export default function SectionList({
   data,
   callback,
   renderItem,
-  bottomPadding = 0,
+  bottomPadding = 80,
   emptyMessage,
 }: SectionListProps) {
   return (
     <FlatList
       keyExtractor={(item: { id: string; title: string }) => item.id.toString()}
+      nestedScrollEnabled={true}
+      style={{ flex: 1 }}
       contentContainerStyle={{
         paddingHorizontal: 15,
         paddingTop: 10,

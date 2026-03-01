@@ -386,6 +386,18 @@ export const userSignUp = async (
   }
 
   if (data && data.user) {
+    // Supabase returns an empty identities array when the email already exists
+    // (instead of throwing an error, for security reasons)
+    if (!data.user.identities || data.user.identities.length === 0) {
+      return {
+        success: false,
+        message:
+          "O email já está em uso. Tente outro email ou faça login com o email e senha que você usou para criar a conta!",
+        session: null,
+        code: AUTH_CODES.EMAIL_EXISTS,
+      };
+    }
+
     const userId = data.user.id;
     const userDetails = {
       user_id: userId,
@@ -624,10 +636,9 @@ export const resendEmailVerification = async (email: string) => {
       message: "Erro ao reenviar email de verificação",
       code: AUTH_CODES.EMAIL_VERIFICATION_RESEND_ERROR,
     };
-	}
-	finally {
-		await logoutWithCleanup();
-	}
+  } finally {
+    await logoutWithCleanup();
+  }
 };
 
 export const verifyEmail = async (email: string, token: string) => {
@@ -690,15 +701,14 @@ export const verifyEmail = async (email: string, token: string) => {
     };
   } catch (error) {
     console.error("Error verifying email", error);
-	await logoutWithCleanup();
+    await logoutWithCleanup();
     return {
       success: false,
       message: "Erro ao verificar email",
       code: AUTH_CODES.EMAIL_VERIFICATION_ERROR,
     };
-	}
-	finally {
-	}
+  } finally {
+  }
 };
 
 export const forgotPassword = async (email: string) => {
@@ -757,7 +767,7 @@ export const comparePasswordResetCode = async (email: string, code: string) => {
     };
   } catch (error) {
     console.error("Error comparing password reset code", error);
-	await logoutWithCleanup();
+    await logoutWithCleanup();
     return {
       success: false,
       message: "O código de redefinição de senha não é válido!",
@@ -787,7 +797,7 @@ export const resetPassword = async (password: string) => {
     };
   } catch (error) {
     console.error("Error resetting password", error);
-	await logoutWithCleanup();
+    await logoutWithCleanup();
     return {
       success: false,
       message: "Erro ao redefinir senha",

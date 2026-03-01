@@ -255,7 +255,7 @@ export default function OrganizationTransactionDataPreview({
       onRequestClose={() => setPreviewData(false)}
     >
       {/* <View className="flex flex-col justify-between h-full p-3 bg-white dark:bg-black"> */}
-      <View className="flex-1 bg-white dark:bg-black">
+      <View className="flex-1 bg-white dark:bg-black pb-8">
         <StatusBar
           backgroundColor="#008000"
           barStyle="light-content"
@@ -275,9 +275,8 @@ export default function OrganizationTransactionDataPreview({
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            // justifyContent: "center",
-            paddingHorizontal: 16,
-            paddingBottom: 80,
+            padding: 16,
+            paddingBottom: 120,
           }}
           className="p-3  bg-white dark:bg-black"
           showsVerticalScrollIndicator={false}

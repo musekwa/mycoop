@@ -22,6 +22,7 @@ export default function GroupMembersAndManagers({
   const screenWindow = Dimensions.get("window");
   const [selected, setSelected] = useState(0);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -115,7 +116,9 @@ export default function GroupMembersAndManagers({
 
       <View
         style={{ flex: 1 }}
-        onLayout={() => {
+        onLayout={(event) => {
+          const { height } = event.nativeEvent.layout;
+          setContentHeight(height);
           // Clear any existing timer
           if (layoutTimerRef.current) {
             clearTimeout(layoutTimerRef.current);
@@ -186,7 +189,8 @@ export default function GroupMembersAndManagers({
               style={{
                 width: screenWindow.width,
                 height:
-                  screenWindow.height - (insets.top + insets.bottom + 100), // Account for header and safe area
+                  contentHeight ||
+                  screenWindow.height - (insets.top + insets.bottom + 200),
               }}
             >
               {item.component}

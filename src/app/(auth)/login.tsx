@@ -123,7 +123,7 @@ export default function Login() {
           contentContainerStyle={{
             flexGrow: 1,
             padding: 16,
-            paddingBottom: 40,
+            paddingBottom: 120,
           }}
         >
           <View className="flex-1 justify-center items-center space-y-2">

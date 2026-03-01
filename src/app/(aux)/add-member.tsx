@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { FlatList, View } from "react-native";
 import { v4 as uuidv4 } from "uuid";
 
+import AddGroupMembers from "@/components/add-group-members";
 import SubmitButton from "@/components/buttons/submit-button";
 import NoContentPlaceholder from "@/components/no-content-placeholder";
 import FarmerMembershipItem from "@/features/group-membership/farmer-item";
@@ -20,7 +21,6 @@ import { addMembersToOrganization } from "@/library/powersync/sql-statements";
 import { useActionStore } from "@/store/actions/actions";
 import { useOrganizationStore } from "@/store/organization";
 import { OrganizationTypes } from "@/types";
-import AddGroupMembers from "@/components/add-group-members";
 
 export default function AddMemberToGroupScreen() {
   const { userDetails } = useUserDetails();
@@ -278,8 +278,10 @@ export default function AddMemberToGroupScreen() {
           component: (
             <FlatList
               data={cooperatives}
+              nestedScrollEnabled={true}
+              style={{ flex: 1 }}
               keyExtractor={(item: (typeof cooperatives)[0]) => item.id}
-              contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
+              contentContainerStyle={{ padding: 15, paddingBottom: 120 }}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View className="h-100 flex justify-center items-center">
@@ -302,8 +304,10 @@ export default function AddMemberToGroupScreen() {
           component: (
             <FlatList
               data={associations}
+              nestedScrollEnabled={true}
+              style={{ flex: 1 }}
               keyExtractor={(item: (typeof associations)[0]) => item.id}
-              contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
+              contentContainerStyle={{ padding: 15, paddingBottom: 120 }}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View className="h-100 flex justify-center items-center">
@@ -328,8 +332,10 @@ export default function AddMemberToGroupScreen() {
           component: (
             <FlatList
               data={farmers}
+              nestedScrollEnabled={true}
+              style={{ flex: 1 }}
               keyExtractor={(item: (typeof farmers)[0]) => item.id}
-              contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
+              contentContainerStyle={{ padding: 15, paddingBottom: 120 }}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View className="h-100 flex justify-center items-center">
@@ -352,8 +358,10 @@ export default function AddMemberToGroupScreen() {
           component: (
             <FlatList
               data={groups}
+              nestedScrollEnabled={true}
+              style={{ flex: 1 }}
               keyExtractor={(item: (typeof groups)[0]) => item.id}
-              contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
+              contentContainerStyle={{ padding: 15, paddingBottom: 120 }}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <View className="h-100 flex justify-center items-center">

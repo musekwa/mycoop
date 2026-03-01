@@ -477,7 +477,7 @@ export default function HomeScreen() {
           contentContainerStyle={{
             paddingTop: StatusBar.currentHeight || 20,
             flexGrow: 1,
-            paddingBottom: 20,
+            // paddingBottom: 20,
             backgroundColor: "#008000",
           }}
           showsVerticalScrollIndicator={false}

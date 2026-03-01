@@ -87,7 +87,7 @@ export default function ForgotPassword() {
           contentContainerStyle={{
             flexGrow: 1,
             padding: 16,
-            paddingBottom: 40,
+            paddingBottom: 120,
           }}
         >
           <View className="flex-1/3 justify-center space-y-3">

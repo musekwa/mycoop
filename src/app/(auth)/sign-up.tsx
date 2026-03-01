@@ -23,7 +23,7 @@ export default function SignUp() {
           contentContainerStyle={{
             flexGrow: 1,
             padding: 16,
-            paddingBottom: 40,
+            paddingBottom: 120,
           }}
           className="bg-white dark:bg-black"
         >

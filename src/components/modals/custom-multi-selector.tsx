@@ -1,10 +1,17 @@
+import { avatarPlaceholderUri } from "@/constants/image-uris";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useMemo, useState } from "react";
-import { FlatList, Modal, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Modal,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import ConfirmOrCancelButtons from "../buttons/confirm-or-cancel-button";
 import SelectorHeader from "./selector-header";
-import { avatarPlaceholderUri } from "@/constants/image-uris";
 
 interface ItemType {
   label: string;
@@ -93,11 +100,11 @@ export default function CustomMultiSelector({
       >
         {/* Profile Photo */}
         <View className="mr-3">
-              <Image
-                source={{ uri: item.photo ?? avatarPlaceholderUri }}
-                className="w-10 h-10 rounded-full"
-                contentFit="cover"
-              />
+          <Image
+            source={{ uri: item.photo ?? avatarPlaceholderUri }}
+            className="w-10 h-10 rounded-full"
+            contentFit="cover"
+          />
         </View>
 
         {/* Participant Info */}
@@ -139,7 +146,7 @@ export default function CustomMultiSelector({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <View className="flex-1 bg-white dark:bg-black">
+      <View className="flex-1 bg-white dark:bg-black pb-8">
         <StatusBar
           backgroundColor="#008000"
           barStyle="light-content"
@@ -160,7 +167,11 @@ export default function CustomMultiSelector({
           renderItem={({ item }) => renderParticipantItem({ item })}
           keyExtractor={(item) => item.value}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 120
+          }}
+          ListFooterComponent={()=><View className="h-24" />}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-16">
               <Ionicons name="people-outline" size={48} color="#9CA3AF" />

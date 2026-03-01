@@ -53,27 +53,47 @@ export default function CustomPopUpMenu({
           optionsContainer: {
             width: 230,
             paddingLeft: 10,
+            paddingRight: 10,
+            paddingVertical: 4,
+            borderRadius: 12,
+            backgroundColor: isDarkMode ? "#1a1a1a" : colors.white,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDarkMode ? 0.4 : 0.15,
+            shadowRadius: 8,
+            elevation: 8,
           },
         }}
       >
-        <View className=" ml-1">
-          <Text className="text-black dark:text-white font-bold py-2">
+        <View className="ml-1 mb-1">
+          <Text
+            className="font-bold py-2"
+            style={{ color: isDarkMode ? colors.white : colors.black }}
+          >
             {title}
           </Text>
-          <Divider />
+          <Divider
+            style={{ backgroundColor: isDarkMode ? "#333" : "#e0e0e0" }}
+          />
         </View>
         {options.map((option, index) => {
           return (
-            <View key={index} className="bg-white dark:bg-gray-700">
-              <MenuOption key={index} onSelect={() => option.action()}>
+            <View key={index}>
+              <MenuOption onSelect={() => option.action()}>
                 <View className="flex flex-row gap-x-2 my-2 items-center">
                   {option.icon}
-                  <Text className="text-black dark:text-white ">
+                  <Text
+                    style={{ color: isDarkMode ? colors.white : colors.black }}
+                  >
                     {option.label}
                   </Text>
                 </View>
               </MenuOption>
-              <Divider />
+              {index < options.length - 1 && (
+                <Divider
+                  style={{ backgroundColor: isDarkMode ? "#333" : "#e0e0e0" }}
+                />
+              )}
             </View>
           );
         })}

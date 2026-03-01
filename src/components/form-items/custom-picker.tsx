@@ -2,12 +2,11 @@ import { colors } from "@/constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import {
   BottomSheetBackdrop,
+  BottomSheetFlatList,
   BottomSheetModal,
-  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  FlatList,
   StyleSheet,
   Text,
   TextInput,
@@ -175,34 +174,35 @@ export const CustomPicker = ({
           backgroundColor: isDarkMode ? colors.gray600 : colors.slate300,
         }}
       >
-        <BottomSheetView style={{ paddingHorizontal: 12, paddingTop: 10 }}>
-          <View className="pb-3">
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Procurar..."
-              placeholderTextColor={colors.gray600}
-              style={{
-                borderWidth: 1,
-                borderColor: isDarkMode ? colors.gray600 : colors.slate300,
-                borderRadius: 10,
-                paddingHorizontal: 10,
-                height: 44,
-                color: isDarkMode ? colors.white : colors.black,
-                backgroundColor: isDarkMode ? colors.black : colors.gray50,
-              }}
-            />
-          </View>
-
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item, idx) => `${item.value}-${idx}`}
-            renderItem={renderItem}
-            keyboardShouldPersistTaps="always"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 40 }}
-          />
-        </BottomSheetView>
+        <BottomSheetFlatList
+          data={filteredItems}
+          keyExtractor={(item: { label: string; value: string }, idx: number) =>
+            `${item.value}-${idx}`
+          }
+          renderItem={renderItem}
+          keyboardShouldPersistTaps="always"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 40 }}
+          ListHeaderComponent={
+            <View className="pb-3 pt-2">
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Procurar..."
+                placeholderTextColor={colors.gray600}
+                style={{
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? colors.gray600 : colors.slate300,
+                  borderRadius: 10,
+                  paddingHorizontal: 10,
+                  height: 44,
+                  color: isDarkMode ? colors.white : colors.black,
+                  backgroundColor: isDarkMode ? colors.black : colors.gray50,
+                }}
+              />
+            </View>
+          }
+        />
       </BottomSheetModal>
     </>
   );

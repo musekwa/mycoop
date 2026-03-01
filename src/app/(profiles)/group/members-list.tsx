@@ -18,6 +18,7 @@ import SearchBar from "@/components/search-bar";
 // Constants and Types
 import ErrorAlert from "@/components/alerts/error-alert";
 import Label from "@/components/form-items/custom-label";
+import GroupMembersAndManagers from "@/components/group-members-and-managers";
 import SectionList from "@/components/section-list";
 import CustomShimmerPlaceholder, {
   CustomShimmerPlaceholderItem,
@@ -30,7 +31,6 @@ import { TABLES } from "@/library/powersync/app-schemas";
 import { deleteOne } from "@/library/powersync/sql-statements";
 import { useActionStore } from "@/store/actions/actions";
 import { ResourceName } from "@/types";
-import GroupMembersAndManagers from "@/components/group-members-and-managers";
 
 const FarmerItem = ({
   id,
@@ -402,7 +402,7 @@ export default function MembersListScreen() {
       id: 1,
       title: "Produtores",
       component: (
-        <View>
+        <View className="flex-1">
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -443,7 +443,7 @@ export default function MembersListScreen() {
       id: 2,
       title: "Grupos",
       component: (
-        <View>
+        <View className="flex-1">
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}

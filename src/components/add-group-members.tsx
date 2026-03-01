@@ -1,5 +1,4 @@
 import Tag from "@/components/custom-tag";
-import GroupManagersList from "@/features/groups/group-managers-list";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Dimensions, FlatList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,6 +21,7 @@ export default function AddGroupMembers({
   const screenWindow = Dimensions.get("window");
   const [selected, setSelected] = useState(0);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -112,7 +112,9 @@ export default function AddGroupMembers({
 
       <View
         style={{ flex: 1 }}
-        onLayout={() => {
+        onLayout={(event) => {
+          const { height } = event.nativeEvent.layout;
+          setContentHeight(height);
           // Clear any existing timer
           if (layoutTimerRef.current) {
             clearTimeout(layoutTimerRef.current);
@@ -183,7 +185,8 @@ export default function AddGroupMembers({
               style={{
                 width: screenWindow.width,
                 height:
-                  screenWindow.height - (insets.top + insets.bottom + 100), // Account for header and safe area
+                  contentHeight ||
+                  screenWindow.height - (insets.top + insets.bottom + 200),
               }}
             >
               {item.component}
