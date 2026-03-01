@@ -15,9 +15,11 @@ export default function TransactionHeader({ index, quantity, label }: Transactio
 					{label} #{index + 1}:
 				</Text>
 			</View>
-			<Text className="text-xs font-medium text-blue-600 dark:text-blue-400 underline">
-				{Intl.NumberFormat('pt-BR').format(quantity)} Kg.
-			</Text>
+			<View className="flex-row items-center bg-green-200 p-1 rounded-full">
+				<Text className="text-xs font-medium text-green-800 dark:text-green-400">
+					{Intl.NumberFormat('pt-BR').format(quantity)} Kg.
+				</Text>
+			</View>
 		</View>
 	)
 }

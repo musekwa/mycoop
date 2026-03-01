@@ -3,16 +3,15 @@ import React, { useState } from "react";
 import { Text, View } from "react-native";
 
 import ErrorAlert from "@/components/alerts/error-alert";
-import { OrganizationTypes } from "@/types";
+import { OrganizationTypes, TransactionFlowType } from "@/types";
 
 import DateRangeSelector from "@/components/dates/date-range-selector";
 import TransactionDataPreview from "@/features/monitoring/transaction-data-preview";
-import { getTransactedItemPortugueseName } from "@/helpers/trades";
-import { useQueryOneAndWatchChanges } from "@/hooks/queries";
 import {
-  OrganizationTransactionRecord,
-  TABLES,
-} from "@/library/powersync/app-schemas";
+  getCurrentStock,
+  getTransactedItemPortugueseName,
+} from "@/helpers/trades";
+import { OrganizationTransactionRecord } from "@/library/powersync/app-schemas";
 import {
   useAggregatedInfoStore,
   useDateRangeStore,
@@ -36,7 +35,7 @@ interface AddTransactionsProps {
     isShowingExistingTransactions: boolean,
   ) => void;
   setShowOverview: (showOverview: boolean) => void;
-  currentStock: number;
+  transactions: OrganizationTransactionRecord[];
   organization: {
     id: string;
     name: string;
@@ -54,29 +53,34 @@ interface AddTransactionsProps {
 }
 
 export default function AddTransactions({
-  currentStock,
+  transactions,
   organization,
   setIsShowingExistingTransactions,
   setShowOverview,
 }: AddTransactionsProps) {
   const { item } = useTransactedItemStore();
   const itemType = getTransactedItemPortugueseName(item);
+
+  // Compute per-item stock for the currently selected item
+  const currentStock = React.useMemo(() => {
+    if (!item || !transactions?.length) return 0;
+    const itemTransactions = transactions
+      .filter(
+        (t) =>
+          t.item === item && t.quantity != null && t.transaction_type != null,
+      )
+      .map((t) => ({
+        quantity: Number(t.quantity),
+        transaction_type: t.transaction_type as TransactionFlowType,
+      }));
+    return getCurrentStock(itemTransactions);
+  }, [item, transactions]);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [showPreview, setShowPreview] = useState(false);
   const [customErrors, setCustomErrors] = useState<Record<string, string>>({});
   const [showInfoProviderModal, setShowInfoProviderModal] = useState(false);
-
-  const {
-    data: lastTransaction,
-    isLoading: isLastTransactionLoading,
-    error: lastTransactionError,
-    isError: isLastTransactionError,
-  } = useQueryOneAndWatchChanges<OrganizationTransactionRecord>(
-    `SELECT end_date FROM ${TABLES.ORGANIZATION_TRANSACTIONS} WHERE store_id = $1 ORDER BY end_date DESC LIMIT 1`,
-    [organization.id],
-  );
 
   const { assertAggregatedInfo } = useAggregatedInfoStore();
   const { assertResoldInfo } = useResoldInfoStore();
@@ -147,36 +151,6 @@ export default function AddTransactions({
       newErrors.dateRange = dateRangeMessage;
     }
 
-    // Validate that neither startDate nor endDate is less than lastTransactionEndDate
-    if (lastTransaction?.end_date) {
-      const lastTransactionEndDate = new Date(lastTransaction.end_date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const lastDate = new Date(lastTransactionEndDate.getTime());
-      lastDate.setHours(0, 0, 0, 0);
-
-      // Check if lastTransactionEndDate is today - no new transactions allowed
-      if (lastDate.getTime() === today.getTime()) {
-        newErrors.dateMismatch =
-          "Não é possível registar transacções quando a data da última monitoria é hoje. Aguarde até amanhã.";
-      } else {
-        const startDateInvalid =
-          startDate && startDate < lastTransactionEndDate;
-        const endDateInvalid = endDate && endDate < lastTransactionEndDate;
-
-        if (startDateInvalid && endDateInvalid) {
-          newErrors.dateMismatch =
-            "As datas de início e fim devem ser posteriores ou iguais à data da última monitoria.";
-        } else if (startDateInvalid) {
-          newErrors.dateMismatch =
-            "A data de início deve ser posterior ou igual à data da última monitoria.";
-        } else if (endDateInvalid) {
-          newErrors.dateMismatch =
-            "A data de fim deve ser posterior ou igual à data da última monitoria.";
-        }
-      }
-    }
-
     if (!resoldStatus) {
       newErrors.resold = resoldMessage;
     }
@@ -239,24 +213,42 @@ export default function AddTransactions({
       scrollEventThrottle={16}
       contentContainerStyle={{
         flexGrow: 1,
-        justifyContent: "center",
+        justifyContent: "flex-start",
+        padding: 16,
         paddingBottom: 80,
       }}
-      className="px-3 bg-white dark:bg-black"
+      className="bg-white dark:bg-black"
     >
-      <View className="bg-gray-50 dark:bg-gray-800 px-2 py-1  my-2 rounded-md">
-        <Text className="text-right text-[#008000]">
-          <Text className="text-[#008000] text-[20px] text-end font-bold">
-            {Intl.NumberFormat("pt-BR").format(currentStock)}{" "}
+      {item ? (
+        <View className="flex-row items-center justify-between bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 px-3 py-2 mb-2 rounded-lg">
+          <View className="flex-col">
+            <Text className="text-[11px] text-gray-500 dark:text-gray-400">
+              Estoque disponível
+            </Text>
+            <Text className="text-[13px] font-semibold text-green-800 dark:text-green-300">
+              {itemType}
+            </Text>
+          </View>
+          <View className="flex-row items-baseline">
+            <Text className="text-[22px] font-bold text-[#008000] dark:text-green-400">
+              {Intl.NumberFormat("pt-BR", {
+                maximumFractionDigits: 2,
+              }).format(currentStock)}
+            </Text>
+            <Text className="text-[13px] text-[#008000] dark:text-green-400 ml-1">
+              Kg
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View className="bg-gray-50 dark:bg-gray-800 px-3 py-3 my-2 rounded-lg border border-gray-200 dark:border-gray-700">
+          <Text className="text-[12px] text-gray-400 dark:text-gray-500 italic text-center">
+            Seleccione um produto para ver o estoque.
           </Text>
-          Kg.
-        </Text>
-        <Text className=" text-[12px] text-right italic text-gray-400">
-          Estoque disponível
-        </Text>
-      </View>
+        </View>
+      )}
 
-      <View className="flex flex-col pb-2">
+      <View className="flex flex-col pb-2 mt-8">
         <AddInfoProviderInfo
           customErrors={customErrors}
           setCustomErrors={setCustomErrors}
@@ -279,15 +271,10 @@ export default function AddTransactions({
         <DateRangeSelector
           customErrors={customErrors}
           setCustomErrors={setCustomErrors}
-          lastTransactionEndDate={
-            lastTransaction?.end_date
-              ? new Date(lastTransaction.end_date)
-              : null
-          }
+          storeId={organization.id}
+          item={item}
         />
       </View>
-
-      
 
       {itemType && infoProvider.info_provider_id && (
         <View className="flex flex-col pb-2">

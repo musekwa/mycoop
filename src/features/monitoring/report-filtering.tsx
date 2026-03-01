@@ -11,12 +11,12 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { Checkbox } from "react-native-paper";
 
 const transactionTypes = [
-  { id: "BOUGHT", label: "Comprado" },
+  // { id: "BOUGHT", label: "Comprado" },
   { id: "SOLD", label: "Vendido" },
   { id: "TRANSFERRED_IN", label: "Recebido" },
   { id: "TRANSFERRED_OUT", label: "Transferido" },
-  { id: "EXPORTED", label: "Exportado" },
-  { id: "PROCESSED", label: "Processado" },
+  // { id: "EXPORTED", label: "Exportado" },
+  // { id: "PROCESSED", label: "Processado" },
   { id: "LOST", label: "Desperdiçado" },
   { id: "AGGREGATED", label: "Agregado" },
 ];
@@ -33,6 +33,8 @@ interface ReportFilteringProps {
     owner_id: string;
     address_id: string;
     warehouse_type: string;
+    admin_post: string;
+    district: string;
   } | null;
   transactions: TransactionForReportType[];
 }
@@ -374,19 +376,16 @@ export default function ReportFiltering({
           Período:
         </Text>
         <Text className="text-gray-500 dark:text-gray-500 text-[11px] italic">
-          * A data de fim não pode ser posterior à data atual
+          * A data de fim não pode ser posterior à data actual
         </Text>
-        <Text className="text-gray-500 dark:text-gray-500 text-[11px]">
-          Período selecionado: {startDate.toLocaleDateString("pt-BR")} a{" "}
-          {endDate.toLocaleDateString("pt-BR")}
-        </Text>
+
         <View className="flex flex-row justify-between gap-x-2">
           <View className="flex-1">
             <TouchableOpacity
               onPress={() => {
                 DateTimePickerAndroid.open({
                   value: startDate,
-                  onChange: (event: any, selectedDate?: Date) => {
+                  onChange: (_event, selectedDate?: Date) => {
                     if (selectedDate) {
                       handleStartDateChange(selectedDate);
                     }
@@ -411,7 +410,7 @@ export default function ReportFiltering({
               onPress={() => {
                 DateTimePickerAndroid.open({
                   value: endDate,
-                  onChange: (event: any, selectedDate?: Date) => {
+                  onChange: (_event, selectedDate?: Date) => {
                     if (selectedDate) {
                       handleEndDateChange(selectedDate);
                     }

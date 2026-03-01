@@ -6,6 +6,7 @@ import TransactionInfoRow from './transaction-info-row'
 
 interface TransactionCardProps {
 	index: number
+	itemType: string
 	quantity: number
 	startDate: string
 	endDate: string
@@ -32,6 +33,7 @@ export default function TransactionCard({
 	description,
 	headerLabel,
 	locationLabel,
+	itemType,
 	statusBadge,
 	children,
 }: TransactionCardProps) {
@@ -47,7 +49,7 @@ export default function TransactionCard({
 			<View className="border-b border-gray-200 dark:border-gray-700 my-3" />
 
 			{/* Transaction Details */}
-			<View className="space-y-3">
+			<View className="gap-y-3">
 				{/* Period */}
 				<TransactionInfoRow
 					icon="calendar-outline"
@@ -75,7 +77,7 @@ export default function TransactionCard({
 			{/* Status Badge */}
 			{statusBadge && (
 				<View className="flex-row justify-end items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-					<View className={`flex-row items-center space-x-2 px-3 py-1.5 rounded-full ${statusBadge.bgClassName}`}>
+					<View className={`flex-row items-center gap-x-2 px-3 py-1.5 rounded-full ${statusBadge.bgClassName}`}>
 						<Ionicons name={statusBadge.icon} size={12} color={statusBadge.iconColor} />
 						<Text className={`text-[10px] font-medium ${statusBadge.textClassName}`}>{statusBadge.text}</Text>
 					</View>

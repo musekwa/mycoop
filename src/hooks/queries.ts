@@ -260,6 +260,11 @@ export const useQueryOneAndWatchChanges = <T>(
   const [isError, setIsError] = useState(false);
   const serializedParams = JSON.stringify(params);
   useEffect(() => {
+    if (!query || query.trim() === "") {
+      setData(null);
+      setIsLoading(false);
+      return;
+    }
     const abortController = new AbortController();
     powersync.watchWithCallback(
       query,

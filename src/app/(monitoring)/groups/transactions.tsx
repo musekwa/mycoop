@@ -26,6 +26,7 @@ import { CashewWarehouseType, TransactionFlowType } from "@/types";
 import { useActionStore } from "@/store/actions/actions";
 
 // Helpers and Constants
+import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import { colors } from "@/constants/colors";
 import ReceivedAndTransferredTransactions from "@/features/monitoring/received-and-transferred-transactions";
 import TransactionList from "@/features/monitoring/transaction-list";
@@ -194,143 +195,148 @@ export default function TransactionsScreen() {
     return <PDFDisplayer />;
   }
 
-  console.log("transactions", JSON.stringify(transactions, null, 2));
-
   return (
-    <View className="flex-1 bg-white dark:bg-black space-y-2">
-      {(state.isShowingExistingTransactions ||
-        state.showReceivedTransactions) &&
-        currentOrganization && (
-          <TransactionActionButtons
-            organizationId={groupId as string}
-            showOverview={state.showOverview}
-            setShowOverview={(showOverview) =>
-              setState((prev) => ({ ...prev, showOverview }))
-            }
-            setIsShowingExistingTransactions={(isShowingExistingTransactions) =>
-              setState((prev) => ({ ...prev, isShowingExistingTransactions }))
-            }
-            isShowingExistingTransactions={state.isShowingExistingTransactions}
-            handleModalPress={handleModalPress}
-            showReceivedTransactions={state.showReceivedTransactions}
-            setShowReceivedTransactions={(showReceivedTransactions) =>
-              setState((prev) => ({ ...prev, showReceivedTransactions }))
-            }
-          />
-        )}
-
-      {state.showOverview &&
-        !state.isLoading &&
-        state.isShowingExistingTransactions && (
-          <TransactionsOverview
-            warehouseStatus={true}
-            currentStock={getCurrentStock(
-              transactions.map((transaction) => ({
-                quantity: transaction.quantity || 0,
-                transaction_type:
-                  transaction.transaction_type as TransactionFlowType,
-              })),
-            )}
-            stockDetails={getStockDetails(
-              transactions.map((transaction) => ({
-                quantity: transaction.quantity || 0,
-                transaction_type:
-                  transaction.transaction_type as TransactionFlowType,
-                item: transaction.item as TransactedItem,
-                confirmed: transaction.confirmed || false,
-              })),
-            )}
-            warehouseType={
-              currentOrganization?.organization_type as CashewWarehouseType
-            }
-            transactions={transactions.map((transaction) => ({
-              quantity: transaction.quantity || 0,
-              transaction_type: transaction.transaction_type || "",
-              item: transaction.item as TransactedItem,
-              confirmed: transaction.confirmed === "true" ? true : false,
-            }))}
-          />
-        )}
-
-      {!state.isShowingExistingTransactions &&
-        !state.showOverview &&
-        !state.isLoading &&
-        !state.showReceivedTransactions && (
-          <AddTransactions
-            setIsShowingExistingTransactions={(isShowingExistingTransactions) =>
-              setState((prev) => ({ ...prev, isShowingExistingTransactions }))
-            }
-            setShowOverview={(showOverview) =>
-              setState((prev) => ({ ...prev, showOverview }))
-            }
-            currentStock={getCurrentStock(
-              transactions.map((transaction) => ({
-                quantity: transaction.quantity || 0,
-                transaction_type:
-                  transaction.transaction_type as TransactionFlowType,
-              })),
-            )}
-            organization={currentOrganization!}
-          />
-        )}
-
-      {state.isLoading && (
-        <CustomShimmerPlaceholderItemList count={10} height={100} />
-      )}
-
-      {state.showReceivedTransactions && !state.isLoading && (
-        <ReceivedAndTransferredTransactions
-          storeType={"GROUP"}
-          organizationId={groupId as string}
-        />
-      )}
-
-      {state.isShowingExistingTransactions &&
-        !state.isLoading &&
-        !state.showOverview && <TransactionList transactions={transactions} />}
-
-      {/* Bottom Sheet Modal */}
-      <CustomBottomSheetModal
-        index={4}
-        handleDismissModalPress={handleModalPress}
-        bottomSheetModalRef={bottomSheetModalRef}
-      >
-        <View className="flex-1 p-3 h-full">
-          <View className="flex-1 space-y-4 pt-8">
-            <ReportFiltering
-              pdfUri={pdfUri}
-              setPdfUri={setPdfUri}
-              onGenerateReport={() => {
-                handleModalDismiss();
-              }}
-              hint={"grupo"}
-              transactions={transactions.map((transaction) => ({
-                id: transaction.id,
-                transaction_type:
-                  transaction.transaction_type as TransactionFlowType,
-                quantity: transaction.quantity || 0,
-                unit_price: transaction.unit_price || 0,
-                start_date: transaction.start_date || "",
-                end_date: transaction.end_date || "",
-                store_id: transaction.store_id || "",
-                created_by: transaction.created_by || "",
-              }))}
-              storeDetails={
-                currentOrganization
-                  ? {
-                      id: currentOrganization.id,
-                      description: currentOrganization.name,
-                      is_active: "true",
-                      owner_id: currentOrganization.id,
-                      address_id: currentOrganization.address_id,
-                      warehouse_type: currentOrganization.organization_type,
-                    }
-                  : null
+    <CustomSafeAreaView edges={["bottom"]}>
+      <View className="flex-1 gap-y-2">
+        {(state.isShowingExistingTransactions ||
+          state.showReceivedTransactions) &&
+          currentOrganization && (
+            <TransactionActionButtons
+              organizationId={groupId as string}
+              showOverview={state.showOverview}
+              setShowOverview={(showOverview) =>
+                setState((prev) => ({ ...prev, showOverview }))
+              }
+              setIsShowingExistingTransactions={(
+                isShowingExistingTransactions,
+              ) =>
+                setState((prev) => ({ ...prev, isShowingExistingTransactions }))
+              }
+              isShowingExistingTransactions={
+                state.isShowingExistingTransactions
+              }
+              handleModalPress={handleModalPress}
+              showReceivedTransactions={state.showReceivedTransactions}
+              setShowReceivedTransactions={(showReceivedTransactions) =>
+                setState((prev) => ({ ...prev, showReceivedTransactions }))
               }
             />
+          )}
+
+        {state.showOverview &&
+          !state.isLoading &&
+          state.isShowingExistingTransactions && (
+            <TransactionsOverview
+              warehouseStatus={true}
+              currentStock={getCurrentStock(
+                transactions.map((transaction) => ({
+                  quantity: transaction.quantity || 0,
+                  transaction_type:
+                    transaction.transaction_type as TransactionFlowType,
+                })),
+              )}
+              stockDetails={getStockDetails(
+                transactions.map((transaction) => ({
+                  quantity: transaction.quantity || 0,
+                  transaction_type:
+                    transaction.transaction_type as TransactionFlowType,
+                  item: transaction.item as TransactedItem,
+                  confirmed: transaction.confirmed || false,
+                })),
+              )}
+              warehouseType={
+                currentOrganization?.organization_type as CashewWarehouseType
+              }
+              transactions={transactions.map((transaction) => ({
+                quantity: transaction.quantity || 0,
+                transaction_type: transaction.transaction_type || "",
+                item: transaction.item as TransactedItem,
+                confirmed: transaction.confirmed === "true" ? true : false,
+              }))}
+            />
+          )}
+
+        {!state.isShowingExistingTransactions &&
+          !state.showOverview &&
+          !state.isLoading &&
+          !state.showReceivedTransactions && (
+            <AddTransactions
+              setIsShowingExistingTransactions={(
+                isShowingExistingTransactions,
+              ) =>
+                setState((prev) => ({ ...prev, isShowingExistingTransactions }))
+              }
+              setShowOverview={(showOverview) =>
+                setState((prev) => ({ ...prev, showOverview }))
+              }
+              transactions={transactions}
+              organization={currentOrganization!}
+            />
+          )}
+
+        {state.isLoading && (
+          <CustomShimmerPlaceholderItemList count={10} height={100} />
+        )}
+
+        {state.showReceivedTransactions && !state.isLoading && (
+          <ReceivedAndTransferredTransactions
+            storeType={"GROUP"}
+            organizationId={groupId as string}
+          />
+        )}
+
+        {state.isShowingExistingTransactions &&
+          !state.isLoading &&
+          !state.showOverview && (
+            <TransactionList transactions={transactions} />
+          )}
+
+        {/* Bottom Sheet Modal */}
+        <CustomBottomSheetModal
+          index={4}
+          handleDismissModalPress={handleModalPress}
+          bottomSheetModalRef={bottomSheetModalRef}
+        >
+          <View className="flex-1 p-3 h-full">
+            <View className="flex-1 gap-y-4 pt-1">
+              <ReportFiltering
+                pdfUri={pdfUri}
+                setPdfUri={setPdfUri}
+                onGenerateReport={() => {
+                  handleModalDismiss();
+                }}
+                hint={"grupo"}
+                transactions={transactions.map((transaction) => ({
+                  id: transaction.id,
+                  item: transaction.item || "",
+                  transaction_type:
+                    transaction.transaction_type as TransactionFlowType,
+                  quantity: transaction.quantity || 0,
+                  unit_price: transaction.unit_price || 0,
+                  start_date: transaction.start_date || "",
+                  end_date: transaction.end_date || "",
+                  store_id: transaction.store_id || "",
+                  created_by: transaction.created_by || "",
+                }))}
+                storeDetails={
+                  currentOrganization
+                    ? {
+                        id: currentOrganization.id,
+                        description: currentOrganization.name,
+                        is_active: "true",
+                        owner_id: currentOrganization.id,
+                        address_id: currentOrganization.address_id,
+                        warehouse_type: currentOrganization.organization_type,
+                        admin_post: currentOrganization.admin_post,
+                        district: currentOrganization.district,
+                      }
+                    : null
+                }
+              />
+            </View>
           </View>
-        </View>
-      </CustomBottomSheetModal>
-    </View>
+        </CustomBottomSheetModal>
+      </View>
+    </CustomSafeAreaView>
   );
 }

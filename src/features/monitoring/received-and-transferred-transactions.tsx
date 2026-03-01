@@ -16,7 +16,7 @@ export default function ReceivedAndTransferredTransactions({
 	storeType,
 	organizationId,
 }: {
-	storeType: 'GROUP' | 'WAREHOUSE'
+	storeType: 'GROUP' 
 	organizationId: string
 }) {
 	const { userDetails } = useUserDetails()
@@ -80,7 +80,7 @@ export default function ReceivedAndTransferredTransactions({
     <View className="bg-white dark:bg-black px-3">
       <CustomAccordion
         title="Entradas"
-        description="Castanha de caju recebida de outro armazém do mesmo comerciante."
+        description="Produtos das cooperativas e associações"
         isExpanded={expandedSection === "received"}
         onToggle={() => toggleSection("received")}
         badgeCount={flattenedReceivedTransactions.length}
@@ -95,7 +95,7 @@ export default function ReceivedAndTransferredTransactions({
 
       <CustomAccordion
         title="Saídas"
-        description="Castanha de caju transferida para a união das cooperativas."
+        description={"Produtos transferidos à união das cooperativas."}
         isExpanded={expandedSection === "transferred"}
         onToggle={() => toggleSection("transferred")}
         badgeCount={flattenedTransferredTransactions.length}

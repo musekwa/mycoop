@@ -1,151 +1,217 @@
 import EndDateSelector from "@/components/dates/end-date-selector";
 import StartDateSelector from "@/components/dates/start-date-selector";
+import { useQueryOneAndWatchChanges } from "@/hooks/queries";
+import {
+  OrganizationTransactionRecord,
+  TABLES,
+} from "@/library/powersync/app-schemas";
 import { useDateRangeStore } from "@/store/trades";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
-import { z } from "zod";
-
-const DateRangeSchema = z.object({
-  startDate: z.date(),
-  endDate: z.date(),
-});
-
-type DateRangeData = z.infer<typeof DateRangeSchema>;
+import NoContentPlaceholder from "../no-content-placeholder";
 
 interface DateRangeSelectorProps {
   customErrors: Record<string, string>;
   setCustomErrors: (customErrors: Record<string, string>) => void;
-  lastTransactionEndDate: Date | null;
+  storeId: string;
+  item: string;
 }
+
+const ONE_DAY = 86400000;
+const normalize = (d: Date) => {
+  const copy = new Date(d.getTime());
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
 
 export default function DateRangeSelector({
   customErrors,
   setCustomErrors,
-  lastTransactionEndDate,
+  storeId,
+  item,
 }: DateRangeSelectorProps) {
-  const [dateRangeError, setDateRangeError] = useState<string | null>(null);
-  const { startDate: storeStartDate, endDate: storeEndDate } =
+  const { setStartDate: setStoreStartDate, setEndDate: setStoreEndDate } =
     useDateRangeStore();
-  const customErrorsRef = useRef(customErrors);
-  const lastErrorMessageRef = useRef<string | null>(null);
+  const [dateRangeError, setDateRangeError] = useState<string | null>(null);
 
-  // Keep ref in sync with prop
-  useEffect(() => {
-    customErrorsRef.current = customErrors;
-  }, [customErrors]);
+  // Query last transaction for this group + item
+  const query = item
+    ? `SELECT end_date FROM ${TABLES.ORGANIZATION_TRANSACTIONS} WHERE store_id = $1 AND item = $2 ORDER BY end_date DESC LIMIT 1`
+    : "";
+  const params = useMemo(() => (item ? [storeId, item] : []), [storeId, item]);
 
-  const { control, getValues, setValue, watch, clearErrors } =
-    useForm<DateRangeData>({
-      defaultValues: {
-        startDate: new Date(),
-        endDate: new Date(),
-      },
-      resolver: zodResolver(DateRangeSchema),
-    });
+  const { data: lastTransaction } =
+    useQueryOneAndWatchChanges<OrganizationTransactionRecord>(query, params);
 
-  const startDateValue = watch("startDate");
+  // Compute last transaction end date
+  const lastTransactionEndDate = useMemo(() => {
+    if (lastTransaction?.end_date) {
+      return normalize(new Date(lastTransaction.end_date));
+    }
+    return null;
+  }, [lastTransaction?.end_date]);
 
-  // Validate dates and show errors
-  useEffect(() => {
-    if (!storeStartDate || !storeEndDate) return;
-
-    let hasError = false;
-    let errorMessage = "";
-
-    // Check if lastTransactionEndDate is today - no new transactions allowed
+  // Compute initial start date
+  const computedStartDate = useMemo(() => {
+    const today = normalize(new Date());
     if (lastTransactionEndDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const lastDate = new Date(lastTransactionEndDate.getTime());
-      lastDate.setHours(0, 0, 0, 0);
+      // Day after last transaction end_date
+      const dayAfter = normalize(
+        new Date(lastTransactionEndDate.getTime() + ONE_DAY),
+      );
+      // Cannot be after today
+      return dayAfter > today ? today : dayAfter;
+    }
+    // No transaction for this item: 1 month before today
+    const oneMonthAgo = new Date(today.getTime());
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    return normalize(oneMonthAgo);
+  }, [lastTransactionEndDate]);
 
-      if (lastDate.getTime() === today.getTime()) {
-        hasError = true;
-        errorMessage =
+  // Compute initial end date (start + 1 day, capped at today)
+  const computedEndDate = useMemo(() => {
+    const today = normalize(new Date());
+    const dayAfterStart = normalize(
+      new Date(computedStartDate.getTime() + ONE_DAY),
+    );
+    return dayAfterStart > today ? today : dayAfterStart;
+  }, [computedStartDate]);
+
+  const [startDate, setStartDate] = useState<Date>(computedStartDate);
+  const [endDate, setEndDate] = useState<Date>(computedEndDate);
+
+  // Re-initialize when item changes (new computed dates)
+  useEffect(() => {
+    setStartDate(computedStartDate);
+    setEndDate(computedEndDate);
+  }, [computedStartDate, computedEndDate]);
+
+  // Sync to store whenever local dates change
+  useEffect(() => {
+    setStoreStartDate(startDate);
+    setStoreEndDate(endDate);
+  }, [startDate, endDate, setStoreStartDate, setStoreEndDate]);
+
+  // Validation
+  useEffect(() => {
+    const today = normalize(new Date());
+    let error = "";
+
+    if (lastTransactionEndDate) {
+      if (lastTransactionEndDate.getTime() >= today.getTime()) {
+        error =
           "Não é possível registar transacções quando a data da última monitoria é hoje. Aguarde até amanhã.";
       }
     }
 
-    // Check if startDate is less than lastTransactionEndDate
-    if (
-      !hasError &&
-      lastTransactionEndDate &&
-      storeStartDate < lastTransactionEndDate
-    ) {
-      hasError = true;
-      errorMessage =
-        "A data de início deve ser posterior ou igual à data da última monitoria.";
+    if (!error && startDate.getTime() >= endDate.getTime()) {
+      error = "A data de início deve ser anterior à data de fim.";
     }
 
-    // Check if endDate is less than lastTransactionEndDate
-    if (
-      !hasError &&
-      lastTransactionEndDate && storeEndDate &&
-      storeEndDate < lastTransactionEndDate
-    ) {
-      hasError = true;
-      errorMessage =
-        "A data de fim deve ser posterior ou igual à data da última monitoria.";
+    if (!error && startDate.getTime() > today.getTime()) {
+      error = "A data de início não pode ser posterior a hoje.";
     }
 
-    // Check if startDate is greater than or equal to endDate
-    if (!hasError && storeStartDate >= storeEndDate) {
-      hasError = true;
-      errorMessage =
-        "A data de início deve ser pelo menos um dia antes da data de fim.";
+    if (!error && endDate.getTime() > today.getTime()) {
+      error = "A data de fim não pode ser posterior a hoje.";
     }
-    console.log('hasError1', {
-      hasError,
-      storeStartDate,
-      storeEndDate,
-    });
 
-    // Only update state if error message changed
-    if (errorMessage !== lastErrorMessageRef.current) {
-      lastErrorMessageRef.current = errorMessage;
-
-      // Check if this is the "last transaction is today" error
-      let isTodayError = false;
-      if (
-        lastTransactionEndDate &&
-        errorMessage.includes("data da última monitoria é hoje")
-      ) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const lastDate = new Date(lastTransactionEndDate.getTime());
-        lastDate.setHours(0, 0, 0, 0);
-        isTodayError = lastDate.getTime() === today.getTime();
+    // Max range = 1 month
+    if (!error) {
+      const maxEnd = new Date(startDate.getTime());
+      maxEnd.setMonth(maxEnd.getMonth() + 1);
+      if (endDate.getTime() > maxEnd.getTime()) {
+        error = "O intervalo máximo permitido é de 1 mês.";
       }
+    }
 
-      if (hasError) {
-        if (isTodayError) {
-          // Use customErrors.dateMismatch only, clear dateRangeError
-          setDateRangeError(null);
-          if (customErrorsRef.current.dateMismatch !== errorMessage) {
-            setCustomErrors({
-              ...customErrorsRef.current,
-              dateMismatch: errorMessage,
-            });
-          }
-        } else {
-          // Use dateRangeError, clear dateMismatch
-          setDateRangeError(errorMessage);
-          if (customErrorsRef.current.dateMismatch) {
-            setCustomErrors({ ...customErrorsRef.current, dateMismatch: "" });
-          }
-        }
-      } else {
-        // Clear both when no error
-        setDateRangeError(null);
-        if (customErrorsRef.current.dateMismatch) {
-          setCustomErrors({ ...customErrorsRef.current, dateMismatch: "" });
-        }
+    setDateRangeError(error || null);
+
+    // Also sync to customErrors.dateMismatch
+    if (error) {
+      if (customErrors.dateMismatch !== error) {
+        setCustomErrors({ ...customErrors, dateMismatch: error });
+      }
+    } else {
+      if (customErrors.dateMismatch) {
+        setCustomErrors({ ...customErrors, dateMismatch: "" });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeStartDate, storeEndDate, lastTransactionEndDate]);
+  }, [startDate, endDate, lastTransactionEndDate]);
+
+  // Determine min/max for start picker
+  const startPickerConstraints = useMemo(() => {
+    const today = normalize(new Date());
+    // Min: if there's a last transaction, day after it; else 1 month ago
+    let minDate: Date;
+    if (lastTransactionEndDate) {
+      minDate = normalize(new Date(lastTransactionEndDate.getTime() + ONE_DAY));
+    } else {
+      minDate = new Date(today.getTime());
+      minDate.setMonth(minDate.getMonth() - 1);
+    }
+    // Max: endDate - 1 day or today, whichever is earlier
+    const maxByEnd = normalize(new Date(endDate.getTime() - ONE_DAY));
+    const maxDate = maxByEnd < today ? maxByEnd : today;
+    return { minDate, maxDate };
+  }, [lastTransactionEndDate, endDate]);
+
+  // Determine min/max for end picker
+  const endPickerConstraints = useMemo(() => {
+    const today = normalize(new Date());
+    // Min: startDate + 1 day
+    const minDate = normalize(new Date(startDate.getTime() + ONE_DAY));
+    // Max: startDate + 1 month or today, whichever is earlier
+    const maxByRange = new Date(startDate.getTime());
+    maxByRange.setMonth(maxByRange.getMonth() + 1);
+    const maxDate =
+      normalize(maxByRange) < today ? normalize(maxByRange) : today;
+    return { minDate, maxDate };
+  }, [startDate]);
+
+  const handleStartDateChange = useCallback(
+    (date: Date) => {
+      const normalized = normalize(date);
+      setStartDate(normalized);
+      // Auto-adjust end date if it violates rules
+      const today = normalize(new Date());
+      const dayAfter = normalize(new Date(normalized.getTime() + ONE_DAY));
+      if (endDate.getTime() <= normalized.getTime()) {
+        setEndDate(dayAfter > today ? today : dayAfter);
+      }
+      // Check max range
+      const maxEnd = new Date(normalized.getTime());
+      maxEnd.setMonth(maxEnd.getMonth() + 1);
+      if (endDate.getTime() > maxEnd.getTime()) {
+        setEndDate(normalize(maxEnd) > today ? today : normalize(maxEnd));
+      }
+    },
+    [endDate],
+  );
+
+  const handleEndDateChange = useCallback((date: Date) => {
+    setEndDate(normalize(date));
+  }, []);
+
+  // Determine if start date picker should be disabled
+  const isStartDateLocked = useMemo(() => {
+    if (!lastTransactionEndDate) return false;
+    const today = normalize(new Date());
+    const dayAfter = normalize(
+      new Date(lastTransactionEndDate.getTime() + ONE_DAY),
+    );
+    // Locked if the only valid start date is dayAfter (no range to pick from)
+    return dayAfter.getTime() >= today.getTime();
+  }, [lastTransactionEndDate]);
+
+  if (!item) {
+    return (
+      <View className="flex flex-col pb-3">
+        <NoContentPlaceholder message="Seleccione um produto para definir as datas." />
+      </View>
+    );
+  }
 
   return (
     <View className="flex flex-col space-y-6 pb-3">
@@ -154,8 +220,8 @@ export default function DateRangeSelector({
           <Text className="text-gray-600 dark:text-gray-400 text-[12px] italic text-center mx-4">
             Registar transacções ocorridas desde{" "}
             <Text className="font-bold text-[#008000]">
-              {new Date(
-                lastTransactionEndDate.getTime() + 86400000,
+              {normalize(
+                new Date(lastTransactionEndDate.getTime() + ONE_DAY),
               ).toLocaleDateString("pt-BR")}
             </Text>
           </Text>
@@ -167,39 +233,29 @@ export default function DateRangeSelector({
       </View>
 
       <StartDateSelector
-        control={control}
-        lastTransactionEndDate={lastTransactionEndDate}
-        setValue={setValue}
-        getValues={getValues}
+        startDate={startDate}
+        onStartDateChange={handleStartDateChange}
+        minDate={startPickerConstraints.minDate}
+        maxDate={startPickerConstraints.maxDate}
+        isLocked={isStartDateLocked}
       />
 
       <EndDateSelector
-        control={control}
-        lastTransactionEndDate={lastTransactionEndDate}
-        startDate={startDateValue}
-        setValue={setValue}
-        getValues={getValues}
-        setCustomErrors={setCustomErrors}
-        customErrors={customErrors}
-        clearErrors={clearErrors}
+        endDate={endDate}
+        onEndDateChange={handleEndDateChange}
+        minDate={endPickerConstraints.minDate}
+        maxDate={endPickerConstraints.maxDate}
       />
 
-      <View className="mt-2">
-        {dateRangeError && (
+      {dateRangeError && (
+        <View className="mt-2">
           <View className="bg-red-100 p-2 rounded-md">
             <Text className="text-red-500 text-[12px] text-center">
               {dateRangeError}
             </Text>
           </View>
-        )}
-        {customErrors.dateMismatch && (
-          <View className="bg-red-100 p-2 rounded-md">
-            <Text className="text-red-500 text-[12px] text-center">
-              {customErrors.dateMismatch}
-            </Text>
-          </View>
-        )}
-      </View>
+        </View>
+      )}
     </View>
   );
 }

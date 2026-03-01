@@ -1,7 +1,11 @@
 import { appIconUri } from "@/constants/image-uris";
 import { TransactionForReportType } from "@/features/types";
 import { getFormattedDate } from "@/helpers/dates";
-import { translateTransactionFlowToPortuguese } from "@/helpers/trades";
+import {
+  getTransactedItemPortugueseName,
+  translateTransactionFlowToPortuguese,
+} from "@/helpers/trades";
+import { getWarehouseTypeLabel } from "@/helpers/transaction-helpers";
 import { TransactionFlowType, UserRoles } from "@/types";
 
 export const warehouseReportHTML = (
@@ -12,6 +16,8 @@ export const warehouseReportHTML = (
     owner_id: string;
     address_id: string;
     warehouse_type: string;
+    admin_post: string;
+    district: string;
   } | null,
   startDate: Date,
   endDate: Date,
@@ -30,13 +36,20 @@ export const warehouseReportHTML = (
       ? "Promotor da Cooperativa"
       : "Usuário";
 
-  const address = "";
+  const ownerName = storeDetails
+    ? `${storeDetails.description} (${getWarehouseTypeLabel(storeDetails.warehouse_type)})`
+    : "N/A";
+  const address = storeDetails
+    ? [storeDetails.district, storeDetails.admin_post]
+        .filter((v) => v && v !== "N/A")
+        .join(", ") || "N/A"
+    : "N/A";
 
   const ownerInfo = `
         <div style="display: flex; flex-direction: row; align-items: center; gap: 20px; margin-top: 20px;">
             <div>
                 <p style="font-size: 12px; font-family: Helvetica Neue; margin: 0;">
-                    <strong>Proprietário:</strong> ${"N/A"}
+                    <strong>Proprietário:</strong> ${ownerName}
                 </p>
                 <p style="font-size: 12px; font-family: Helvetica Neue; margin: 0;">
                     <strong>Endereço:</strong> ${address}
@@ -49,6 +62,7 @@ export const warehouseReportHTML = (
 		<table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10px; font-family: Helvetica Neue;">
 			<thead>
 				<tr style="background-color: #f2f2f2;">
+					<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Produto</th>
 					<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Início</th>
 					<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fim</th>
 					<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Transacção</th>
@@ -62,6 +76,7 @@ export const warehouseReportHTML = (
           .map(
             (transaction) => `
 					<tr>
+						<td style="border: 1px solid #ddd; padding: 8px;">${getTransactedItemPortugueseName(transaction.item)}</td>
 						<td style="border: 1px solid #ddd; padding: 8px;">${getFormattedDate(new Date(transaction.start_date))}</td>
 						<td style="border: 1px solid #ddd; padding: 8px;">${getFormattedDate(new Date(transaction.end_date))}</td>
 						<td style="border: 1px solid #ddd; padding: 8px;">${translateTransactionFlowToPortuguese(transaction.transaction_type as TransactionFlowType)}</td>
@@ -87,11 +102,11 @@ export const warehouseReportHTML = (
 				style="width: 60px; height: 60px; border-radius: 100%; padding-bottom: 10px;" 
 			/>
 			<h3 style="font-size: 12px; font-family: Helvetica Neue; font-weight: bold; margin-top: -2px;">
-				Instituto de Amêndoas de Moçambique, IP<br />(IAM, IP)
+				Associação Moçambicana para Promoção do Cooperativismo Moderno<br />(AMPCM)
 			</h3>
 		</div>    
 		<div style="font-size: 12px font-family: Helvetica Neue; font-weight: normal; text-align: center; padding-bottom: 10px;">
-			Relatório das Transacções de ${"N/A"}
+			Relatório das Transacções de ${storeDetails?.description || "N/A"}
 			<br />
 			<strong>Período de ${formattedStartDate} a ${formattedEndDate}</strong>
 		</div>

@@ -65,7 +65,7 @@ export default function TransactionActionButtons({
   const unconfirmedCount = unconfirmedTransactions?.[0]?.count || 0;
 
   return (
-    <View className="flex flex-row justify-around items-center pb-4 mx-3 rounded-md border-gray-300 space-x-3">
+    <View className="flex flex-row justify-around items-center pb-4 mx-3 rounded-md border-gray-300 gap-x-3">
       <TouchableOpacity
         onPress={() => {
           setShowOverview(!showOverview);
