@@ -1,21 +1,13 @@
-// React and React Native imports
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useState } from "react";
 import { StatusBar, Text, View } from "react-native";
 
-// Third party libraries
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 
-// Constants
-import {
-  actorOrganizationsImageUri,
-  ampcmWhiteFullLogoUri,
-  farmerCategoryImageUri,
-} from "@/constants/image-uris";
-
-// Types
-import { OrganizationTypes } from "@/types";
+import { ampcmWhiteFullLogoUri } from "@/constants/image-uris";
+import { getTransactedItemPortugueseName } from "@/helpers/trades";
+import { OrganizationTypes, TransactionFlowType } from "@/types";
 
 import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import CustomShimmerPlaceholder from "@/components/skeletons/custom-shimmer-placeholder";
@@ -27,357 +19,296 @@ import { getAdminPostsByDistrictId } from "@/library/sqlite/selects";
 import { getUserSession } from "@/library/supabase/user-auth";
 import { Session } from "@supabase/supabase-js";
 import { useRouter } from "expo-router";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
 
-// Custom hook for data processing
-const useProcessedData = (userDetails: UserDetailsRecord | null) => {
-  const [foundAdminPosts, setFoundAdminPosts] = useState<
-    { id: string; name: string }[]
-  >([]);
-  const [farmersByAdminPost, setFarmersByAdminPost] = useState<
-    Array<{
-      adminPost: { id: string; name: string };
-      smallScaleFarmerCount: number;
-      largeScaleFarmerCount: number;
-      sprayingServiceProviderCount: number;
-    }>
-  >([]);
-  const [organizationsByAdminPost, setOrganizationsByAdminPost] = useState<
-    Array<{
-      adminPost: { id: string; name: string };
-      cooperativeCount: number;
-      associationCount: number;
-      unionCount: number;
-    }>
-  >([]);
+// ─── Data Hook ───────────────────────────────────────────────────────────────
+const useHomeData = (userDetails: UserDetailsRecord | null) => {
+  const [adminPosts, setAdminPosts] = useState<{ id: string; name: string }[]>(
+    [],
+  );
 
-  // Only run queries if PowerSync is ready and we have a district ID
   const districtId = userDetails?.district_id;
   const shouldQuery = !!districtId;
 
-  const {
-    data: farmers,
-    isLoading: isFarmersLoading,
-    error: farmersError,
-    isError: isFarmersError,
-  } = useQueryMany<{
+  // Farmers filtered by category = FARMER
+  const { data: farmers, isLoading: isFarmersLoading } = useQueryMany<{
     id: string;
     admin_post_id: string;
   }>(
     shouldQuery
       ? `
-		SELECT 
-			ad.actor_id as id,
-			addr.admin_post_id as admin_post_id
-		FROM ${TABLES.ACTOR_DETAILS} ad
-		JOIN ${TABLES.ADDRESS_DETAILS} addr 
-			ON addr.owner_id = ad.actor_id AND addr.owner_type = 'FARMER'
-		WHERE addr.district_id = '${districtId}'
-		GROUP BY ad.actor_id, addr.admin_post_id
-	`
+      SELECT 
+        a.id,
+        addr.admin_post_id
+      FROM ${TABLES.ACTORS} a
+      INNER JOIN ${TABLES.ADDRESS_DETAILS} addr 
+        ON addr.owner_id = a.id AND addr.owner_type = 'FARMER'
+      WHERE a.category = 'FARMER' AND addr.district_id = '${districtId}'
+      GROUP BY a.id, addr.admin_post_id
+    `
       : "",
   );
 
-  const {
-    data: organizations,
-    isLoading: isOrganizationsLoading,
-    error: organizationsError,
-    isError: isOrganizationsError,
-  } = useQueryMany<{
-    id: string;
-    admin_post_id: string;
-    organization_type: OrganizationTypes;
-  }>(
-    shouldQuery
-      ? `
-		SELECT 
-			a.id as id,
-			ac.subcategory as organization_type,
-			addr.admin_post_id as admin_post_id
-		FROM ${TABLES.ACTORS} a
-		INNER JOIN ${TABLES.ACTOR_DETAILS} ad ON ad.actor_id = a.id
-		LEFT JOIN ${TABLES.ACTOR_CATEGORIES} ac ON ac.actor_id = a.id AND ac.category = 'GROUP'
-		LEFT JOIN ${TABLES.ADDRESS_DETAILS} addr 
-			ON addr.owner_id = a.id AND addr.owner_type = 'GROUP'
-		WHERE addr.district_id = '${districtId}' AND a.category = 'GROUP'
-	`
-      : "",
-  );
+  // Groups (cooperatives, associations, unions)
+  const { data: organizations, isLoading: isOrganizationsLoading } =
+    useQueryMany<{
+      id: string;
+      admin_post_id: string;
+      organization_type: OrganizationTypes;
+    }>(
+      shouldQuery
+        ? `
+      SELECT 
+        a.id,
+        ac.subcategory as organization_type,
+        addr.admin_post_id
+      FROM ${TABLES.ACTORS} a
+      INNER JOIN ${TABLES.ACTOR_CATEGORIES} ac ON ac.actor_id = a.id AND ac.category = 'GROUP'
+      INNER JOIN ${TABLES.ADDRESS_DETAILS} addr 
+        ON addr.owner_id = a.id AND addr.owner_type = 'GROUP'
+      WHERE addr.district_id = '${districtId}' AND a.category = 'GROUP'
+    `
+        : "",
+    );
 
-  // Only fetch admin posts if PowerSync is ready
+  // Aggregated quantities by item across all groups in the district
+  const { data: aggregatedByItem, isLoading: isAggregatedLoading } =
+    useQueryMany<{
+      item: string;
+      total_quantity: number;
+    }>(
+      shouldQuery
+        ? `
+      SELECT 
+        ot.item,
+        SUM(
+          CASE 
+            WHEN ot.transaction_type IN ('${TransactionFlowType.AGGREGATED}', '${TransactionFlowType.TRANSFERRED_IN}')
+            THEN ot.quantity 
+            WHEN ot.transaction_type IN ('${TransactionFlowType.SOLD}', '${TransactionFlowType.TRANSFERRED_OUT}', '${TransactionFlowType.LOST}')
+            THEN -ot.quantity
+            ELSE 0
+          END
+        ) as total_quantity
+      FROM ${TABLES.ORGANIZATION_TRANSACTIONS} ot
+      INNER JOIN ${TABLES.ACTORS} a ON a.id = ot.store_id
+      INNER JOIN ${TABLES.ADDRESS_DETAILS} addr 
+        ON addr.owner_id = a.id AND addr.owner_type = 'GROUP'
+      WHERE addr.district_id = '${districtId}'
+        AND ot.item IS NOT NULL
+      GROUP BY ot.item
+    `
+        : "",
+    );
+
+  // Fetch admin posts
   useEffect(() => {
-    if (!shouldQuery) {
-      setFoundAdminPosts([]);
+    if (!shouldQuery || !districtId) {
+      setAdminPosts([]);
       return;
     }
-
     const fetchAdminPosts = async () => {
       try {
-        if (!districtId) {
-          return;
-        }
         const posts = await getAdminPostsByDistrictId(districtId);
-        if (posts && posts.length > 0) {
-          setFoundAdminPosts(
-            posts.map((post) => ({ id: post.id, name: post.name })),
-          );
-        } else {
-          setFoundAdminPosts([]);
-        }
+        setAdminPosts(
+          posts?.length ? posts.map((p) => ({ id: p.id, name: p.name })) : [],
+        );
       } catch (error) {
         console.error("Error getting admin posts:", error);
-        setFoundAdminPosts([]);
+        setAdminPosts([]);
       }
     };
-
     fetchAdminPosts();
   }, [shouldQuery, districtId]);
 
-  // Only process data if we have all required data
-  useEffect(() => {
-    // Ensure all data arrays exist before processing
-    if (
-      !Array.isArray(foundAdminPosts) ||
-      !Array.isArray(farmers) ||
-      !Array.isArray(organizations)
-    ) {
-      return;
-    }
-
-    const results = foundAdminPosts.map((post) => {
+  // Process data by admin post
+  const dataByAdminPost = useMemo(() => {
+    if (!adminPosts.length) return [];
+    return adminPosts.map((post) => {
       const postFarmers = (farmers || []).filter(
-        (farmer) => farmer?.admin_post_id == post.id,
+        (f) => f.admin_post_id === post.id,
       );
-      const postOrganizations = (organizations || []).filter(
-        (organization) => organization?.admin_post_id == post.id,
+      const postOrgs = (organizations || []).filter(
+        (o) => o.admin_post_id === post.id,
       );
-
       return {
-        farmers: {
-          adminPost: post,
-          smallScaleFarmerCount: postFarmers.length,
-          largeScaleFarmerCount: postFarmers.length,
-          sprayingServiceProviderCount: postFarmers.length,
-        },
-        organizations: {
-          adminPost: post,
-          cooperativeCount: postOrganizations.filter(
-            (organization) =>
-              organization.organization_type == OrganizationTypes.COOPERATIVE,
-          ).length,
-          associationCount: postOrganizations.filter(
-            (organization) =>
-              organization.organization_type == OrganizationTypes.ASSOCIATION,
-          ).length,
-          unionCount: postOrganizations.filter(
-            (organization) =>
-              organization.organization_type == OrganizationTypes.COOP_UNION,
-          ).length,
-        },
+        adminPost: post,
+        farmerCount: postFarmers.length,
+        cooperativeCount: postOrgs.filter(
+          (o) => o.organization_type === OrganizationTypes.COOPERATIVE,
+        ).length,
+        associationCount: postOrgs.filter(
+          (o) => o.organization_type === OrganizationTypes.ASSOCIATION,
+        ).length,
+        unionCount: postOrgs.filter(
+          (o) => o.organization_type === OrganizationTypes.COOP_UNION,
+        ).length,
       };
     });
+  }, [adminPosts, farmers, organizations]);
 
-    setFarmersByAdminPost(results.map((r) => r.farmers));
-    setOrganizationsByAdminPost(results.map((r) => r.organizations));
-  }, [shouldQuery, foundAdminPosts, farmers, organizations]);
-
-  // const computedFarmers = useMemo(
-  // 	() => [
-  // 		{
-  // 			name: 'Familiares',
-  // 			icon: 'person',
-  // 			count: farmersByAdminPost.reduce((sum, post) => sum + post.smallScaleFarmerCount, 0),
-  // 		},
-  // 		{
-  // 			name: 'Comerciais',
-  // 			icon: 'person',
-  // 			count: farmersByAdminPost.reduce((sum, post) => sum + post.largeScaleFarmerCount, 0),
-  // 		},
-  // 		{
-  // 			name: 'Prov. de Serviços',
-  // 			icon: 'person',
-  // 			count: farmersByAdminPost.reduce((sum, post) => sum + post.sprayingServiceProviderCount, 0),
-  // 		},
-  // 	],
-  // 	[farmersByAdminPost],
-  // )
-
-  const computedOrganizations = useMemo(
-    () => [
-      {
-        name: "Cooperativas",
-        icon: "people",
-        count: organizationsByAdminPost.reduce(
-          (sum, post) => sum + post.cooperativeCount,
-          0,
-        ),
-      },
-      {
-        name: "Associações",
-        icon: "people",
-        count: organizationsByAdminPost.reduce(
-          (sum, post) => sum + post.associationCount,
-          0,
-        ),
-      },
-      {
-        name: "Uniões",
-        icon: "people",
-        count: organizationsByAdminPost.reduce(
-          (sum, post) => sum + post.unionCount,
-          0,
-        ),
-      },
-    ],
-    [organizationsByAdminPost],
-  );
+  const totalFarmers = farmers?.length || 0;
+  const totalCooperatives =
+    organizations?.filter(
+      (o) => o.organization_type === OrganizationTypes.COOPERATIVE,
+    ).length || 0;
+  const totalAssociations =
+    organizations?.filter(
+      (o) => o.organization_type === OrganizationTypes.ASSOCIATION,
+    ).length || 0;
+  const totalUnions =
+    organizations?.filter(
+      (o) => o.organization_type === OrganizationTypes.COOP_UNION,
+    ).length || 0;
+  const totalGroups = totalCooperatives + totalAssociations + totalUnions;
 
   return {
-    farmersByAdminPost,
-    organizationsByAdminPost,
-    // computedFarmers,
-    computedOrganizations,
-    // isLoading,
-    foundAdminPosts,
+    dataByAdminPost,
+    aggregatedByItem: aggregatedByItem || [],
+    totalFarmers,
+    totalGroups,
+    totalCooperatives,
+    totalAssociations,
+    totalUnions,
+    isLoading:
+      isFarmersLoading || isOrganizationsLoading || isAggregatedLoading,
   };
 };
 
-// Card Skeleton Component
-const CardSkeleton = () => (
-  <View className="border rounded-lg border-gray-200 dark:border-gray-700 p-4 mb-3 bg-white dark:bg-gray-800">
-    <View className="flex flex-row items-center mb-3">
+// ─── Shimmer Placeholder ─────────────────────────────────────────────────────
+const ShimmerRow = () => (
+  <View className="flex-row gap-3 mb-3">
+    {[1, 2, 3].map((_, i) => (
       <CustomShimmerPlaceholder
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: 100,
-          borderWidth: 1,
-          borderColor: "#008000",
-          padding: 2,
-        }}
+        key={i}
+        style={{ flex: 1, height: 80, borderRadius: 12 }}
       />
-      <CustomShimmerPlaceholder
-        style={{
-          width: 120,
-          height: 20,
-          borderRadius: 4,
-          marginLeft: 8,
-        }}
-      />
-    </View>
-    <View className="flex-row flex-wrap gap-2">
-      {[1, 2, 3].map((_, index) => (
-        <CustomShimmerPlaceholder
-          key={index}
-          style={{
-            width: 100,
-            height: 60,
-            borderRadius: 8,
-          }}
-        />
-      ))}
-    </View>
+    ))}
   </View>
 );
 
-// Helper function to get icon for each label
-const getIconForLabel = (label: string): string => {
-  const iconMap: { [key: string]: string } = {
-    // Farmers
-    Familiares: "home-outline",
-    Comerciais: "business-outline",
-    "Prov. Serviços": "construct-outline",
-    // Organizations
-    Cooperativas: "people-outline",
-    Associações: "people-circle-outline",
-    Uniões: "link-outline",
-  };
-  return iconMap[label] || "ellipse-outline";
+// ─── Hero Summary Card ───────────────────────────────────────────────────────
+const HeroCard = ({
+  icon,
+  label,
+  value,
+  color,
+  delay,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  color: string;
+  delay: number;
+}) => (
+  <Animated.View
+    entering={FadeInDown.duration(400).delay(delay).springify()}
+    className="flex-1 rounded-2xl p-4 border"
+    style={{
+      backgroundColor: `${color}12`,
+      borderColor: `${color}30`,
+    }}
+  >
+    <View
+      className="w-9 h-9 rounded-full items-center justify-center mb-2"
+      style={{ backgroundColor: `${color}20` }}
+    >
+      <Ionicons name={icon as any} size={18} color={color} />
+    </View>
+    <Text className="font-bold text-[26px]" style={{ color }}>
+      {Intl.NumberFormat("pt-BR").format(value)}
+    </Text>
+    <Text className="text-gray-500 dark:text-gray-400 text-[11px] mt-1">
+      {label}
+    </Text>
+  </Animated.View>
+);
+
+// ─── Aggregated Stock Card ───────────────────────────────────────────────────
+const ITEM_COLORS: Record<string, string> = {
+  CASHEWNUT: "#D97706",
+  GROUNDNUT: "#059669",
+  BEANS: "#7C3AED",
+};
+const ITEM_ICONS: Record<string, string> = {
+  CASHEWNUT: "nutrition-outline",
+  GROUNDNUT: "leaf-outline",
+  BEANS: "ellipse-outline",
 };
 
-// Summary Stats Component - Shows totals at the top
-const SummaryStats = ({
-  totals,
-  title,
-  iconUri,
+const AggregatedStockSection = ({
+  data,
   isLoading,
 }: {
-  totals: any[];
-  title: string;
-  iconUri: string;
+  data: { item: string; total_quantity: number }[];
   isLoading: boolean;
 }) => {
-  if (isLoading) {
-    return (
-      <View className="mb-4">
-        <View className="flex-row items-center mb-3">
-          <CustomShimmerPlaceholder
-            style={{ width: 40, height: 40, borderRadius: 20 }}
-          />
-          <CustomShimmerPlaceholder
-            style={{ width: 100, height: 20, borderRadius: 4, marginLeft: 8 }}
-          />
-        </View>
-        <View className="flex-row gap-3">
-          {[1, 2, 3].map((_, i) => (
-            <CustomShimmerPlaceholder
-              key={i}
-              style={{ flex: 1, height: 80, borderRadius: 12 }}
-            />
-          ))}
-        </View>
-      </View>
-    );
-  }
+  if (isLoading) return <ShimmerRow />;
+
+  const itemData = data
+    .filter((d) => d.item && d.total_quantity != null)
+    .map((d) => ({
+      item: d.item,
+      quantity: Math.max(d.total_quantity || 0, 0),
+    }));
+  const totalStock = itemData.reduce((sum, d) => sum + d.quantity, 0);
+
+  if (itemData.length === 0) return null;
 
   return (
     <View className="mb-6">
       <View className="flex-row items-center mb-4">
-        <View className="w-10 h-10 rounded-full bg-[#008000]/10 dark:bg-[#008000]/20 items-center justify-center">
-          <Image
-            source={{ uri: iconUri }}
-            style={{ width: 24, height: 24 }}
-            // contentFit=""
-          />
+        <View className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/30 items-center justify-center">
+          <Ionicons name="cube-outline" size={18} color="#D97706" />
         </View>
-        <Text className="text-gray-900 dark:text-white font-bold text-[18px] ml-3">
-          {title}
-        </Text>
+        <View className="ml-3 flex-1">
+          <Text className="text-gray-900 dark:text-white font-bold text-[16px]">
+            Estoque Agregado
+          </Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-[11px]">
+            Total: {Intl.NumberFormat("pt-BR").format(totalStock)} Kg
+          </Text>
+        </View>
       </View>
       <View className="flex-row gap-3">
-        {totals.map((total, index) => {
-          const totalCount = totals.reduce((sum, t) => sum + t.count, 0);
-          const percentage =
-            totalCount > 0 ? ((total.count / totalCount) * 100).toFixed(0) : 0;
-
+        {itemData.map((d, index) => {
+          const color = ITEM_COLORS[d.item] || "#6B7280";
+          const icon = ITEM_ICONS[d.item] || "ellipse-outline";
+          const pct = totalStock > 0 ? (d.quantity / totalStock) * 100 : 0;
           return (
             <Animated.View
-              key={index}
-              entering={FadeIn.duration(300).delay(index * 50)}
-              className="flex-1 bg-[#008000]/10 dark:bg-[#008000]/20 rounded-xl p-4 border border-[#008000]/20 dark:border-[#008000]/30"
+              key={d.item}
+              entering={FadeInDown.duration(400)
+                .delay(index * 80)
+                .springify()}
+              className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700"
             >
-              <View className="flex-row items-center mb-2">
-                <View className="w-8 h-8 rounded-full bg-[#008000]/20 dark:bg-[#008000]/30 items-center justify-center">
-                  <Ionicons
-                    name={getIconForLabel(total.name) as any}
-                    size={16}
-                    color="#008000"
-                  />
-                </View>
-                <Text
-                  className="text-[#008000] dark:text-[#00cc00] text-[10px] ml-2 font-semibold flex-1"
-                  numberOfLines={1}
-                >
-                  {total.name}
-                </Text>
+              <View
+                className="w-8 h-8 rounded-full items-center justify-center mb-2"
+                style={{ backgroundColor: `${color}18` }}
+              >
+                <Ionicons name={icon as any} size={16} color={color} />
               </View>
-              <Text className="text-[#008000] dark:text-[#00cc00] font-bold text-[24px] mb-1">
-                {total.count}
+              <Text className="font-bold text-[18px]" style={{ color }}>
+                {Intl.NumberFormat("pt-BR").format(d.quantity)}
               </Text>
-              <View className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <Text className="text-gray-500 dark:text-gray-400 text-[10px]">
+                Kg
+              </Text>
+              <Text
+                className="text-[10px] mt-1 font-medium"
+                numberOfLines={1}
+                style={{ color }}
+              >
+                {getTransactedItemPortugueseName(d.item)}
+              </Text>
+              <View className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full mt-2 overflow-hidden">
                 <View
-                  className="h-full bg-[#008000] rounded-full"
-                  style={{ width: `${percentage}%` as unknown as number }}
+                  className="h-full rounded-full"
+                  style={{
+                    backgroundColor: color,
+                    width: `${pct}%` as unknown as number,
+                  }}
                 />
               </View>
             </Animated.View>
@@ -388,181 +319,154 @@ const SummaryStats = ({
   );
 };
 
-// Card-based component for displaying data
-const DataCard = ({
-  title,
-  iconUri,
+// ─── Admin Post Breakdown ────────────────────────────────────────────────────
+const AdminPostBreakdown = ({
   data,
-  totals,
   isLoading,
-  labels,
 }: {
-  title: string;
-  iconUri: string;
-  data: any[];
-  totals: any[];
+  data: Array<{
+    adminPost: { id: string; name: string };
+    farmerCount: number;
+    cooperativeCount: number;
+    associationCount: number;
+    unionCount: number;
+  }>;
   isLoading: boolean;
-  labels: string[];
 }) => {
-  return (
-    <View className="flex flex-col rounded-2xl p-5 mb-4 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700">
-      <View className="flex flex-row items-center justify-between mb-5">
-        <View className="flex flex-row items-center">
-          <View className="w-10 h-10 rounded-full bg-[#008000]/10 dark:bg-[#008000]/20 items-center justify-center">
-            <Image
-              source={{ uri: iconUri }}
-              style={{ width: 24, height: 24 }}
-              contentFit="contain"
+  if (isLoading) {
+    return (
+      <View>
+        {[1, 2].map((_, i) => (
+          <View key={i} className="mb-3">
+            <CustomShimmerPlaceholder
+              style={{ width: "100%", height: 120, borderRadius: 16 }}
             />
           </View>
-          <Text className="text-gray-900 dark:text-white font-bold text-[18px] ml-3">
-            {title}
-          </Text>
-        </View>
-        <View className="flex-row items-center bg-[#008000]/10 dark:bg-[#008000]/20 px-3 py-1 rounded-full">
-          <Ionicons name="stats-chart-outline" size={14} color="#008000" />
-          <Text className="text-[#008000] dark:text-[#00cc00] font-bold text-[12px] ml-1">
-            {totals.reduce((sum, t) => sum + t.count, 0)}
-          </Text>
-        </View>
+        ))}
       </View>
+    );
+  }
 
-      {isLoading ? (
-        <CardSkeleton />
-      ) : (
-        <>
-          {data.length === 0 ? (
-            <View className="py-8 items-center">
-              <Ionicons name="document-outline" size={48} color="#9CA3AF" />
-              <Text className="text-gray-400 dark:text-gray-500 text-[14px] mt-2">
-                Nenhum dado disponível
+  if (data.length === 0) {
+    return (
+      <View className="py-8 items-center">
+        <Ionicons name="map-outline" size={48} color="#9CA3AF" />
+        <Text className="text-gray-400 dark:text-gray-500 text-[13px] mt-2">
+          Nenhum posto administrativo encontrado
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-y-3">
+      {data.map((item, index) => {
+        const totalGroups =
+          item.cooperativeCount + item.associationCount + item.unionCount;
+        return (
+          <Animated.View
+            key={item.adminPost.id}
+            entering={FadeInDown.duration(400)
+              .delay(index * 80)
+              .springify()}
+            className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700"
+          >
+            {/* Admin post header */}
+            <View className="flex-row items-center mb-3">
+              <View className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center">
+                <Ionicons name="location" size={14} color="#2563EB" />
+              </View>
+              <Text
+                className="text-gray-900 dark:text-white font-semibold text-[14px] ml-2 flex-1"
+                numberOfLines={1}
+              >
+                {item.adminPost.name}
               </Text>
             </View>
-          ) : (
-            <View className="space-y-4">
-              {data.map((item, index) => {
-                // Extract values based on data type
-                let values: { label: string; count: number }[] = [];
 
-                if (item.smallScaleFarmerCount !== undefined) {
-                  values = [
-                    {
-                      label: labels[0],
-                      count: item.smallScaleFarmerCount || 0,
-                    },
-                    {
-                      label: labels[1],
-                      count: item.largeScaleFarmerCount || 0,
-                    },
-                    {
-                      label: labels[2],
-                      count: item.sprayingServiceProviderCount || 0,
-                    },
-                  ];
-                } else if (item.cooperativeCount !== undefined) {
-                  values = [
-                    { label: labels[0], count: item.cooperativeCount || 0 },
-                    { label: labels[1], count: item.associationCount || 0 },
-                    { label: labels[2], count: item.unionCount || 0 },
-                  ];
-                }
-
-                const totalForPost = values.reduce(
-                  (sum, v) => sum + v.count,
-                  0,
-                );
-
-                return (
-                  <Animated.View
-                    key={index}
-                    entering={FadeIn.duration(300).delay(index * 50)}
-                    className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
-                  >
-                    <View className="flex flex-row items-center justify-between mb-4">
-                      <View className="flex flex-row items-center flex-1">
-                        <View className="w-8 h-8 rounded-full bg-[#008000]/10 dark:bg-[#008000]/20 items-center justify-center">
-                          <Ionicons name="location" size={16} color="#008000" />
-                        </View>
-                        <Text
-                          className="text-gray-900 dark:text-white font-semibold text-[15px] ml-2 flex-1"
-                          numberOfLines={1}
-                        >
-                          {item.adminPost?.name || "N/A"}
-                        </Text>
-                      </View>
-                      <View className="bg-[#008000]/10 dark:bg-[#008000]/20 px-2 py-1 rounded-full">
-                        <Text className="text-[#008000] dark:text-[#00cc00] font-bold text-[12px]">
-                          {totalForPost}
-                        </Text>
-                      </View>
-                    </View>
-                    <View className="flex-row gap-2">
-                      {values.map((value, valueIndex) => (
-                        <View
-                          key={valueIndex}
-                          className="flex-1 bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-                        >
-                          <View className="flex flex-row items-center mb-2">
-                            <Ionicons
-                              name={getIconForLabel(value.label) as any}
-                              size={12}
-                              color="#008000"
-                            />
-                            <Text
-                              className="text-gray-600 dark:text-gray-400 text-[10px] ml-1 flex-1"
-                              numberOfLines={1}
-                            >
-                              {value.label}
-                            </Text>
-                          </View>
-                          <Text className="text-gray-900 dark:text-white font-bold text-[20px]">
-                            {value.count}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  </Animated.View>
-                );
-              })}
+            {/* Stats row */}
+            <View className="flex-row gap-2">
+              {/* Farmers */}
+              <View className="flex-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3">
+                <Text className="text-emerald-600 dark:text-emerald-400 text-[10px] font-medium mb-1">
+                  Produtores
+                </Text>
+                <Text className="text-emerald-700 dark:text-emerald-300 font-bold text-[20px]">
+                  {item.farmerCount}
+                </Text>
+              </View>
+              {/* Groups breakdown */}
+              <View className="flex-1 bg-violet-50 dark:bg-violet-900/20 rounded-xl p-3">
+                <Text className="text-violet-600 dark:text-violet-400 text-[10px] font-medium mb-1">
+                  Grupos ({totalGroups})
+                </Text>
+                <View className="gap-y-1">
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-500 dark:text-gray-400 text-[9px]">
+                      Cooperativas
+                    </Text>
+                    <Text className="text-violet-700 dark:text-violet-300 font-bold text-[11px]">
+                      {item.cooperativeCount}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-500 dark:text-gray-400 text-[9px]">
+                      Associações
+                    </Text>
+                    <Text className="text-violet-700 dark:text-violet-300 font-bold text-[11px]">
+                      {item.associationCount}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-500 dark:text-gray-400 text-[9px]">
+                      Uniões
+                    </Text>
+                    <Text className="text-violet-700 dark:text-violet-300 font-bold text-[11px]">
+                      {item.unionCount}
+                    </Text>
+                  </View>
+                </View>
+              </View>
             </View>
-          )}
-        </>
-      )}
+          </Animated.View>
+        );
+      })}
     </View>
   );
 };
 
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const { userDetails, isLoading: isUserDetailsLoading } = useUserDetails();
   const { districtName } = useUserDistrict();
   const [session, setSession] = useState<Session | null>(null);
-
   const router = useRouter();
-  const {
-    farmersByAdminPost,
-    organizationsByAdminPost,
-    // computedFarmers,
-    computedOrganizations,
-    // isLoading: isDataLoading,
-    // foundAdminPosts,
-  } = useProcessedData(userDetails);
 
-  // Check session
+  const {
+    dataByAdminPost,
+    aggregatedByItem,
+    totalFarmers,
+    totalGroups,
+    totalCooperatives,
+    totalAssociations,
+    totalUnions,
+    isLoading,
+  } = useHomeData(userDetails);
+
+  const isDataReady = !isUserDetailsLoading && !isLoading;
+
   useEffect(() => {
     const checkSession = async () => {
-      const { session, error } = await getUserSession();
+      const { session } = await getUserSession();
       setSession(session);
       if (!session) {
         router.replace("/(auth)/login");
       }
     };
-
     if (!session) {
       checkSession();
     }
   }, [session, router]);
-
-  useEffect(() => {}, []);
 
   return (
     <RouteProtection>
@@ -573,67 +477,101 @@ export default function HomeScreen() {
           contentContainerStyle={{
             paddingTop: StatusBar.currentHeight || 20,
             flexGrow: 1,
-            justifyContent: "center",
             paddingBottom: 20,
             backgroundColor: "#008000",
           }}
           showsVerticalScrollIndicator={false}
         >
-          <View className=" bg-[#008000]">
-            <View className="relative justify-center items-center">
+          {/* ── Green Header ── */}
+          <View className="bg-[#008000]">
+            <View className="items-center justify-center">
               <Image
                 source={{ uri: ampcmWhiteFullLogoUri }}
                 style={{ width: 160, height: 80 }}
                 contentFit="contain"
               />
             </View>
-            <View className="pb-4 gap-2 px-3 flex flex-row">
-              <Ionicons name="location-outline" size={20} color="white" />
+            <View className="pb-4 gap-2 px-4 flex-row items-center">
+              <Ionicons name="location-outline" size={18} color="white" />
               <Text className="text-white text-[14px] font-semibold">
                 {districtName || "Distrito não definido"}
               </Text>
             </View>
           </View>
-          <View className="flex-1 py-6 px-4 rounded-t-3xl bg-gray-50 dark:bg-black">
-            {/* Summary Statistics Section */}
-            <View className="mb-6">
-              <Text className="text-gray-900 dark:text-white font-bold text-[20px] mb-4">
-                Visão Geral
-              </Text>
-              <SummaryStats
-                title="Produtores"
-                iconUri={farmerCategoryImageUri}
-                totals={[]}
-                isLoading={isUserDetailsLoading}
-              />
-              <SummaryStats
-                title="Grupos"
-                iconUri={actorOrganizationsImageUri}
-                totals={computedOrganizations}
-                isLoading={isUserDetailsLoading}
-              />
-            </View>
 
-            {/* Detailed Breakdown Section */}
-            <View className="mb-2">
-              <Text className="text-gray-900 dark:text-white font-bold text-[20px] mb-4">
-                Detalhes por Posto Administrativo
-              </Text>
-              <DataCard
-                title="Produtores"
-                iconUri={farmerCategoryImageUri}
-                labels={["Familiares", "Comerciais", "Prov. Serviços"]}
-                data={farmersByAdminPost}
-                totals={[]}
-                isLoading={isUserDetailsLoading}
-              />
-              <DataCard
-                title="Grupos"
-                iconUri={actorOrganizationsImageUri}
-                labels={["Cooperativas", "Associações", "Uniões"]}
-                data={organizationsByAdminPost}
-                totals={computedOrganizations}
-                isLoading={isUserDetailsLoading}
+          {/* ── Content Area ── */}
+          <View className="flex-1 pt-6 px-4 rounded-t-3xl bg-gray-50 dark:bg-black">
+            {/* Hero summary cards */}
+            <Text className="text-gray-900 dark:text-white font-bold text-[20px] mb-4">
+              Visão Geral
+            </Text>
+            {!isDataReady ? (
+              <ShimmerRow />
+            ) : (
+              <View className="flex-row gap-3 mb-6">
+                <HeroCard
+                  icon="people-outline"
+                  label="Produtores"
+                  value={totalFarmers}
+                  color="#059669"
+                  delay={0}
+                />
+                <HeroCard
+                  icon="business-outline"
+                  label="Grupos"
+                  value={totalGroups}
+                  color="#2563EB"
+                  delay={80}
+                />
+              </View>
+            )}
+
+            {/* Group type breakdown */}
+            {isDataReady && totalGroups > 0 && (
+              <View className="flex-row gap-3 mb-6">
+                <HeroCard
+                  icon="people-outline"
+                  label="Cooperativas"
+                  value={totalCooperatives}
+                  color="#7C3AED"
+                  delay={160}
+                />
+                <HeroCard
+                  icon="people-circle-outline"
+                  label="Associações"
+                  value={totalAssociations}
+                  color="#D97706"
+                  delay={240}
+                />
+                <HeroCard
+                  icon="link-outline"
+                  label="Uniões"
+                  value={totalUnions}
+                  color="#0891B2"
+                  delay={320}
+                />
+              </View>
+            )}
+
+            {/* Aggregated Stock */}
+            <AggregatedStockSection
+              data={aggregatedByItem}
+              isLoading={!isDataReady}
+            />
+
+            {/* Admin Post Breakdown */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-4">
+                <View className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center">
+                  <Ionicons name="map-outline" size={18} color="#2563EB" />
+                </View>
+                <Text className="text-gray-900 dark:text-white font-bold text-[16px] ml-3">
+                  Por Posto Administrativo
+                </Text>
+              </View>
+              <AdminPostBreakdown
+                data={dataByAdminPost}
+                isLoading={!isDataReady}
               />
             </View>
           </View>
