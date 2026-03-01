@@ -55,7 +55,7 @@ SplashScreen.preventAutoHideAsync();
 // export default Sentry.wrap(RootLayout)
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
+  const [showCustomSplash, setShowCustomSplash] = useState(true);
 
   const [loaded, error] = useFonts({
     SpaceMono: require("../../assets/fonts/SpaceMono-Regular.ttf"),
@@ -67,41 +67,24 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
+  // Hide native splash once fonts are loaded, then show custom splash
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  useEffect(() => {
-    async function prepare() {
-      try {
-        // Pre-load fonts, make any API calls you need to do here
-        // await Font.loadAsync(Entypo.font);
-        // Artificially delay for two seconds to simulate a slow loading
-        // experience. Please remove this if you copy and paste the code!
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        // Tell the application to render
-        setIsReady(true);
-      }
-    }
-
-    prepare();
-  }, [loaded]);
-
   const onSplashFinish = () => {
-    SplashScreen.hideAsync();
+    setShowCustomSplash(false);
   };
 
-  if (!isReady) {
-    return <CustomSplashScreen onFinish={onSplashFinish} />;
-  }
-
+  // Wait for fonts before rendering anything
   if (!loaded) {
     return null;
+  }
+
+  if (showCustomSplash) {
+    return <CustomSplashScreen onFinish={onSplashFinish} />;
   }
 
   return (
