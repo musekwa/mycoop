@@ -6,24 +6,30 @@ import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 import TransactionCard from '@/features/monitoring/transaction-card'
 import TransactionShimmer from '@/components/skeletons/transaction-shimmer'
 import { getWarehouseTypeLabel } from '@/helpers/transaction-helpers'
+import { getTransactedItemPortugueseName } from '@/helpers/trades'
 
 interface OrganizationTransferredInfoProps {
 	transactions: OrganizationTransferredTransactionItem[]
 }
 
-const TransactionItem = ({ item, index }: { item: OrganizationTransferredTransactionItem; index: number }) => {
-	const warehouseType = getWarehouseTypeLabel(item.destination_org_organization_type)
-	const description = item.destination_org_group_name
+const TransactionItem = ({ transaction, index }: { transaction: OrganizationTransferredTransactionItem; index: number }) => {
+	const warehouseType = getWarehouseTypeLabel(transaction.destination_org_organization_type)
+	const description = transaction.destination_org_group_name
+
+	if (!transaction.item) {
+		return null
+	}
 
 	return (
 		<TransactionCard
 			index={index}
-			quantity={item.quantity!}
-			startDate={item.start_date!}
-			endDate={item.end_date!}
+			itemType={transaction.item}
+			quantity={transaction.quantity!}
+			startDate={transaction.start_date!}
+			endDate={transaction.end_date!}
 			warehouseType={warehouseType}
 			description={description}
-			headerLabel="Transferência"
+			headerLabel={`Transferência de ${getTransactedItemPortugueseName(transaction.item!).toLowerCase()}`}
 			locationLabel="Destino"
 			statusBadge={{
 				icon: 'time-outline',
@@ -64,13 +70,13 @@ export default function OrganizationTransferredInfo({ transactions }: Organizati
 			contentContainerStyle={{ paddingBottom: 200, paddingTop: 4, paddingHorizontal: 4, flexGrow: 1 }}
 			showsVerticalScrollIndicator={false}
 		>
-			{data.map((item, index) => (
+			{data.map((transaction, index) => (
 				<Animated.View
-					key={item.id}
+					key={transaction.id}
 					entering={FadeInDown.delay(index * 100).springify()}
 					layout={LinearTransition.springify()}
 				>
-					<TransactionItem item={item} index={index} />
+					<TransactionItem transaction={transaction} index={index} />
 				</Animated.View>
 			))}
 		</Animated.ScrollView>
