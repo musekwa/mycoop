@@ -1,3 +1,4 @@
+import ActorProfileHeaderAvatar from "@/components/actor-profile-header-avatar";
 import { colors } from "@/constants/colors";
 import { avatarPlaceholderUri } from "@/constants/image-uris";
 import { useUserDetails } from "@/hooks/queries";
@@ -86,9 +87,9 @@ function CustomDrawerContent(props: any) {
             </View>
 
             <View className="flex flex-row justify-between">
-              <View className="py-3 flex flex-row space-x-1 items-center">
+              <View className="py-3 flex flex-row gap-x-1 items-center">
                 <TouchableOpacity
-                  className="flex flex-row space-x-2 items-center"
+                  className="flex flex-row gap-x-2 items-center"
                   onPress={() => Linking.openURL(`tel:${userDetails?.phone}`)}
                 >
                   <Feather name="phone-call" size={15} color={colors.primary} />
@@ -97,7 +98,7 @@ function CustomDrawerContent(props: any) {
                   </Text>
                 </TouchableOpacity>
               </View>
-              <View className="py-3 flex flex-row space-x-1 items-center">
+              <View className="py-3 flex flex-row gap-x-1 items-center">
                 <Ionicons
                   name="location-outline"
                   size={15}
@@ -125,7 +126,7 @@ function CustomDrawerContent(props: any) {
                   props.navigation?.navigate(route.name);
                   props.navigation?.closeDrawer();
                 }}
-                className={`flex flex-row items-center px-4 py-3 rounded-md ${isFocused && !isDark ? "bg-[#f0f0f0]" : "bg-[#333333]"}`}
+                className={`flex flex-row items-center px-4 py-3 rounded-md ${isFocused && !isDark ? "bg-[#f0f0f0]" : isFocused && isDark ? "bg-[#333333]" : ""} `}
               >
                 {drawerIcon && (
                   <View className="mr-3">
@@ -160,7 +161,7 @@ function CustomDrawerContent(props: any) {
                 performLogOut();
               }}
               disabled={isSigningOut}
-              className="flex flex-row space-x-2 items-center "
+              className="flex flex-row gap-x-2 items-center "
             >
               <Ionicons name="log-out-outline" size={20} color={colors.red} />
               <Text className="text-[12px] text-red-500">
@@ -217,6 +218,7 @@ export default function UserLayout() {
             headerTitleStyle: {
               color: isDark ? colors.white : colors.black,
             },
+            headerLeft: () => <ActorProfileHeaderAvatar photoUri={avatarPlaceholderUri} />,
           }}
         >
           <Drawer.Screen

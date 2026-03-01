@@ -59,7 +59,7 @@ function OrgListItem({ item }: OrgListItemProps) {
         <View className="flex-row items-center justify-between mb-2">
           <View className="flex-row items-center flex-1 min-w-0">
             <Image
-              source={{ uri: noImageUri }}
+              source={{ uri: item.photo || noImageUri }}
               style={[
                 styles.image,
                 { borderColor: isDarkMode ? colors.gray600 : "#e5e7eb" },

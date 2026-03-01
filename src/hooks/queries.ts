@@ -314,6 +314,11 @@ export const useQueryManyAndWatchChanges = <T>(query: string) => {
   const [error, setError] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   useEffect(() => {
+    if (!query || !query.trim()) {
+      setData([]);
+      setIsLoading(false);
+      return;
+    }
     const abortController = new AbortController();
     powersync.watchWithCallback(
       query,

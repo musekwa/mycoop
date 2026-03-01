@@ -1,50 +1,77 @@
-# Welcome to your Expo app 👋
+# MyCoop
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application for managing agricultural cooperatives, associations, and unions. Built with React Native and Expo, MyCoop enables field agents to register farmers, manage groups, track commodity transactions, and monitor district-level activity — all with offline-first sync.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Home Dashboard** — Overview of farmers, groups, and aggregated stock by commodity (Cashew, Groundnut, Beans)
+- **Actor Management** — Register and manage farmers and group members
+- **Monitoring** — View groups (cooperatives, associations, unions) and their transaction summaries by product
+- **Transaction Tracking** — Record aggregation, sales, transfers, and losses per group
+- **Reporting** — Generate warehouse transaction reports filtered by date and item
+- **Offline-First** — Powered by PowerSync for local-first data with background sync
+- **Dark Mode** — Full dark theme support
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+- **Framework** — [Expo](https://expo.dev) + [React Native](https://reactnative.dev)
+- **Routing** — [Expo Router](https://docs.expo.dev/router/introduction/) (file-based)
+- **Database** — [PowerSync](https://www.powersync.com/) (offline-first SQLite sync)
+- **State Management** — [Zustand](https://github.com/pmndrs/zustand)
+- **Styling** — [NativeWind](https://www.nativewind.dev/) (TailwindCSS for React Native)
+- **Animations** — [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/)
+- **UI Components** — [@expo/vector-icons](https://icons.expo.fyi/), [@gorhom/bottom-sheet](https://gorhom.github.io/react-native-bottom-sheet/)
 
-   ```bash
-   npx expo start
-   ```
+## Project Structure
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/
+├── app/                  # Screens (file-based routing)
+│   ├── (tabs)/           # Main tab navigation (Home, Actors, Monitoring, User)
+│   ├── (monitoring)/     # Monitoring sub-routes (plots, etc.)
+│   ├── (profiles)/       # Profile screens
+│   ├── (auth)/           # Authentication screens
+│   ├── (aux)/            # Auxiliary screens (checkpoints, etc.)
+│   └── (native)/         # Native module screens
+├── components/           # Reusable UI components
+├── constants/            # Colors, image URIs, config
+├── features/             # Feature-specific logic and components
+├── helpers/              # Utility functions (dates, transactions, reports)
+├── hooks/                # Custom React hooks (queries, navigation, etc.)
+├── library/              # PowerSync schemas and SQLite queries
+├── store/                # Zustand stores
+└── types/                # TypeScript type definitions
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Getting Started
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+- Node.js (LTS)
+- Android Studio (for Android emulator) or a physical device
+- Expo CLI
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
 
-## Join the community
+```bash
+npm install
+```
 
-Join our community of developers creating universal apps.
+### Running the App
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+# Start the development server
+npx expo start
+
+# Run on Android
+npm run android
+
+# Run on iOS
+npm run ios
+```
+
+## Linting
+
+```bash
+npm run lint
+```

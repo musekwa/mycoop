@@ -13,23 +13,11 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { avatarPlaceholderUri } from "@/constants/image-uris";
 // Navigation imports
 import CustomSafeAreaView from "@/components/layouts/safe-area-view";
-import RouteProtection from "@/features/auth/route-protection";
 import { colors } from "@/constants/colors";
+import RouteProtection from "@/features/auth/route-protection";
 import { useUserDetails } from "@/hooks/queries";
 import { getDistrictById, getProvinceById } from "@/library/sqlite/selects";
-
-// Helper function to get role display name
-const getRoleDisplayName = (role: string) => {
-  const roleMap: { [key: string]: string } = {
-    ADMIN: "Administrador",
-    USER: "Usuário",
-    INSPECTOR: "Fiscal",
-    SUPERVISOR: "Supervisor",
-    FIELD_AGENT: "Extensionista",
-    COOP_ADMIN: "Gestor de Cooperativa",
-  };
-  return roleMap[role] || role;
-};
+import { getUserRole } from "@/helpers/get-user-role";
 
 export default function UserProfileScreen() {
   const { userDetails } = useUserDetails();
@@ -50,7 +38,7 @@ export default function UserProfileScreen() {
       setFullName(userDetails.full_name);
       setEmail(userDetails.email);
       setPhone(userDetails.phone);
-      setRole(userDetails.user_role);
+      setRole(getUserRole(userDetails.user_role).label);
     }
     if (userDetails?.district_id) {
       getDistrictById(userDetails.district_id).then((district) => {
@@ -115,24 +103,20 @@ export default function UserProfileScreen() {
               {/* Role Badge */}
               <View className="bg-gray-200 dark:bg-gray-700 rounded-full px-4 py-2 border border-white/30">
                 <Text className="text-gray-900 dark:text-white font-semibold text-[10px]">
-                  {getRoleDisplayName(role || "USER")}
+                  {role}
                 </Text>
               </View>
             </View>
 
             {/* Content Section */}
             <View className="flex-1 pt-10 px-4">
-              {/* <Text className="text-gray-600 dark:text-gray-400 text-[14px] font-semibold mb-4 px-2">
-								Informações de Contacto
-							</Text> */}
-
-              <View className="space-y-3">
+              <View className="gap-y-3">
                 {/* Email Card */}
                 <Animated.View
                   entering={FadeIn.delay(100)}
                   className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700"
                 >
-                  <View className="flex-row items-center space-x-3">
+                  <View className="flex-row items-center gap-x-3">
                     <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 items-center justify-center">
                       <Ionicons
                         name="mail-outline"
@@ -161,7 +145,7 @@ export default function UserProfileScreen() {
                   entering={FadeIn.delay(200)}
                   className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700"
                 >
-                  <View className="flex-row items-center space-x-3">
+                  <View className="flex-row items-center gap-x-3">
                     <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 items-center justify-center">
                       <Ionicons
                         name="call-outline"
@@ -189,7 +173,7 @@ export default function UserProfileScreen() {
                   entering={FadeIn.delay(300)}
                   className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700"
                 >
-                  <View className="flex-row items-center space-x-3">
+                  <View className="flex-row items-center gap-x-3">
                     <View className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 items-center justify-center">
                       <Ionicons
                         name="location-outline"

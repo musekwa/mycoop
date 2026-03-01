@@ -40,6 +40,7 @@ import { TABLES } from "@/library/powersync/app-schemas";
 import { OrganizationTypes } from "@/types";
 
 export default function GroupsScreen() {
+  const isDarkMode = useColorScheme() === "dark";
   const config = getOrganizationTypeConfig();
   const { search, setSearch } = useNavigationSearch({
     searchBarOptions: {
@@ -226,8 +227,14 @@ export default function GroupsScreen() {
     >
       <View className="flex-row gap-x-2 items-center p-2 border-b border-gray-200 dark:border-gray-700">
         <Image
-          source={{ uri: noImageUri }}
-          style={{ width: 60, height: 60, borderRadius: 30 }}
+          source={{ uri: item.photo || noImageUri }}
+          style={{
+            width: 50,
+            height: 50,
+            borderRadius: 10,
+            borderWidth: 1.5,
+            borderColor: isDarkMode ? colors.gray600 : "#e5e7eb",
+          }}
           contentFit="cover"
         />
         <View className="flex-1">

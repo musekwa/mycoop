@@ -9,6 +9,7 @@ export type OrganizationItem = {
 	organization_type: string
 	admin_post: string
 	admin_post_id: string
+	photo?: string
 }
 
 function buildGroupsQuery(organizationType: OrganizationTypes, districtId?: string) {
@@ -21,7 +22,8 @@ function buildGroupsQuery(organizationType: OrganizationTypes, districtId?: stri
 			ad.other_names as group_name, 
 			ac.subcategory as organization_type, 
 			ap.name as admin_post,
-			addr.admin_post_id as admin_post_id
+			addr.admin_post_id as admin_post_id,
+			ad.photo
 		FROM ${TABLES.ACTORS} a
 		INNER JOIN ${TABLES.ACTOR_DETAILS} ad ON ad.actor_id = a.id
 		LEFT JOIN ${TABLES.ACTOR_CATEGORIES} ac ON ac.actor_id = a.id AND ac.category = 'GROUP'

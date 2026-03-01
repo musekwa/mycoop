@@ -1,7 +1,7 @@
 import { Image } from "react-native";
 
 // Image imports for the application
-import AvatarPlaceHolder from "../../assets/images/avatar-placeholder.jpg";
+import avatarPlaceHolder from "../../assets/images/avatar-placeholder.jpg";
 import ampcmLogo from "../../assets/images/mycoop-logo.png";
 import noImage from "../../assets/images/no-image.png";
 
@@ -24,7 +24,7 @@ import sprayerCategoryImage from "../../assets/images/sprayer.png";
 import unionCategoryImage from "../../assets/images/union-20.png";
 
 export const avatarPlaceholderUri =
-  Image.resolveAssetSource(AvatarPlaceHolder).uri;
+  Image.resolveAssetSource(avatarPlaceHolder).uri;
 export const ampcmLogoUri = Image.resolveAssetSource(ampcmLogo).uri;
 export const ampcmGreenLogoUri = Image.resolveAssetSource(ampcmGreenLogo).uri;
 export const ampcmWhiteLogoUri = Image.resolveAssetSource(ampcmWhiteLogo).uri;
