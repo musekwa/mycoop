@@ -9,8 +9,13 @@ import { userSignIn } from "@/library/supabase/user-auth";
 import { useAuthStore } from "@/store/auth";
 import { Href, Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-tools";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 export default function Login() {
   const [hasError, setHasError] = useState(false);
@@ -107,32 +112,34 @@ export default function Login() {
 
   return (
     <CustomSafeAreaView>
-      <KeyboardAwareScrollView
-        automaticallyAdjustContentInsets={true}
-        restoreScrollOnKeyboardHide={true}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          paddingBottom: 40,
-        }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <View className="flex-1 justify-center items-center space-y-2">
-          <HeroCard title="MyCoop" description="" />
-          <Text className="text-[#008000] font-bold text-2xl text-center tracking-wide">
-            MyCoop
-          </Text>
-          <Text className="text-gray-400 dark:text-gray-500 text-sm text-center">
-            Faça login para continuar
-          </Text>
-        </View>
-        <View className="flex-1 justify-center">
-          <LogInForm performLogin={performLogin} />
-        </View>
-      </KeyboardAwareScrollView>
+        <ScrollView
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 16,
+            paddingBottom: 40,
+          }}
+        >
+          <View className="flex-1 justify-center items-center space-y-2">
+            <HeroCard title="MyCoop" description="" />
+            <Text className="text-[#008000] font-bold text-2xl text-center tracking-wide">
+              MyCoop
+            </Text>
+            <Text className="text-gray-400 dark:text-gray-500 text-sm text-center">
+              Faça login para continuar
+            </Text>
+          </View>
+          <View className="flex-1 justify-center">
+            <LogInForm performLogin={performLogin} />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <ErrorAlert
         visible={hasError}
         setVisible={setHasError}

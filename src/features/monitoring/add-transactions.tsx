@@ -1,6 +1,12 @@
 import SubmitButton from "@/components/buttons/submit-button";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 import ErrorAlert from "@/components/alerts/error-alert";
 import { OrganizationTypes, TransactionFlowType } from "@/types";
@@ -22,7 +28,6 @@ import {
   useTransferredByOrgInfoStore,
   useTransferredInfoStore,
 } from "@/store/trades";
-import { KeyboardAwareScrollView } from "react-native-keyboard-tools";
 import AddAggregatedInfo from "./add-aggregated-info";
 import AddInfoProviderInfo from "./add-info-provider-info";
 import AddLostInfo from "./add-lost-info";
@@ -204,144 +209,148 @@ export default function AddTransactions({
   };
 
   return (
-    <KeyboardAwareScrollView
-      decelerationRate={"normal"}
-      fadingEdgeLength={2}
-      keyboardDismissMode="on-drag"
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-      scrollEventThrottle={16}
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: "flex-start",
-        padding: 16,
-        paddingBottom: 80,
-      }}
-      className="bg-white dark:bg-black"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
     >
-      {item ? (
-        <View className="flex-row items-center justify-between bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 px-3 py-2 mb-2 rounded-lg">
-          <View className="flex-col">
-            <Text className="text-[11px] text-gray-500 dark:text-gray-400">
-              Estoque disponível
-            </Text>
-            <Text className="text-[13px] font-semibold text-green-800 dark:text-green-300">
-              {itemType}
-            </Text>
-          </View>
-          <View className="flex-row items-baseline">
-            <Text className="text-[22px] font-bold text-[#008000] dark:text-green-400">
-              {Intl.NumberFormat("pt-BR", {
-                maximumFractionDigits: 2,
-              }).format(currentStock)}
-            </Text>
-            <Text className="text-[13px] text-[#008000] dark:text-green-400 ml-1">
-              Kg
-            </Text>
-          </View>
-        </View>
-      ) : (
-        <View className="bg-gray-50 dark:bg-gray-800 px-3 py-3 my-2 rounded-lg border border-gray-200 dark:border-gray-700">
-          <Text className="text-[12px] text-gray-400 dark:text-gray-500 italic text-center">
-            Seleccione um produto para ver o estoque.
-          </Text>
-        </View>
-      )}
-
-      <View className="flex flex-col pb-2 mt-8">
-        <AddInfoProviderInfo
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-          setShowInfoProviderModal={setShowInfoProviderModal}
-          showInfoProviderModal={showInfoProviderModal}
-          ownerId={organization.id as string}
-          storeId={organization.id as string}
-          storeType="GROUP"
-        />
-      </View>
-
-      <View className="flex flex-col pb-2">
-        <AddTransactedItem
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-        />
-      </View>
-
-      <View className="flex flex-col pb-2">
-        <DateRangeSelector
-          customErrors={customErrors}
-          setCustomErrors={setCustomErrors}
-          storeId={organization.id}
-          item={item}
-        />
-      </View>
-
-      {itemType && infoProvider.info_provider_id && (
-        <View className="flex flex-col pb-2">
-          {/* activeMember participations (quantity by member) for cooperative and association */}
-          {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
-            <AddAggregatedInfo
-              group_id={organization.id as string}
-              customErrors={customErrors}
-              setCustomErrors={setCustomErrors}
-              itemType={itemType}
-            />
-          )}
-
-          {/* Resold Info */}
-          <AddResoldInfo
-            customErrors={customErrors}
-            setCustomErrors={setCustomErrors}
-            itemType={itemType}
-          />
-
-          {/* Transferred transaction only for cooperative and association */}
-          {organization?.organization_type !== OrganizationTypes.COOP_UNION && (
-            <AddTransferredByOrgInfo
-              customErrors={customErrors}
-              setCustomErrors={setCustomErrors}
-              organizationId={organization.id as string}
-              itemType={itemType}
-            />
-          )}
-
-          {/* Lost Info */}
-          <AddLostInfo
-            customErrors={customErrors}
-            setCustomErrors={setCustomErrors}
-            itemType={itemType}
-          />
-
-          {customErrors.outgoing && (
-            <View className="flex-row justify-center items-center mt-4 bg-red-100 p-2 rounded-md">
-              <Text className="text-red-500 text-[12px]">
-                {customErrors.outgoing}
+      <ScrollView
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "flex-start",
+          padding: 16,
+          paddingBottom: 80,
+        }}
+        className="bg-white dark:bg-black"
+      >
+        {item ? (
+          <View className="flex-row items-center justify-between bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 px-3 py-2 mb-2 rounded-lg">
+            <View className="flex-col">
+              <Text className="text-[11px] text-gray-500 dark:text-gray-400">
+                Estoque disponível
+              </Text>
+              <Text className="text-[13px] font-semibold text-green-800 dark:text-green-300">
+                {itemType}
               </Text>
             </View>
-          )}
-
-          <View className="flex-row justify-center items-center mt-4">
-            <SubmitButton title="Pré-visualizar" onPress={onSubmit} />
+            <View className="flex-row items-baseline">
+              <Text className="text-[22px] font-bold text-[#008000] dark:text-green-400">
+                {Intl.NumberFormat("pt-BR", {
+                  maximumFractionDigits: 2,
+                }).format(currentStock)}
+              </Text>
+              <Text className="text-[13px] text-[#008000] dark:text-green-400 ml-1">
+                Kg
+              </Text>
+            </View>
           </View>
+        ) : (
+          <View className="bg-gray-50 dark:bg-gray-800 px-3 py-3 my-2 rounded-lg border border-gray-200 dark:border-gray-700">
+            <Text className="text-[12px] text-gray-400 dark:text-gray-500 italic text-center">
+              Seleccione um produto para ver o estoque.
+            </Text>
+          </View>
+        )}
+
+        <View className="flex flex-col pb-2 mt-8">
+          <AddInfoProviderInfo
+            customErrors={customErrors}
+            setCustomErrors={setCustomErrors}
+            setShowInfoProviderModal={setShowInfoProviderModal}
+            showInfoProviderModal={showInfoProviderModal}
+            ownerId={organization.id as string}
+            storeId={organization.id as string}
+            storeType="GROUP"
+          />
         </View>
-      )}
 
-      <ErrorAlert
-        visible={hasError}
-        setVisible={setHasError}
-        title=""
-        message={errorMessage}
-        setMessage={setErrorMessage}
-      />
+        <View className="flex flex-col pb-2">
+          <AddTransactedItem
+            customErrors={customErrors}
+            setCustomErrors={setCustomErrors}
+          />
+        </View>
 
-      {showPreview && (
-        <TransactionDataPreview
-          previewData={showPreview}
-          setPreviewData={setShowPreview}
-          organization={organization}
-          setIsShowingExistingTransactions={setIsShowingExistingTransactions}
+        <View className="flex flex-col pb-2">
+          <DateRangeSelector
+            customErrors={customErrors}
+            setCustomErrors={setCustomErrors}
+            storeId={organization.id}
+            item={item}
+          />
+        </View>
+
+        {itemType && infoProvider.info_provider_id && (
+          <View className="flex flex-col pb-2">
+            {/* activeMember participations (quantity by member) for cooperative and association */}
+            {organization?.organization_type !==
+              OrganizationTypes.COOP_UNION && (
+              <AddAggregatedInfo
+                group_id={organization.id as string}
+                customErrors={customErrors}
+                setCustomErrors={setCustomErrors}
+                itemType={itemType}
+              />
+            )}
+
+            {/* Resold Info */}
+            <AddResoldInfo
+              customErrors={customErrors}
+              setCustomErrors={setCustomErrors}
+              itemType={itemType}
+            />
+
+            {/* Transferred transaction only for cooperative and association */}
+            {organization?.organization_type !==
+              OrganizationTypes.COOP_UNION && (
+              <AddTransferredByOrgInfo
+                customErrors={customErrors}
+                setCustomErrors={setCustomErrors}
+                organizationId={organization.id as string}
+                itemType={itemType}
+              />
+            )}
+
+            {/* Lost Info */}
+            <AddLostInfo
+              customErrors={customErrors}
+              setCustomErrors={setCustomErrors}
+              itemType={itemType}
+            />
+
+            {customErrors.outgoing && (
+              <View className="flex-row justify-center items-center mt-4 bg-red-100 p-2 rounded-md">
+                <Text className="text-red-500 text-[12px]">
+                  {customErrors.outgoing}
+                </Text>
+              </View>
+            )}
+
+            <View className="flex-row justify-center items-center mt-4">
+              <SubmitButton title="Pré-visualizar" onPress={onSubmit} />
+            </View>
+          </View>
+        )}
+
+        <ErrorAlert
+          visible={hasError}
+          setVisible={setHasError}
+          title=""
+          message={errorMessage}
+          setMessage={setErrorMessage}
         />
-      )}
-    </KeyboardAwareScrollView>
+
+        {showPreview && (
+          <TransactionDataPreview
+            previewData={showPreview}
+            setPreviewData={setShowPreview}
+            organization={organization}
+            setIsShowingExistingTransactions={setIsShowingExistingTransactions}
+          />
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

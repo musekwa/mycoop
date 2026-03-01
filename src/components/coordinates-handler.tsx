@@ -43,7 +43,7 @@ const LocationDisplay = ({
   return (
     <Animated.View
       style={{ opacity: fadeAnim }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-green-200"
+      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-green-200 dark:border-green-700"
     >
       <View className="flex flex-col items-center">
         <View className="bg-green-100 rounded-full p-3 mb-3">
@@ -52,15 +52,15 @@ const LocationDisplay = ({
         <Text className="text-green-700 font-semibold text-sm mb-2">
           Localização Capturada!
         </Text>
-        <View className="bg-gray-50 rounded-lg px-3 py-2">
-          <Text className="text-gray-700 text-xs font-mono">
+        <View className="bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
+          <Text className="text-gray-700 dark:text-gray-200 text-xs font-mono">
             Latitude: {location.coords.latitude.toFixed(6)}
           </Text>
-          <Text className="text-gray-700 text-xs font-mono">
+          <Text className="text-gray-700 dark:text-gray-200 text-xs font-mono">
             Longitude: {location.coords.longitude.toFixed(6)}
           </Text>
         </View>
-        <Text className="text-gray-500 text-xs mt-2">
+        <Text className="text-gray-500 dark:text-gray-400 text-xs mt-2">
           Precisão: ±{location.coords.accuracy?.toFixed(0) || "N/A"}m
         </Text>
       </View>
@@ -109,11 +109,15 @@ const WaitingDisplay = () => {
               size={16}
               color={colors.gray600}
             />
-            <Text className="text-gray-500 text-xs">Seguro</Text>
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">
+              Seguro
+            </Text>
           </View>
           <View className="flex flex-row items-center gap-1">
             <Ionicons name="speedometer" size={16} color={colors.gray600} />
-            <Text className="text-gray-500 text-xs">Alta precisão</Text>
+            <Text className="text-gray-500 dark:text-gray-400 text-xs">
+              Alta precisão
+            </Text>
           </View>
         </View>
       </View>
@@ -153,7 +157,7 @@ const ErrorDisplay = ({ message }: { message: string }) => {
   return (
     <Animated.View
       style={{ transform: [{ translateX: shakeAnim }] }}
-      className="bg-red-50 border border-red-200 rounded-2xl p-4"
+      className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-2xl p-4"
     >
       <View className="flex flex-col items-center">
         <View className="bg-red-100 rounded-full p-3 mb-3">
@@ -163,7 +167,7 @@ const ErrorDisplay = ({ message }: { message: string }) => {
           Erro na Captura
         </Text>
         <Text className="text-red-600 text-center text-sm">{message}</Text>
-        <Text className="text-gray-500 text-xs text-center mt-2">
+        <Text className="text-gray-500 dark:text-gray-400 text-xs text-center mt-2">
           Verifique suas permissões e conexão com a internet
         </Text>
       </View>
@@ -277,7 +281,7 @@ export default function CoordinatesHandler({
       <Text className="text-gray-600 dark:text-gray-400 text-sm text-center mb-4">
         Obtendo coordenadas GPS com alta precisão
       </Text>
-      <View className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+      <View className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <Animated.View
           style={{
             width: captureProgress.interpolate({
@@ -290,7 +294,9 @@ export default function CoordinatesHandler({
           className="h-full rounded-full"
         />
       </View>
-      <Text className="text-gray-500 text-xs mt-2">Aguarde um momento...</Text>
+      <Text className="text-gray-500 dark:text-gray-400 text-xs mt-2">
+        Aguarde um momento...
+      </Text>
     </View>
   );
 

@@ -2,7 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Href, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { z } from "zod";
 
 import ErrorAlert from "@/components/alerts/error-alert";
@@ -17,7 +23,6 @@ import HeroCard from "@/components/hero-card";
 import CustomSafeAreaView from "@/components/layouts/safe-area-view";
 import { colors } from "@/constants/colors";
 import { Ionicons } from "@expo/vector-icons";
-import { KeyboardAwareScrollView } from "react-native-keyboard-tools";
 
 const PasswordResetSchema = z
   .object({
@@ -91,146 +96,156 @@ export default function PasswordReset() {
 
   return (
     <CustomSafeAreaView>
-      <KeyboardAwareScrollView
-        automaticallyAdjustContentInsets={true}
-        restoreScrollOnKeyboardHide={true}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 16,
-          paddingBottom: 40,
-        }}
-        className="bg-white dark:bg-black"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <HeroCard
-          title="MyCoop"
-          description="Redefina sua senha. Digite sua nova senha e confirme-a para redefinir sua senha."
-        />
-        <View className="py-4"></View>
-        <View className="flex-1 justify-center gap-y-3">
-          <View className="relative">
-            <Controller
-              control={control}
-              name="password"
-              render={({ field }) => (
-                <View className="relative">
-                  <CustomTextInput
-                    label=""
-                    placeholder="Digite sua nova senha"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    secureTextEntry={!isPasswordVisible}
-                    editable={!isLoading}
-                  />
-                  <View className="absolute right-3 top-0 bottom-0 justify-center">
-                    {isPasswordVisible ? (
-                      <Ionicons
-                        onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                        color={colors.gray600}
-                        name="eye-outline"
-                        size={24}
-                      />
-                    ) : (
-                      <Ionicons
-                        onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                        color={colors.gray600}
-                        name="eye-off-outline"
-                        size={24}
-                      />
-                    )}
+        <ScrollView
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 16,
+            paddingBottom: 40,
+          }}
+          className="bg-white dark:bg-black"
+        >
+          <HeroCard
+            title="MyCoop"
+            description="Redefina sua senha. Digite sua nova senha e confirme-a para redefinir sua senha."
+          />
+          <View className="py-4"></View>
+          <View className="flex-1 justify-center gap-y-3">
+            <View className="relative">
+              <Controller
+                control={control}
+                name="password"
+                render={({ field }) => (
+                  <View className="relative">
+                    <CustomTextInput
+                      label=""
+                      placeholder="Digite sua nova senha"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      secureTextEntry={!isPasswordVisible}
+                      editable={!isLoading}
+                    />
+                    <View className="absolute right-3 top-0 bottom-0 justify-center">
+                      {isPasswordVisible ? (
+                        <Ionicons
+                          onPress={() =>
+                            setIsPasswordVisible(!isPasswordVisible)
+                          }
+                          color={colors.gray600}
+                          name="eye-outline"
+                          size={24}
+                        />
+                      ) : (
+                        <Ionicons
+                          onPress={() =>
+                            setIsPasswordVisible(!isPasswordVisible)
+                          }
+                          color={colors.gray600}
+                          name="eye-off-outline"
+                          size={24}
+                        />
+                      )}
+                    </View>
                   </View>
-                </View>
-              )}
-            />
-            <FormItemDescription description="Senha" />
-            {errors.password && (
-              <Text className="text-red-500 text-sm mt-1">
-                {errors.password.message}
-              </Text>
-            )}
-          </View>
-          <View className="relative">
-            <Controller
-              control={control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <View className="relative">
-                  <CustomTextInput
-                    label=""
-                    placeholder="Confirme sua nova senha"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    secureTextEntry={!isConfirmPasswordVisible}
-                    editable={!isLoading}
-                  />
-                  <View className="absolute right-3 top-0 bottom-0 justify-center">
-                    {isConfirmPasswordVisible ? (
-                      <Ionicons
-                        onPress={() =>
-                          setIsConfirmPasswordVisible(!isConfirmPasswordVisible)
-                        }
-                        color={colors.gray600}
-                        name="eye-outline"
-                        size={24}
-                      />
-                    ) : (
-                      <Ionicons
-                        onPress={() =>
-                          setIsConfirmPasswordVisible(!isConfirmPasswordVisible)
-                        }
-                        color={colors.gray600}
-                        name="eye-off-outline"
-                        size={24}
-                      />
-                    )}
-                  </View>
-                </View>
-              )}
-            />
-            <FormItemDescription description="Confirme sua nova senha" />
-            {errors.confirmPassword && (
-              <View className="flex-row items-center space-x-1 bg-red-100 p-1 rounded-md mt-1">
-                <Text className="text-red-600 text-[12px] italic">
-                  {errors.confirmPassword.message}
+                )}
+              />
+              <FormItemDescription description="Senha" />
+              {errors.password && (
+                <Text className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
                 </Text>
-              </View>
-            )}
+              )}
+            </View>
+            <View className="relative">
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <View className="relative">
+                    <CustomTextInput
+                      label=""
+                      placeholder="Confirme sua nova senha"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      secureTextEntry={!isConfirmPasswordVisible}
+                      editable={!isLoading}
+                    />
+                    <View className="absolute right-3 top-0 bottom-0 justify-center">
+                      {isConfirmPasswordVisible ? (
+                        <Ionicons
+                          onPress={() =>
+                            setIsConfirmPasswordVisible(
+                              !isConfirmPasswordVisible,
+                            )
+                          }
+                          color={colors.gray600}
+                          name="eye-outline"
+                          size={24}
+                        />
+                      ) : (
+                        <Ionicons
+                          onPress={() =>
+                            setIsConfirmPasswordVisible(
+                              !isConfirmPasswordVisible,
+                            )
+                          }
+                          color={colors.gray600}
+                          name="eye-off-outline"
+                          size={24}
+                        />
+                      )}
+                    </View>
+                  </View>
+                )}
+              />
+              <FormItemDescription description="Confirme sua nova senha" />
+              {errors.confirmPassword && (
+                <View className="flex-row items-center space-x-1 bg-red-100 p-1 rounded-md mt-1">
+                  <Text className="text-red-600 text-[12px] italic">
+                    {errors.confirmPassword.message}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <View className="my-4">
+              <SubmitButton
+                title={isLoading ? "Redefinindo..." : "Redefinir Senha"}
+                onPress={handleSubmit(onSubmit)}
+                disabled={isLoading || !isDirty || isSubmitting}
+                isSubmitting={isSubmitting}
+              />
+            </View>
+            <View className="">
+              <Text
+                className="text-[#008000] font-bold text-center underline"
+                onPress={() => router.back()}
+              >
+                Solicitar Novo Código
+              </Text>
+            </View>
           </View>
-          <View className="my-4">
-            <SubmitButton
-              title={isLoading ? "Redefinindo..." : "Redefinir Senha"}
-              onPress={handleSubmit(onSubmit)}
-              disabled={isLoading || !isDirty || isSubmitting}
-              isSubmitting={isSubmitting}
-            />
-          </View>
-          <View className="">
-            <Text
-              className="text-[#008000] font-bold text-center underline"
-              onPress={() => router.back()}
-            >
-              Solicitar Novo Código
-            </Text>
-          </View>
-        </View>
 
-        <ErrorAlert
-          visible={hasAlert}
-          setVisible={setHasAlert}
-          message={errorMessage}
-          setMessage={setErrorMessage}
-          title="Erro"
-        />
+          <ErrorAlert
+            visible={hasAlert}
+            setVisible={setHasAlert}
+            message={errorMessage}
+            setMessage={setErrorMessage}
+            title="Erro"
+          />
 
-        <SuccessAlert
-          visible={hasSuccess}
-          setVisible={setHasSuccess}
-          route={"/(auth)/login"}
-        />
-      </KeyboardAwareScrollView>
+          <SuccessAlert
+            visible={hasSuccess}
+            setVisible={setHasSuccess}
+            route={"/(auth)/login"}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </CustomSafeAreaView>
   );
 }
