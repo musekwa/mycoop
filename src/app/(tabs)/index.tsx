@@ -1,16 +1,16 @@
 // React and React Native imports
-import { StatusBar } from "expo-status-bar";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { StatusBar, Text, View } from "react-native";
 
 // Third party libraries
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as Animatable from "react-native-animatable";
 
 // Constants
 import {
   actorOrganizationsImageUri,
+  ampcmWhiteFullLogoUri,
   farmerCategoryImageUri,
 } from "@/constants/image-uris";
 
@@ -337,7 +337,7 @@ const SummaryStats = ({
           <Image
             source={{ uri: iconUri }}
             style={{ width: 24, height: 24 }}
-            contentFit="contain"
+            // contentFit=""
           />
         </View>
         <Text className="text-gray-900 dark:text-white font-bold text-[18px] ml-3">
@@ -566,40 +566,32 @@ export default function HomeScreen() {
 
   return (
     <RouteProtection>
-      <CustomSafeAreaView edges={["top"]}>
+      <CustomSafeAreaView edges={["top", "bottom"]}>
         <Animated.ScrollView
           entering={FadeIn.duration(300)}
           exiting={FadeOut.duration(300)}
           contentContainerStyle={{
+            paddingTop: StatusBar.currentHeight || 20,
             flexGrow: 1,
             justifyContent: "center",
             paddingBottom: 20,
+            backgroundColor: "#008000",
           }}
-          className="bg-white dark:bg-black"
           showsVerticalScrollIndicator={false}
         >
-          <View className="h-37.5 bg-[#008000]">
-            <View className="relative justify-center items-center pt-10">
-              <Animatable.Text
-                animation="pulse"
-                easing="ease-out"
-                iterationCount="infinite"
-                style={{ textAlign: "center" }}
-                className="text-[22px] font-bold text-white"
-              >
-                MyCoop
-              </Animatable.Text>
-              <Text className="text-white text-center text-[10px] italic px-10">
-                Promovendo o cooperativismo moderno em Moçambique
-              </Text>
+          <View className=" bg-[#008000]">
+            <View className="relative justify-center items-center">
+              <Image
+                source={{ uri: ampcmWhiteFullLogoUri }}
+                style={{ width: 160, height: 80 }}
+                contentFit="contain"
+              />
             </View>
-            <View className="h-12.5 flex flex-row items-center justify-between space-x-6 px-3">
-              <View className="flex flex-row items-center space-x-1 w-1/2">
-                <Ionicons name="location-outline" size={20} color="white" />
-                <Text className="text-white text-[14px] font-semibold text-center">
-                  {districtName || "Distrito não definido"}
-                </Text>
-              </View>
+            <View className="pb-4 gap-2 px-3 flex flex-row">
+              <Ionicons name="location-outline" size={20} color="white" />
+              <Text className="text-white text-[14px] font-semibold">
+                {districtName || "Distrito não definido"}
+              </Text>
             </View>
           </View>
           <View className="flex-1 py-6 px-4 rounded-t-3xl bg-gray-50 dark:bg-black">
@@ -647,7 +639,7 @@ export default function HomeScreen() {
           </View>
         </Animated.ScrollView>
       </CustomSafeAreaView>
-      <StatusBar style="light" />
+      <ExpoStatusBar style="light" backgroundColor="#008000" />
     </RouteProtection>
   );
 }

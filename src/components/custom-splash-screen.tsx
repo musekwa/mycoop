@@ -1,40 +1,34 @@
-import { splash123Uri } from "@/constants/image-uris";
+import { ampcmWhiteFullLogoUri } from "@/constants/image-uris";
 import { Image } from "expo-image";
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
-
-const images = [splash123Uri];
+import React, { useEffect } from "react";
+import { StyleSheet } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export default function CustomSplashScreen({
   onFinish,
 }: {
   onFinish: () => void;
 }) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => {
-        if (prevIndex === images.length - 1) {
-          clearInterval(interval);
-          onFinish();
-          return prevIndex;
-        }
-        return prevIndex + 1;
-      });
-    }, 2000); // Change image every 1 second
+    const timeout = setTimeout(() => {
+      onFinish();
+    }, 5000);
 
-    return () => clearInterval(interval);
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
-    <View style={styles.container}>
+    <Animated.View
+      entering={FadeIn.duration(400)}
+      exiting={FadeOut.duration(400)}
+      style={styles.container}
+    >
       <Image
-        source={{ uri: images[currentImageIndex] }}
-        style={styles.image}
-        contentFit="cover"
+        source={{ uri: ampcmWhiteFullLogoUri }}
+        style={styles.logo}
+        contentFit="contain"
       />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -43,11 +37,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ffffff", // Set your desired background color
+    backgroundColor: "#008000",
   },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "contain",
+  logo: {
+    width: 200,
+    height: 100,
   },
 });
