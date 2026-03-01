@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 
 // Third party libraries
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import * as Sentry from "@sentry/react-native";
 import { useFonts } from "expo-font";
 import { Href, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -37,14 +36,7 @@ export {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  sendDefaultPii: true,
-  tracesSampleRate: 1.0,
-  spotlight: __DEV__,
-});
-
-function RootLayout() {
+export default function RootLayout() {
   const [showCustomSplash, setShowCustomSplash] = useState(true);
 
   const [loaded, error] = useFonts({
@@ -83,8 +75,6 @@ function RootLayout() {
     </Providers>
   );
 }
-
-export default Sentry.wrap(RootLayout);
 
 function RootLayoutNav() {
   const { userDetails, isLoading } = useUserDetails();
