@@ -37,7 +37,14 @@
       ],
       "expo-sqlite",
       "react-native-vision-camera",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@sentry/react-native",
+        {
+          "organization": "iam-ip",
+          "project": "connectcaju"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 
 // Third party libraries
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import * as Sentry from "@sentry/react-native";
 import { useFonts } from "expo-font";
 import { Href, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-// import 'react-native-reanimated';
 
 // Components
 import CustomSplashScreen from "@/components/custom-splash-screen";
@@ -37,24 +37,14 @@ export {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-// // Sentry setup
-// Sentry.init({
-// 	dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-// 	sendDefaultPii: true,
-// 	enableLogs: true,
-// 	profilesSampleRate: 1.0,
-// 	tracesSampleRate: 1.0,
-// 	replaysSessionSampleRate: 0.1,
-// 	replaysOnErrorSampleRate: 1,
-// 	integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0,
+  spotlight: __DEV__,
+});
 
-// 	// uncomment the line below to enable Spotlight (https://spotlightjs.com)
-// 	spotlight: __DEV__,
-// })
-
-// export default Sentry.wrap(RootLayout)
-
-export default function RootLayout() {
+function RootLayout() {
   const [showCustomSplash, setShowCustomSplash] = useState(true);
 
   const [loaded, error] = useFonts({
@@ -93,6 +83,8 @@ export default function RootLayout() {
     </Providers>
   );
 }
+
+export default Sentry.wrap(RootLayout);
 
 function RootLayoutNav() {
   const { userDetails, isLoading } = useUserDetails();
