@@ -93,6 +93,12 @@ export default function DateRangeSelector({
 		// Check if startDate is greater than or equal to endDate
 		if (!hasError && storeStartDate >= storeEndDate) {
 			hasError = true
+			console.log('hasError', {
+				hasError,
+				storeStartDate,
+				storeEndDate,
+			})
+
 			errorMessage = 'A data de início deve ser pelo menos um dia antes da data de fim.'
 		}
 

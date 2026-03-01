@@ -15,4 +15,4 @@ export const transactedItems = [
         value: "BEANS",
         label: "Feijão"
     },
-]
+].sort((a, b) => a.label.localeCompare(b.label))

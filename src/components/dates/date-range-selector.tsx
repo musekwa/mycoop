@@ -96,6 +96,11 @@ export default function DateRangeSelector({
       errorMessage =
         "A data de início deve ser pelo menos um dia antes da data de fim.";
     }
+    console.log('hasError1', {
+      hasError,
+      storeStartDate,
+      storeEndDate,
+    });
 
     // Only update state if error message changed
     if (errorMessage !== lastErrorMessageRef.current) {

@@ -23,9 +23,9 @@ export default function GroupMemberShipItem({
     <TouchableOpacity
       onPress={onToggle}
       activeOpacity={0.7}
-      className={`flex-row items-center p-3 mb-3 rounded-xl border ${
+      className={`will-change-variable flex-row items-center p-3 mb-3 rounded-xl border ${
         selected
-          ? "bg-gray-100 border-gray-400 shadow-sm dark:bg-gray-800/50 dark:border-gray-500"
+          ? "bg-gray-100 border-gray-400 shadow-sm dark:bg-gray-700 dark:border-gray-500"
           : "bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-700"
       }`}
       style={
@@ -88,13 +88,17 @@ export default function GroupMemberShipItem({
       <View className="ml-2">
         {selected ? (
           <View
+            key="selected"
             className="w-7 h-7 rounded-full items-center justify-center shadow-sm"
             style={{ backgroundColor: "#008000" }}
           >
             <Ionicons name="checkmark-circle" size={24} color={colors.white} />
           </View>
         ) : (
-          <View className="w-7 h-7 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+          <View
+            key="unselected"
+            className="w-7 h-7 rounded-full border-2 border-gray-300 dark:border-gray-600"
+          />
         )}
       </View>
     </TouchableOpacity>
