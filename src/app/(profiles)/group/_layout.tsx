@@ -395,7 +395,9 @@ export default function OrganizationLayout() {
         />
       </Drawer>
       {getDrawerStatus() === "closed" && (
-        <SingleFloatingButton icon="arrow-right" />
+        <View className="absolute bottom-10 right-4">
+          <SingleFloatingButton icon="arrow-right" />
+        </View>
       )}
     </>
   );

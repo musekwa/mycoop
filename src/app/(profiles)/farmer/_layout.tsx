@@ -350,7 +350,9 @@ export default function FarmerLayout() {
       </Drawer>
       <StatusBar style="auto" />
       {getDrawerStatus() === "closed" && (
-        <SingleFloatingButton icon="arrow-right" />
+        <View className="absolute bottom-16 right-4">
+          <SingleFloatingButton icon="arrow-right" />
+        </View>
       )}
     </>
   );
