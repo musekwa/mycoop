@@ -259,7 +259,7 @@ export default function PendingUserAuthorization() {
             />
           </View>
 
-          <View className="flex-1 pt-6 gap-4 justify-end">
+          <View className="flex-1 pt-6 gap-4 justify-end pb-8">
             <View className="w-full">
               <SubmitButton
                 onPress={handleCheckStatus}
