@@ -52,7 +52,6 @@ create table public.admin_posts (
   constraint admin_posts_district_id_fkey foreign KEY (district_id) references districts (id) on delete set null
 ) TABLESPACE pg_default;
 
-
 -- Villages table
 create table public.villages (
   id uuid not null default gen_random_uuid (),
@@ -64,7 +63,6 @@ create table public.villages (
   constraint villages_code_unique unique (code),
   constraint villages_admin_post_id_fkey foreign KEY (admin_post_id) references admin_posts (id) on delete set null
 ) TABLESPACE pg_default;
-
 
 
 -- User details table
